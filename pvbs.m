@@ -1,7 +1,7 @@
 %% Prairie View Browsing Solution (PVBS)
+% (https://github.com/flosfor/pvbs)
 %
 % Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
-% (Last modified: 2022-05-30)
 %
 %
 % -------------------------- <!> Important <!> ---------------------------
