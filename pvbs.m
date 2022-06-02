@@ -63,7 +63,7 @@
 function pvbs()
 % main window
 pvbsTitle = 'Prairie View Browsing Solution (PVBS)';
-pvbsLastMod = '2022.06.01';
+pvbsLastMod = '2022.06.02';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -2197,8 +2197,8 @@ if isempty(VRec)
 end
 
 % experiment to display
-columnTimeStamp = 1;
-columnToDisplay = 2; % assuming data columns are timestamp, V, i, and displaying V
+columnTimeStamp = h.params.actualParams.timeColumn;
+columnToDisplay = h.params.actualParams.pvbsVoltageColumn; %%% fixlater
 itemToDisplay = itemSelected(1); % display only the first one if multiple items are selected - obsolete
 VRecToDisplay = VRec{itemToDisplay};
 if iscell(VRecToDisplay)
@@ -2428,8 +2428,8 @@ if isempty(VRec)
 end
 
 % experiment to display
-columnTimeStamp = 1;
-columnToDisplay = 2; % assuming data columns are timestamp, V, i, and displaying V
+columnTimeStamp = h.params.actualParams.timeColumn;
+columnToDisplay = h.params.actualParams.pvbsVoltageColumn; %%% fixlater
 itemToDisplay = itemSelected(1); % display only the first one if multiple items are selected - obsolete
 VRecToDisplay = VRec{itemToDisplay};
 if iscell(VRecToDisplay)
