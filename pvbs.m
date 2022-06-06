@@ -212,7 +212,7 @@ ui.cellListDel = uicontrol('Style', 'pushbutton', 'String', 'X', 'Units', 'norma
 %  main trace display window
 ui.traceDisplayTitle = uicontrol('Style', 'text', 'string', 'Traces', 'fontweight', 'bold', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.15, 0.955, 0.09, 0.02]);
 ui.traceDisplay = axes('Units', 'Normalized', 'Position', [0.19, 0.42, 0.57, 0.53], 'xminortick', 'on', 'yminortick', 'on', 'box', 'on');
-ui.traceDisplayChannels = uicontrol('Style', 'pushbutton', 'enable', 'off', 'String', 'S#', 'backgroundcolor', [0.99, 0.99, 0.99], 'Units', 'normalized', 'Position', [0.735, 0.905, 0.015, 0.03], 'Callback', @traceDisplayChannels, 'interruptible', 'off');
+ui.traceDisplayChannels = uicontrol('Style', 'pushbutton', 'enable', 'on', 'String', 'S#', 'backgroundcolor', [0.99, 0.99, 0.99], 'Units', 'normalized', 'Position', [0.735, 0.905, 0.015, 0.03], 'Callback', @traceDisplayChannels, 'interruptible', 'off');
 ui.traceDisplayXZoomIn = uicontrol('Style', 'pushbutton', 'String', '+', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.5245, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXZoomIn, 'interruptible', 'off');
 ui.traceDisplayXZoomOut = uicontrol('Style', 'pushbutton', 'String', '-', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.4115, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXZoomOut, 'interruptible', 'off');
 ui.traceDisplayXMoveRight = uicontrol('Style', 'pushbutton', 'String', '>', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.72, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveRight, 'interruptible', 'off');
@@ -336,21 +336,21 @@ ui.traceProcessingTitle = uicontrol('Style', 'text', 'string', 'Postprocessing',
 ui.traceProcessingTargetText = uicontrol('Style', 'text', 'string', 'Target Signal: ', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.02, 0.274, 0.09, 0.02]);
 ui.traceProcessingTarget = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList1, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.0775, 0.274, 0.0575, 0.025], 'Callback', @downsamplingSignalSelect, 'interruptible', 'off');
 ui.downsamplingButton = uicontrol('Style', 'checkbox', 'min', 0, 'max', 1, 'string', 'Boxcar: ', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.016, 0.242, 0.09, 0.03], 'Callback', @downsamplingBoxcarButton, 'interruptible', 'off');
-ui.downsamplingInput = uicontrol('Style', 'edit', 'string', '4', 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.08, 0.242, 0.016, 0.026], 'Callback', @downsamplingBoxcarInput, 'interruptible', 'off');
+ui.downsamplingInput = uicontrol('Style', 'edit', 'string', num2str(params.actualParams.boxcarLength2), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.08, 0.242, 0.016, 0.026], 'Callback', @downsamplingBoxcarInput, 'interruptible', 'off');
 ui.downsamplingText = uicontrol('Style', 'text', 'string', 'x', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.096, 0.242, 0.02, 0.02]);
 ui.lowPassFilterButton = uicontrol('Style', 'checkbox', 'min', 0, 'max', 1, 'string', 'Bessel LP: ', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.016, 0.212, 0.09, 0.03],  'Callback', @downsamplingBesselButton, 'interruptible', 'off');
-ui.lowPassFilterInput = uicontrol('Style', 'edit', 'string', '1', 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.08, 0.212, 0.016, 0.026], 'Callback', @downsamplingBesselInput, 'interruptible', 'off');
+ui.lowPassFilterInput = uicontrol('Style', 'edit', 'string', num2str(params.actualParams.besselFreq2), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.08, 0.212, 0.016, 0.026], 'Callback', @downsamplingBesselInput, 'interruptible', 'off');
 ui.lowPassFilterText = uicontrol('Style', 'text', 'string', '(kHz)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.096, 0.212, 0.02, 0.02]);
 ui.stimArtifactButton = uicontrol('Style', 'checkbox', 'enable', 'off', 'min', 0, 'max', 1, 'string', 'Remove artifact: ', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.016, 0.18, 0.09, 0.03],  'Callback', @stimArtifactButton, 'interruptible', 'off');
-ui.stimArtifactInput = uicontrol('Style', 'edit', 'string', '2', 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.08, 0.182, 0.016, 0.026], 'Callback', @stimArtifactLength, 'interruptible', 'off');
+ui.stimArtifactInput = uicontrol('Style', 'edit', 'string', num2str(params.actualParams.artifactLength), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.08, 0.182, 0.016, 0.026], 'Callback', @stimArtifactLength, 'interruptible', 'off');
 ui.stimArtifactText = uicontrol('Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.096, 0.182, 0.03, 0.02]);
 ui.stimArtifactText2 = uicontrol('Style', 'text', 'string', 'from', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.152, 0.02, 0.02]);
-ui.stimArtifactInput2 = uicontrol('Style', 'edit', 'string', '50', 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.042, 0.152, 0.016, 0.026], 'Callback', @stimArtifactStart, 'interruptible', 'off');
+ui.stimArtifactInput2 = uicontrol('Style', 'edit', 'string', num2str(params.actualParams.artifactStart), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.042, 0.152, 0.016, 0.026], 'Callback', @stimArtifactStart, 'interruptible', 'off');
 ui.stimArtifactText3 = uicontrol('Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.058, 0.152, 0.02, 0.02]);
 ui.stimArtifactText4 = uicontrol('Style', 'text', 'string', 'x', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.073, 0.152, 0.01, 0.02]);
-ui.stimArtifactInput3 = uicontrol('Style', 'edit', 'string', '1', 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.08, 0.152, 0.016, 0.026], 'Callback', @stimArtifactCount, 'interruptible', 'off');
+ui.stimArtifactInput3 = uicontrol('Style', 'edit', 'string', num2str(params.actualParams.artifactCount), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.08, 0.152, 0.016, 0.026], 'Callback', @stimArtifactCount, 'interruptible', 'off');
 ui.stimArtifactText5 = uicontrol('Style', 'text', 'string', 'at', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.096, 0.152, 0.03, 0.02]);
-ui.stimArtifactInput4 = uicontrol('Style', 'edit', 'string', '10', 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.105, 0.152, 0.016, 0.026], 'Callback', @stimArtifactFreq, 'interruptible', 'off');
+ui.stimArtifactInput4 = uicontrol('Style', 'edit', 'string', num2str(params.actualParams.artifactFreq), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.105, 0.152, 0.016, 0.026], 'Callback', @stimArtifactFreq, 'interruptible', 'off');
 ui.stimArtifactText6 = uicontrol('Style', 'text', 'string', '(Hz)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.121, 0.152, 0.02, 0.02]);
 %  export
 ui.exportDisplayTitle = uicontrol('Style', 'text', 'string', 'Export', 'fontweight', 'bold', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.015, 0.12, 0.09, 0.02]);
@@ -2803,6 +2803,39 @@ end
 
 
 function traceDisplayChannels(src, ~)
+
+win1 = src.Parent;
+srcButton = src;
+set(srcButton, 'enable', 'off');
+
+% load parameters
+h = guidata(win1);
+params = h.params;
+analysisParameters = h.params.actualParams;
+analysisParametersDefault = h.params.defaultParams;
+
+% options
+win2 = figure('Name', 'Channels to Display', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.55, 0.65, 0.2, 0.2], 'DeleteFcn', @winClosed); % use CloseRequestFcn?
+
+ui2.e101 = uicontrol('Parent', win2, 'Style', 'text', 'fontweight', 'bold', 'string', ' <  Axis 1', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.85, 0.4, 0.08]);
+ui2.e102 = uicontrol('Parent', win2, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.85, 0.6, 0.08]);
+ui2.e103 = uicontrol('Parent', win2, 'Style', 'text', 'fontweight', 'bold', 'string', 'Axis 2  > ', 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.525, 0.85, 0.4, 0.08]);
+ui2.e111 = uicontrol('Parent', win2, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.75, 0.4, 0.08]);
+ui2.e112 = uicontrol('Parent', win2, 'Style', 'edit', 'string', num2str(1), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.76, 0.125, 0.08], 'callback', @updateCallback);
+ui2.e113 = uicontrol('Parent', win2, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.75, 0.1, 0.08]);
+ui2.e121 = uicontrol('Parent', win2, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.75, 0.4, 0.08]);
+ui2.e122 = uicontrol('Parent', win2, 'Style', 'edit', 'string', num2str(1), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.75, 0.76, 0.125, 0.08], 'callback', @updateCallback);
+ui2.e123 = uicontrol('Parent', win2, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.75, 0.1, 0.08]);
+
+ui2.resetButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.44, 0.05, 0.25, 0.12], 'callback', @resetCallback, 'interruptible', 'off');
+ui2.saveButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Save', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.7, 0.05, 0.25, 0.12], 'callback', @saveCallback, 'interruptible', 'off');
+
+
+    function winClosed(src, ~)
+        set(srcButton, 'enable', 'on');
+        %guidata(srcButton, h); % don't save when closed without using the save button
+    end
+
 end
 
 
@@ -10923,9 +10956,10 @@ function downsamplingBoxcarButton(src, event)
 
 h = guidata(src);
 checked = event.Source.Value;
-%h.ui.downsamplingButton.Value = checked;
+besselChecked = h.ui.lowPassFilterButton.Value;
 h = downsamplingBesselAndBoxcar(h);
 h.ui.downsamplingButton.Value = checked;
+h.ui.lowPassFilterButton.Value = besselChecked;
 
 guidata(src, h);
     
@@ -10967,9 +11001,10 @@ function downsamplingBesselButton(src, event)
 
 h = guidata(src);
 checked = event.Source.Value;
-%h.ui.lowPassFilterButton.Value = checked;
+boxcarChecked = h.ui.downsamplingButton.Value;
 h = downsamplingBesselAndBoxcar(h);
 h.ui.lowPassFilterButton.Value = checked;
+h.ui.downsamplingButton.Value = boxcarChecked;
 
 guidata(src, h);
 
@@ -11022,6 +11057,29 @@ boxcarCheck = h.ui.downsamplingButton.Value;
 besselCheck = h.ui.lowPassFilterButton.Value;
 targetSignal = h.ui.traceProcessingTarget.Value;
 targetSignal = targetSignal - 1;
+
+%%{
+expIdx = h.ui.cellListDisplay.Value;
+expIdx = expIdx(1); % force single selection
+h.ui.cellListDisplay.Value = expIdx;
+
+targetSignal = h.ui.traceProcessingTarget.Value;
+targetSignal = targetSignal - 1;
+
+postprocessingNew = h.exp.data.postprocessing{expIdx};
+postprocessingTemp = postprocessingNew(targetSignal, :);
+
+boxcarLength = h.ui.downsamplingInput.String;
+boxcarLength = str2num(boxcarLength);
+postprocessingTemp(1) = boxcarLength;
+
+besselFreq = h.ui.lowPassFilterInput.String;
+besselFreq = str2num(besselFreq);
+postprocessingTemp(2) = besselFreq;
+
+postprocessingNew(targetSignal, :) = postprocessingTemp;
+h.exp.data.postprocessing{expIdx} = postprocessingNew;
+%}
 
 postprocessing = h.exp.data.postprocessing{expIdx};
 postprocessing = postprocessing(targetSignal, :);
