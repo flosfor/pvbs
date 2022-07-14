@@ -63,7 +63,7 @@
 function pvbs()
 % main window
 pvbsTitle = 'Prairie View Browsing Solution (PVBS)';
-pvbsLastMod = '2022.06.02';
+pvbsLastMod = '2022.07.14';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -82,6 +82,10 @@ h = struct();
         aboutWinText1 = uicontrol('Parent', aboutWin, 'Style', 'text', 'string', ' PVBS : "Prairie View Browsing Solution"', 'fontweight', 'bold', 'horizontalalignment', 'center', 'Units', 'normalized', 'Position', [0.05, 0.85, 0.9, 0.1]);
         aboutWinText2 = uicontrol('Parent', aboutWin, 'Style', 'text', 'string', sprintf(' "mspaint made by an unfortunate graphics designer \n who is not a programmer and used to having Photoshop" \n   \n\n v. %s \n  Designed for Prairie View %s & Matlab %s \n  (requires Statistics & Machine Learning Toolbox) \n\n (LF)  "What does PVBS stand for?" \n (JY)  "(PVBS)" \n\n', [pvbsVer, ' ', pvbsStage], fpVer, matlabVer), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.15, 0.8, 0.65]);
         aboutWinClose = uicontrol('Parent', aboutWin, 'Style', 'pushbutton', 'string', 'Che sfortuna!', 'horizontalalignment', 'center', 'backgroundcolor', [0.9, 0.9, 0.9], 'Units', 'normalized', 'Position', [0.3, 0.1, 0.4, 0.1], 'Callback', @closeAboutWin, 'interruptible', 'off');
+        try
+            set(h.ui.saveGUIButton, 'enable', 'on');
+        catch ME
+        end
         function closeAboutWin(src, ~)
             set(aboutButton, 'enable', 'on');
             delete(aboutWin);
@@ -11321,6 +11325,7 @@ expIdx = h.ui.cellListDisplay.Value;
 expIdx = expIdx(1); % force single selection
 h.ui.cellListDisplay.Value = expIdx;
 results = h.results{expIdx};
+params = h.params;
 
 % fetch plot info
 try
@@ -11364,33 +11369,51 @@ try
     end
     
     %  organize data
+    try
+        peakDirection = 2; % default to this in case it fails
+        switch winToPlot
+            case 1 % win 1
+                peakDirectionWin = h.params.actualParams.peakDirection1;
+            case 2 % win 2
+                peakDirectionWin = h.params.actualParams.peakDirection2;
+        end
+        switch peakDirectionWin % confusing af due to usual lack of foresight
+            case 1 % positive-going
+                peakDirection = 3;
+            case 0 % either direction
+                peakDirection = 2;
+            case -1 % negative-going
+                peakDirection = 1;
+        end
+    catch ME
+    end
     switch h.ui.analysisType1.Value
         case 2 % peak/area/mean
             switch analysisPlot1Menu3 % which kind of results
                 case 2
                     dataY = results1.peak;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 case 3
                     dataY = results1.area;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 case 4
                     dataY = results1.mean;
                     resultsType = 1; % only one here
                 case 5
                     dataY = results1.timeOfPeak;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 case 6
                     dataY = results1.riseTime;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 case 7
                     dataY = results1.decayTime;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 case 8
                     dataY = results1.riseSlope;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 case 9
                     dataY = results1.decaySlope;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 otherwise
                     dataY = [];
                     resultsType = 1; % whatever
@@ -11489,33 +11512,51 @@ try
     end
 
     %  organize data
+    try
+        peakDirection = 2; % default to this in case it fails
+        switch winToPlot
+            case 1 % win 1
+                peakDirectionWin = h.params.actualParams.peakDirection1;
+            case 2 % win 2
+                peakDirectionWin = h.params.actualParams.peakDirection2;
+        end
+        switch peakDirectionWin % confusing af due to usual lack of foresight
+            case 1 % positive-going
+                peakDirection = 3;
+            case 0 % either direction
+                peakDirection = 2;
+            case -1 % negative-going
+                peakDirection = 1;
+        end
+    catch ME
+    end
     switch h.ui.analysisType2.Value
         case 2 % peak/area/mean
             switch analysisPlot2Menu3 % which kind of results
                 case 2
                     dataY = results2.peak;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 case 3
                     dataY = results2.area;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 case 4
                     dataY = results2.mean;
                     resultsType = 1; % only one here
                 case 5
                     dataY = results2.timeOfPeak;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 case 6
                     dataY = results2.riseTime;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 case 7
                     dataY = results2.decayTime;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 case 8
                     dataY = results2.riseSlope;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 case 9
                     dataY = results2.decaySlope;
-                    resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                 otherwise
                     dataY = [];
                     resultsType = 1; % whatever
@@ -13995,33 +14036,51 @@ end
                 dataX = 1:length(resultsToExport.groups); % group number
         end
         
+        try
+            peakDirection = 2; % default to this in case it fails
+            switch targetWindow
+                case 1 % win 1
+                    peakDirectionWin = h.params.actualParams.peakDirection1;
+                case 2 % win 2
+                    peakDirectionWin = h.params.actualParams.peakDirection2;
+            end
+            switch peakDirectionWin % confusing af due to usual lack of foresight
+                case 1 % positive-going
+                    peakDirection = 3;
+                case 0 % either direction
+                    peakDirection = 2;
+                case -1 % negative-going
+                    peakDirection = 1;
+            end
+        catch ME
+        end
         switch targetAnalysisType
             case 2 % peak/area/mean
                 switch targetResult % which kind of results
                     case 2
                         resultsToExport = resultsToExport.peak;
-                        resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                     case 3
                         resultsToExport = resultsToExport.area;
-                        resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                     case 4
                         resultsToExport = resultsToExport.mean;
                         resultsType = 1; % only one here
                     case 5
                         resultsToExport = resultsToExport.timeOfPeak;
-                        resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                     case 6
                         resultsToExport = resultsToExport.riseTime;
-                        resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                     case 7
                         resultsToExport = resultsToExport.decayTime;
-                        resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                     case 8
                         resultsToExport = resultsToExport.riseSlope;
-                        resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                     case 9
                         resultsToExport = resultsToExport.decaySlope;
-                        resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
                     otherwise
                         resultsToExport = [];
                         resultsType = 1; % whatever
