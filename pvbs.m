@@ -13974,20 +13974,21 @@ if h.ui.exportTarget1.Value % signal 1 / window 1
             export{currentExperiment} = [];
         end
     end
-    [saveName, savePath] = exportReally(); % great name
+    idx = 1;
+    [saveName, savePath] = exportReally(idx); % great name
     
     % also save experiment file names - fuck it
     saveName2 = saveName;
     saveName2 = saveName2(1:end-4); % shedding extension (.csv)
-    saveName2 = saveName2(1:end-2); % shedding "S#" (see within exportReally())
-    saveName2 = [saveName2, 'fileNames'];
+    %saveName2 = saveName2(1:end-2); % shedding "S#" (see within exportReally())
+    saveName2 = [saveName2, '_fileNames'];
     saveName2 = [saveName2, '.csv']; % re-appending extension
     writecell(h.exp.fileName, [savePath, saveName2]);
     % also save experiment file paths - fuck it
     saveName3 = saveName;
     saveName3 = saveName3(1:end-4); % shedding extension (.csv)
-    saveName3 = saveName3(1:end-2); % shedding "S#" (see within exportReally())
-    saveName3 = [saveName3, 'filePaths'];
+    %saveName3 = saveName3(1:end-2); % shedding "S#" (see within exportReally())
+    saveName3 = [saveName3, '_filePaths'];
     saveName3 = [saveName3, '.csv']; % re-appending extension
     writecell(h.exp.filePath, [savePath, saveName3]);
 end
@@ -14012,7 +14013,8 @@ if h.ui.exportTarget2.Value % signal 2 / window 2
             export{currentExperiment} = [];
         end
     end
-    exportReally(); % great name
+    idx = 2;
+    exportReally(idx); % great name
 end
 
     function export = exportResultsMain(export, h, currentExperiment)
@@ -14112,7 +14114,7 @@ end
         export{currentExperiment} = resultsToExport; % update for current experiment
     end
 
-    function [saveName, savePath] = exportReally() %%% fuck it
+    function [saveName, savePath] = exportReally(idx) %%% fuck it
         
         % convert to cell
         maxLength = 0;
@@ -14142,10 +14144,10 @@ end
         if length(h.exp.fileName) > 1 % more than 1 experiments in dataset
             expCount = length(h.exp.fileName);
             expCount = num2str(expCount);
-            saveNameCellSuffix = ['_N', expCount, '_S', num2str(targetSignal), '_', saveNameDate];
+            saveNameCellSuffix = ['_N', expCount, '_S', num2str(targetSignal), '_R', num2str(idx), '_', saveNameDate];
             saveNameCell = [saveNameCell, saveNameCellSuffix];
         else
-            saveNameCellSuffix = ['_S', num2str(targetSignal), '_', saveNameDate];
+            saveNameCellSuffix = ['_S', num2str(targetSignal), '_R', num2str(idx), '_', saveNameDate];
             saveNameCell = [saveNameCell, saveNameCellSuffix];
         end
         %saveName = [saveNameCell, '.mat'];
