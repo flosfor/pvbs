@@ -13955,7 +13955,7 @@ end
 fprintf('Exporting results... (for ALL experiments)');
 
 if h.ui.exportTarget1.Value % signal 1 / window 1
-    targetSignal = 1;
+    targetSignal = h.ui.analysisPlot1Menu1.Value - 1; % (sel), s1, s2; hence -1
     targetWindow = h.ui.analysisPlot1Menu2.Value - 1; % (sel), win1, win2; hence -1
     switch targetWindow
         case 1 % win 1
@@ -13993,7 +13993,7 @@ if h.ui.exportTarget1.Value % signal 1 / window 1
 end
 
 if h.ui.exportTarget2.Value % signal 2 / window 2
-    targetSignal = 2;
+    targetSignal = h.ui.analysisPlot2Menu1.Value - 1; % (sel), s1, s2; hence -1
     targetWindow = h.ui.analysisPlot2Menu2.Value - 1; % (sel), win1, win2; hence -1
     switch targetWindow
         case 1 % win 1
