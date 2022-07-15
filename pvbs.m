@@ -63,7 +63,7 @@
 function pvbs()
 % main window
 pvbsTitle = 'Prairie View Browsing Solution (PVBS)';
-pvbsLastMod = '2022.07.14';
+pvbsLastMod = '2022.07.15';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -14206,6 +14206,7 @@ export.exp.filePath = h.exp.filePath;
 export.results = h.results;
 export.analysis = h.analysis;
 export.params.actualParams = h.params.actualParams;
+export.intrinsicProperties = h.exp.data.intrinsicProperties;
 
 % prompt
 fprintf('Exporting results... (for ALL experiments)');
