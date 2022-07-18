@@ -13171,7 +13171,8 @@ oWin.baselineEndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string'
 oWin.baselineEndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_baseline_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.66, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
 oWin.baselineEndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.65, 0.1, 0.05]);
 
-oWin.windowsText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Analysis windows (1: transient, 2: steady-state)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.55, 0.9, 0.05]);
+oWin.windowsText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Analysis window', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.55, 0.9, 0.05]);
+%oWin.windowsText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Analysis windows (1: transient, 2: steady-state)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.55, 0.9, 0.05]);
 oWin.window1StartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step start:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.475, 0.4, 0.05]);
 oWin.window1StartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.485, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
 oWin.window1StartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.475, 0.1, 0.05]);
