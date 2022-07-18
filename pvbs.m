@@ -11,6 +11,8 @@
 %  are correct for yours!
 % ------------------------------------------------------------------------
 %
+% Requires: Statistics & Machine Learning Toolbox
+%
 % Supported experiment types: 
 %  1) PV VoltageRecording
 %  2) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
@@ -615,6 +617,11 @@ intrinsicPropertiesAnalysis.data_segment_length = 5000; % Sweep duration (ms), s
 %  detection window; for more than 2 windows, manually set them as n*3 arrays (start, end, direction) and pass them onto functions
 intrinsicPropertiesAnalysis.window_baseline_start = 0; % (ms); baseline start - this is not for main analysis window, but for intrinsic properties!
 intrinsicPropertiesAnalysis.window_baseline_end = 2000; % (ms); baseline end
+intrinsicPropertiesAnalysis.window_n = 1; % number of detection windows (1 or 2)
+intrinsicPropertiesAnalysis.window_start = 2000; % (ms); detection window start
+intrinsicPropertiesAnalysis.window_end = 3000; % (ms); detection window end
+intrinsicPropertiesAnalysis.window_direction = 0; % (ms); detection window 1 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
+%{
 intrinsicPropertiesAnalysis.window_n = 2; % number of detection windows (1 or 2)
 intrinsicPropertiesAnalysis.window_1_start = 2000; % (ms); detection window 1 start
 intrinsicPropertiesAnalysis.window_1_end = 2250; % (ms); detection window 1 end
@@ -640,12 +647,20 @@ intrinsicPropertiesAnalysis.window_2_end = 500; % (ms); analysis window 2 end
 intrinsicPropertiesAnalysis.window_2_direction = 0; % (ms); analysis window 2 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
 %}
 %  display options
+intrinsicPropertiesAnalysis.stepStart = intrinsicPropertiesAnalysis.window_start; % defined above
+intrinsicPropertiesAnalysis.stepEnd = intrinsicPropertiesAnalysis.window_end; % defined above
+intrinsicPropertiesAnalysis.stepLength = intrinsicPropertiesAnalysis.stepEnd - intrinsicPropertiesAnalysis.stepStart;
+intrinsicPropertiesAnalysis.displayMargin = 0.25; % relative to step length
+intrinsicPropertiesAnalysis.displayStart = intrinsicPropertiesAnalysis.stepStart - intrinsicPropertiesAnalysis.displayMargin * intrinsicPropertiesAnalysis.stepLength;
+intrinsicPropertiesAnalysis.displayEnd = intrinsicPropertiesAnalysis.stepEnd + intrinsicPropertiesAnalysis.displayMargin * intrinsicPropertiesAnalysis.stepLength;
+%{
 intrinsicPropertiesAnalysis.stepStart = intrinsicPropertiesAnalysis.window_1_start; % defined above
 intrinsicPropertiesAnalysis.stepEnd = intrinsicPropertiesAnalysis.window_2_end; % defined above
 intrinsicPropertiesAnalysis.stepLength = intrinsicPropertiesAnalysis.stepEnd - intrinsicPropertiesAnalysis.stepStart;
 intrinsicPropertiesAnalysis.displayMargin = 0.25; % relative to step length
 intrinsicPropertiesAnalysis.displayStart = intrinsicPropertiesAnalysis.stepStart - intrinsicPropertiesAnalysis.displayMargin * intrinsicPropertiesAnalysis.stepLength;
 intrinsicPropertiesAnalysis.displayEnd = intrinsicPropertiesAnalysis.stepEnd + intrinsicPropertiesAnalysis.displayMargin * intrinsicPropertiesAnalysis.stepLength;
+%}
 
 end
 
@@ -9909,6 +9924,8 @@ for idx1 = 1:size(analysis_type_selected, 2) % iterate for analysis types select
             case analysis_type_list{5} % mean_and_median
                 output_temp{analysis_type_selected_idx(idx1), idx2} = analysis_mean_median(input_data, input_data_name, param_window(idx2, :), param_baseline(idx2, :));
             case analysis_type_list{6} % intrinsic_properties
+                %%% very fucked up but lazy to fix now %%% fixlater for hard-coded stuff, like signal channel or detection window
+                param_window;
                 output_temp{analysis_type_selected_idx(idx1), idx2} = oldAnalysisIntrinsic(input_data, input_data_name, param_window(idx2, :), param_baseline(idx2, :), param_data_voltage_interval);
             otherwise
                 disp(sprintf('\nfix later\n'));
@@ -9959,7 +9976,7 @@ function output = oldAnalysisIntrinsic(input_data, input_data_name, param_window
 % Round i_cmd because Dagan is stupid; will be recorded in results for safety
 %  changed to auto-detect (in multiples of 10 (pA));
 %i_cmd_step = 50; % round to a multiple of this value (pA); set to 0 to not round
-roundingfactor = 25; % auto-detect, but then again round to a multiple of this value (pA) %%%%%%%
+roundingfactor = 5; % auto-detect, but then again round to a multiple of this value (pA) %%%%%%%
 
 % Spike counting parameters - caution: will not be prompted!
 spike_trigger = 10; % (mV); cationic E_rev, loosely correcting for usual LJP
@@ -12223,13 +12240,22 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
     window_baseline_start = analysisParameters.window_baseline_start; % (ms); baseline start - this is not for main analysis window, but for intrinsic properties!
     window_baseline_end = analysisParameters.window_baseline_end; % (ms); baseline end
     window_n = analysisParameters.window_n; % number of detection windows (1 or 2)
+    window_1_start = analysisParameters.window_start; % (ms); detection window 1 start
+    window_1_end = analysisParameters.window_end; % (ms); detection window 1 end
+    window_1_direction = analysisParameters.window_direction; % (ms); detection window 1 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
+    %  below became redundant %%% fixlater
+    window_2_start = analysisParameters.window_start; % (ms); analysis window 2 start
+    window_2_end = analysisParameters.window_end; % (ms); analysis window 2 end
+    window_2_direction = analysisParameters.window_direction; % (ms); analysis window 2 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
+    %{
     window_1_start = analysisParameters.window_1_start; % (ms); detection window 1 start
     window_1_end = analysisParameters.window_1_end; % (ms); detection window 1 end
     window_1_direction = analysisParameters.window_1_direction; % (ms); detection window 1 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
     window_2_start = analysisParameters.window_2_start; % (ms); analysis window 2 start
     window_2_end = analysisParameters.window_2_end; % (ms); analysis window 2 end
     window_2_direction = analysisParameters.window_2_direction; % (ms); analysis window 2 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
- 
+    %}
+    
     % initialize data array
     data_voltage = [];
     data_voltage_episodic = {}; % cell should be easier to handle than a 4-d array
@@ -13146,24 +13172,24 @@ oWin.baselineEndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string
 oWin.baselineEndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.65, 0.1, 0.05]);
 
 oWin.windowsText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Analysis windows (1: transient, 2: steady-state)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.55, 0.9, 0.05]);
-oWin.window1StartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Window 1 start:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.475, 0.4, 0.05]);
-oWin.window1StartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_1_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.485, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
+oWin.window1StartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step start:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.475, 0.4, 0.05]);
+oWin.window1StartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.485, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
 oWin.window1StartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.475, 0.1, 0.05]);
-oWin.window1EndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Window 1 end:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.475, 0.4, 0.05]);
-oWin.window1EndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_1_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.485, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
+oWin.window1EndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step end:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.475, 0.4, 0.05]);
+oWin.window1EndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.485, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
 oWin.window1EndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.475, 0.1, 0.05]);
-
+%{
 oWin.window2StartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Window 2 start:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.4, 0.4, 0.05]);
 oWin.window2StartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_2_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.405, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
 oWin.window2StartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.4, 0.1, 0.05]);
 oWin.window2EndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Window 2 end:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.4, 0.4, 0.05]);
 oWin.window2EndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_2_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.405, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
 oWin.window2EndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.4, 0.1, 0.05]);
-
-oWin.stepLengthText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i step Length:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.325, 0.4, 0.05]);
-oWin.stepLengthInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_2_end - analysisParameters.window_1_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.335, 0.125, 0.05], 'enable', 'off');
-oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.325, 0.1, 0.05]);
-oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '[ = (Win 2 end) - (Win 1 start) ]', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.5, 0.325, 0.4, 0.05]);
+%}
+oWin.stepLengthText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step duration:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.4, 0.4, 0.05]);
+oWin.stepLengthInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_end - analysisParameters.window_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.405, 0.125, 0.05], 'enable', 'off');
+oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.4, 0.1, 0.05]);
+%oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms) [ = (Win 2 end) - (Win 1 start) ]', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.5, 0.4, 0.4, 0.05]);
 
 oWin.resetButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.425, 0.05, 0.25, 0.075], 'callback', @resetIntrinsicOptions, 'interruptible', 'off');
 oWin.saveButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Save', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.7, 0.05, 0.25, 0.075], 'callback', @saveIntrinsicOptions, 'interruptible', 'off');
@@ -13174,8 +13200,10 @@ oWinB1 = oWin.baselineStartInput.String;
 oWinB2 = oWin.baselineEndInput.String;
 oWinW11 = oWin.window1StartInput.String;
 oWinW12 = oWin.window1EndInput.String;
+%{
 oWinW21 = oWin.window2StartInput.String;
 oWinW22 = oWin.window2EndInput.String;
+%}
 
 oWinSegmentLength = str2num(oWinSegmentLength);
 oWinOffset = str2num(oWinOffset);
@@ -13183,8 +13211,10 @@ oWinB1 = str2num(oWinB1);
 oWinB2 = str2num(oWinB2);
 oWinW11 = str2num(oWinW11);
 oWinW12 = str2num(oWinW12);
+%{
 oWinW21 = str2num(oWinW21);
 oWinW22 = str2num(oWinW22);
+%}
 
     function winClosed(src, ~)
         set(srcButton, 'enable', 'on');
@@ -13198,8 +13228,10 @@ oWinW22 = str2num(oWinW22);
         oWinB2 = oWin.baselineEndInput.String;
         oWinW11 = oWin.window1StartInput.String;
         oWinW12 = oWin.window1EndInput.String;
+        %{
         oWinW21 = oWin.window2StartInput.String;
         oWinW22 = oWin.window2EndInput.String;
+        %}
         
         oWinSegmentLength = str2num(oWinSegmentLength);
         oWinOffset = str2num(oWinOffset);
@@ -13207,10 +13239,13 @@ oWinW22 = str2num(oWinW22);
         oWinB2 = str2num(oWinB2);
         oWinW11 = str2num(oWinW11);
         oWinW12 = str2num(oWinW12);
+        %{
         oWinW21 = str2num(oWinW21);
         oWinW22 = str2num(oWinW22);
+        %}
         
-        oWinStepLength = oWinW22 - oWinW11;
+        oWinStepLength = oWinW12 - oWinW11;
+        %oWinStepLength = oWinW22 - oWinW11;
         oWin.stepLengthInput.String = num2str(oWinStepLength);
         
         %{
@@ -13235,8 +13270,10 @@ oWinW22 = str2num(oWinW22);
         oWinB2 = num2str(intrinsicPropertiesAnalysis.window_baseline_end);
         oWinW11 = num2str(intrinsicPropertiesAnalysis.window_1_start);
         oWinW12 = num2str(intrinsicPropertiesAnalysis.window_1_end);
+        %{
         oWinW21 = num2str(intrinsicPropertiesAnalysis.window_2_start);
         oWinW22 = num2str(intrinsicPropertiesAnalysis.window_2_end);
+        %}
         
         oWin.segmentLengthInput.String = oWinSegmentLength;
         oWin.segmentOffsetInput.String = oWinOffset;
@@ -13244,8 +13281,10 @@ oWinW22 = str2num(oWinW22);
         oWin.baselineEndInput.String = oWinB2;
         oWin.window1StartInput.String = oWinW11;
         oWin.window1EndInput.String = oWinW12;
+        %{
         oWin.window2StartInput.String = oWinW21;
         oWin.window2EndInput.String = oWinW22;
+        %}
         
         oWinStepLength = num2str(intrinsicPropertiesAnalysis.stepLength);
         oWin.stepLengthInput.String = num2str(oWinStepLength);
@@ -13262,8 +13301,10 @@ oWinW22 = str2num(oWinW22);
         oWinB2 = oWin.baselineEndInput.String;
         oWinW11 = oWin.window1StartInput.String;
         oWinW12 = oWin.window1EndInput.String;
+        %{
         oWinW21 = oWin.window2StartInput.String;
         oWinW22 = oWin.window2EndInput.String;
+        %}
         
         oWinSegmentLength = str2num(oWinSegmentLength);
         oWinOffset = str2num(oWinOffset);
@@ -13271,28 +13312,42 @@ oWinW22 = str2num(oWinW22);
         oWinB2 = str2num(oWinB2);
         oWinW11 = str2num(oWinW11);
         oWinW12 = str2num(oWinW12);
+        %{
         oWinW21 = str2num(oWinW21);
         oWinW22 = str2num(oWinW22);
+        %}
         
-        oWinStepLength = oWinW22 - oWinW11;
+        oWinStepLength = oWinW12 - oWinW11;
+        %oWinStepLength = oWinW22 - oWinW11;
         oWin.stepLengthInput.String = num2str(oWinStepLength);
         
         h.params.actualParams.intrinsicPropertiesAnalysis.data_segment_length = oWinSegmentLength;
         h.params.actualParams.intrinsicPropertiesAnalysis.data_segmentation_cutoff_first = oWinOffset;
         h.params.actualParams.intrinsicPropertiesAnalysis.window_baseline_start = oWinB1;
         h.params.actualParams.intrinsicPropertiesAnalysis.window_baseline_end = oWinB2;
+        
+        h.params.actualParams.intrinsicPropertiesAnalysis.window_start = oWinW11;
+        h.params.actualParams.intrinsicPropertiesAnalysis.window_end = oWinW12;
+        %{
         h.params.actualParams.intrinsicPropertiesAnalysis.window_1_start = oWinW11;
         h.params.actualParams.intrinsicPropertiesAnalysis.window_1_end = oWinW12;
         h.params.actualParams.intrinsicPropertiesAnalysis.window_2_start = oWinW21;
         h.params.actualParams.intrinsicPropertiesAnalysis.window_2_end = oWinW22;
+        %}
         
         % somewhat hidden
         h.params.actualParams.intrinsicPropertiesAnalysis.stepStart = oWinW11;
-        h.params.actualParams.intrinsicPropertiesAnalysis.stepEnd = oWinW22;
-        h.params.actualParams.intrinsicPropertiesAnalysis.stepLength = oWinW22 - oWinW11;
+        h.params.actualParams.intrinsicPropertiesAnalysis.stepEnd = oWinW12;
+        %h.params.actualParams.intrinsicPropertiesAnalysis.stepEnd = oWinW22;
+        h.params.actualParams.intrinsicPropertiesAnalysis.stepLength = oWinW12 - oWinW11;
+        %h.params.actualParams.intrinsicPropertiesAnalysis.stepLength = oWinW22 - oWinW11;
         displayMargin = h.params.actualParams.intrinsicPropertiesAnalysis.displayMargin;
+        h.params.actualParams.intrinsicPropertiesAnalysis.displayStart = oWinW11 - displayMargin*(oWinW12 - oWinW11);
+        h.params.actualParams.intrinsicPropertiesAnalysis.displayEnd = oWinW12 + displayMargin*(oWinW12 - oWinW11);
+        %{
         h.params.actualParams.intrinsicPropertiesAnalysis.displayStart = oWinW11 - displayMargin*(oWinW22 - oWinW11);
         h.params.actualParams.intrinsicPropertiesAnalysis.displayEnd = oWinW22 + displayMargin*(oWinW22 - oWinW11);
+        %}
         
         guidata(win1, h);
         close(optionsWin);
@@ -17275,4 +17330,3 @@ end
 
 
 %% ----------
-
