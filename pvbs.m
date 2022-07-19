@@ -65,7 +65,7 @@
 function pvbs()
 % main window
 pvbsTitle = 'Prairie View Browsing Solution (PVBS)';
-pvbsLastMod = '2022.07.18';
+pvbsLastMod = '2022.07.19';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -378,6 +378,8 @@ ui.intrinsicPlot1 = axes('Units', 'Normalized', 'Position', [0.19, 0.05, 0.11, 0
 ui.intrinsicPlot2 = axes('Units', 'Normalized', 'Position', [0.325, 0.19, 0.1, 0.09], 'xminortick', 'on', 'yminortick', 'on');
 ui.intrinsicPlot3 = axes('Units', 'Normalized', 'Position', [0.325, 0.05, 0.1, 0.09], 'xminortick', 'on', 'yminortick', 'on');
 ui.intrinsicPlot1Enlarge = uicontrol('Style', 'pushbutton', 'String', '+', 'Units', 'normalized', 'Position', [0.288, 0.254, 0.012, 0.024], 'Callback', @intrinsicPlot1Enlarge, 'interruptible', 'off');
+ui.intrinsicPlot2Enlarge = uicontrol('Style', 'pushbutton', 'String', '+', 'Units', 'normalized', 'Position', [0.413, 0.254, 0.012, 0.024], 'Callback', @intrinsicPlot2Enlarge, 'interruptible', 'off');
+ui.intrinsicPlot3Enlarge = uicontrol('Style', 'pushbutton', 'String', '+', 'Units', 'normalized', 'Position', [0.413, 0.114, 0.012, 0.024], 'Callback', @intrinsicPlot3Enlarge, 'interruptible', 'off');
 ui.intrinsicRMP = uicontrol('Style', 'text', 'string', '', 'backgroundcolor', 'w', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.2425, 0.235, 0.055, 0.02]);
 ui.intrinsicRin = uicontrol('Style', 'text', 'string', '', 'backgroundcolor', 'w', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.2425, 0.215, 0.055, 0.02]);
 ui.intrinsicSag = uicontrol('Style', 'text', 'string', '', 'backgroundcolor', 'w', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.2425, 0.195, 0.055, 0.02]);
@@ -13404,6 +13406,100 @@ hold off;
 %xlabel('t (s)'); xticks(0:10000:1000000); xticklabels(0:10:1000); % x ticks in 10 s up to 1000 s
 %xlabel('t (ms)'); xticks(0:500:1000000); xticklabels(0:500:1000000); % x ticks in 500 ms up to 1000000 ms
 ylabel('V_m (mV)');
+yticks(-1000:10:1000);
+set(displayWindow, 'xminortick', 'on', 'yminortick', 'on');
+
+end
+
+
+function intrinsicPlot2Enlarge(src, ~)
+
+h = guidata(src);
+
+win = src.Parent;
+if isempty(h.ui.cellListDisplay.String)
+    return
+end
+currentExperiment = h.ui.cellListDisplay.Value;
+currentExperiment = currentExperiment(1); % force single selection
+h.ui.cellListDisplay.Value = currentExperiment;
+intrinsicProperties = h.exp.data.intrinsicProperties{currentExperiment};
+i_v = intrinsicProperties.i_v;
+newWinTitle = h.exp.data.intrinsicPropertiesFileName{currentExperiment};
+try
+    newWin = figure('name', newWinTitle, 'numbertitle', 'off', 'color', 'w', 'units', 'normalized', 'position', [0.25, 0.25, 0.5, 0.5]);
+catch ME
+    return
+end
+newAxes = axes('parent', newWin, 'position', [0.15, 0.15, 0.75, 0.75], 'units', 'normalized');
+
+displayParams = h.params.actualParams.intrinsicPropertiesAnalysis;
+voltage_signal_channel = displayParams.voltage_signal_channel;
+data_segment_length = displayParams.data_segment_length;
+data_voltage_interval = displayParams.data_voltage_interval;
+
+axes(newAxes);
+displayWindow = newAxes;
+hold on;
+plot(i_v(:,1), i_v(:,2), 'parent', displayWindow, 'color', [0.5, 0.5, 0.5]); % trace_episodic_color was for this
+%set(displayWindow, 'XLim', [displayParams.displayStart, displayParams.displayEnd]);
+xlabel('i (pA)'); 
+%xticks(displayParams.stepStart:500:displayParams.stepStart+100000); xticklabels(-100:0.5:1000); % x ticks in 0.5 s up to 1000 s
+hold off;
+%xlabel('t (ms)'); xticks(0:10:1000000); xticklabels(0:10:1000000); % x ticks in 10 ms up to 1000000 ms
+%xlabel('t (ms)'); xticks(0:100:1000000); xticklabels(0:100:1000000); % x ticks in 100 ms up to 1000000 ms
+%xlabel('t (s)'); xticks(0:500:1000000); xticklabels(0:0.5:1000); % x ticks in 0.5 s up to 1000 s
+%xlabel('t (s)'); xticks(0:1000:1000000); xticklabels(0:1:1000); % x ticks in 1 s up to 1000 s
+%xlabel('t (s)'); xticks(0:10000:1000000); xticklabels(0:10:1000); % x ticks in 10 s up to 1000 s
+%xlabel('t (ms)'); xticks(0:500:1000000); xticklabels(0:500:1000000); % x ticks in 500 ms up to 1000000 ms
+ylabel('dV (mV)');
+yticks(-1000:10:1000);
+set(displayWindow, 'xminortick', 'on', 'yminortick', 'on');
+
+end
+
+
+function intrinsicPlot3Enlarge(src, ~)
+
+h = guidata(src);
+
+win = src.Parent;
+if isempty(h.ui.cellListDisplay.String)
+    return
+end
+currentExperiment = h.ui.cellListDisplay.Value;
+currentExperiment = currentExperiment(1); % force single selection
+h.ui.cellListDisplay.Value = currentExperiment;
+intrinsicProperties = h.exp.data.intrinsicProperties{currentExperiment};
+f_i = intrinsicProperties.f_i;
+newWinTitle = h.exp.data.intrinsicPropertiesFileName{currentExperiment};
+try
+    newWin = figure('name', newWinTitle, 'numbertitle', 'off', 'color', 'w', 'units', 'normalized', 'position', [0.25, 0.25, 0.5, 0.5]);
+catch ME
+    return
+end
+newAxes = axes('parent', newWin, 'position', [0.15, 0.15, 0.75, 0.75], 'units', 'normalized');
+
+displayParams = h.params.actualParams.intrinsicPropertiesAnalysis;
+voltage_signal_channel = displayParams.voltage_signal_channel;
+data_segment_length = displayParams.data_segment_length;
+data_voltage_interval = displayParams.data_voltage_interval;
+
+axes(newAxes);
+displayWindow = newAxes;
+hold on;
+plot(f_i(:,1), f_i(:,2), 'parent', displayWindow, 'color', [0.5, 0.5, 0.5]); % trace_episodic_color was for this
+%set(displayWindow, 'XLim', [displayParams.displayStart, displayParams.displayEnd]);
+xlabel('i (pA)'); 
+%xticks(displayParams.stepStart:500:displayParams.stepStart+100000); xticklabels(-100:0.5:1000); % x ticks in 0.5 s up to 1000 s
+hold off;
+%xlabel('t (ms)'); xticks(0:10:1000000); xticklabels(0:10:1000000); % x ticks in 10 ms up to 1000000 ms
+%xlabel('t (ms)'); xticks(0:100:1000000); xticklabels(0:100:1000000); % x ticks in 100 ms up to 1000000 ms
+%xlabel('t (s)'); xticks(0:500:1000000); xticklabels(0:0.5:1000); % x ticks in 0.5 s up to 1000 s
+%xlabel('t (s)'); xticks(0:1000:1000000); xticklabels(0:1:1000); % x ticks in 1 s up to 1000 s
+%xlabel('t (s)'); xticks(0:10000:1000000); xticklabels(0:10:1000); % x ticks in 10 s up to 1000 s
+%xlabel('t (ms)'); xticks(0:500:1000000); xticklabels(0:500:1000000); % x ticks in 500 ms up to 1000000 ms
+ylabel('f (Hz)');
 yticks(-1000:10:1000);
 set(displayWindow, 'xminortick', 'on', 'yminortick', 'on');
 
