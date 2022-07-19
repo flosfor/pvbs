@@ -4,14 +4,14 @@
 % Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 %
 %
+% Requires: Statistics & Machine Learning Toolbox
+%
 % -------------------------- <!> Important <!> ---------------------------
 %  See function setDefaultParams() or use the "Import Settings" button on 
 %  the GUI for default import parameters, e.g. DAC gain, input channels, 
 %  etc.; these can easily be different across setups, so make sure they 
-%  are correct for yours!
+%  are correct for yours _before_ importing data!
 % ------------------------------------------------------------------------
-%
-% Requires: Statistics & Machine Learning Toolbox
 %
 % Supported experiment types: 
 %  1) PV VoltageRecording
@@ -460,8 +460,8 @@ h = guidata(win);
 % gain settings
 %  below are set for MC700B with Rf = 500 MO and usual gain settings for whole-cell recordings, in combination with PV
 %  reminder: these are dependent on both acquisition hardware and software settings; make sure they are correct!
-pvbsVoltageScalingFactor = 100; % (mV/V); 
-pvbsCurrentScalingFactor = 2000; % (pA/V); 
+pvbsVoltageScalingFactor = 100; % (mV/V); % 100 for P-IV (MIT MIBR 46-6178) and Rigs 1 & 2 (46-6190)
+pvbsCurrentScalingFactor = 2000; % (pA/V); % 2000 for P-IV (MIT MIBR 46-6178), or 10000 for Rigs 1 & 2 (46-6190) - 2022-07-19 JY
 
 % PVBS software conventions
 %  below are set for single channel recording of V and i (in that order)
