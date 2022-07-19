@@ -13371,10 +13371,10 @@ end
 currentExperiment = h.ui.cellListDisplay.Value;
 currentExperiment = currentExperiment(1); % force single selection
 h.ui.cellListDisplay.Value = currentExperiment;
-intrinsicProperties = h.exp.data.intrinsicProperties{currentExperiment};
-data_voltage_cycle_episodic = h.exp.data.intrinsicPropertiesVRec{currentExperiment};
-newWinTitle = h.exp.data.intrinsicPropertiesFileName{currentExperiment};
 try
+    intrinsicProperties = h.exp.data.intrinsicProperties{currentExperiment};
+    data_voltage_cycle_episodic = h.exp.data.intrinsicPropertiesVRec{currentExperiment};
+    newWinTitle = h.exp.data.intrinsicPropertiesFileName{currentExperiment};
     newWin = figure('name', newWinTitle, 'numbertitle', 'off', 'color', 'w', 'units', 'normalized', 'position', [0.25, 0.25, 0.5, 0.5]);
 catch ME
     return
@@ -13423,10 +13423,10 @@ end
 currentExperiment = h.ui.cellListDisplay.Value;
 currentExperiment = currentExperiment(1); % force single selection
 h.ui.cellListDisplay.Value = currentExperiment;
-intrinsicProperties = h.exp.data.intrinsicProperties{currentExperiment};
-i_v = intrinsicProperties.i_v;
-newWinTitle = h.exp.data.intrinsicPropertiesFileName{currentExperiment};
 try
+    intrinsicProperties = h.exp.data.intrinsicProperties{currentExperiment};
+    i_v = intrinsicProperties.i_v;
+    newWinTitle = h.exp.data.intrinsicPropertiesFileName{currentExperiment};
     newWin = figure('name', newWinTitle, 'numbertitle', 'off', 'color', 'w', 'units', 'normalized', 'position', [0.25, 0.25, 0.5, 0.5]);
 catch ME
     return
@@ -13470,10 +13470,10 @@ end
 currentExperiment = h.ui.cellListDisplay.Value;
 currentExperiment = currentExperiment(1); % force single selection
 h.ui.cellListDisplay.Value = currentExperiment;
-intrinsicProperties = h.exp.data.intrinsicProperties{currentExperiment};
-f_i = intrinsicProperties.f_i;
-newWinTitle = h.exp.data.intrinsicPropertiesFileName{currentExperiment};
 try
+    intrinsicProperties = h.exp.data.intrinsicProperties{currentExperiment};
+    f_i = intrinsicProperties.f_i;
+    newWinTitle = h.exp.data.intrinsicPropertiesFileName{currentExperiment};
     newWin = figure('name', newWinTitle, 'numbertitle', 'off', 'color', 'w', 'units', 'normalized', 'position', [0.25, 0.25, 0.5, 0.5]);
 catch ME
     return
