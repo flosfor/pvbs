@@ -65,7 +65,7 @@
 function pvbs()
 % main window
 pvbsTitle = 'Prairie View Browsing Solution (PVBS)';
-pvbsLastMod = '2022.07.19';
+pvbsLastMod = '2022.07.30';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -105,8 +105,8 @@ params.defaultParams = defaultParams; % store separately for access (e.g. to rev
 % default parameters that can be hard-coded without much concern
 %params.defaultParams = struct(); % moved up
 params.analysisBaseline = [27, 44]; % baseline window; NB. choose ~ 16.67 ms to average out 60 Hz noise
-params.analysisWindow1 = [52, 152]; % analysis window 1
-params.analysisWindow2 = [60, 200]; % analysis window 2
+params.analysisWindow1 = [52, 202]; % analysis window 1
+params.analysisWindow2 = [60, 210]; % analysis window 2
 %params.analysisTargetList = {'(Target)', 'All Groups', 'Selected Groups', 'All Sweeps', 'Selected Sweeps'};
 %{
 params.analysisOptionList11 = {'(Dir.)', '+/-', '+', '-'};
@@ -528,7 +528,7 @@ artifactCount = 1;
 artifactFreq = 10; % (Hz)
 
 % sweep segmentation
-segmentationLength = 100; % segment length (ms)
+segmentationLength = 200; % segment length (ms)
 segmentationOffset = 0; % segmentation initial offset (ms)
 segmentationTruncate = 1; % truncate remainder (0: no, 1: yes)
 segmentationCount = 0; % keep only this many segments and discard the rest (0 to disable)
@@ -692,7 +692,7 @@ oWin.t122 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(a
 oWin.t123 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(pA/V)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.88, 0.1, 0.04]);
 
 oWin.t201 = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', '.CSV import', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.825, 0.9, 0.04]);
-oWin.t202 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(NB.  Settings overridden when directly importing .csv (instead of via PV metadata .xml),  _if_  "Columns represent sweeps" is checked)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.125, 0.825, 0.85, 0.04]);
+oWin.t202 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(NB.  Settings overridden when directly*  importing .csv (instead of via PV metadata .xml),  if*  "Columns represent sweeps" is checked)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.125, 0.825, 0.85, 0.04]);
 oWin.t211 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Row offset:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.78, 0.4, 0.04]);
 oWin.t212 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.csvOffsetRow), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.7875, 0.125, 0.04], 'callback', @updateParams);
 oWin.t213 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.78, 0.1, 0.04]);
@@ -1851,6 +1851,10 @@ end
 % group sweeps automatically
 groupIdx2 = 1;
 if sweeps == 1
+    %{
+    groupIdx{1} = 1;
+    groupStr{1} = '1';
+    %}
     groupIdx{1} = 1;
     groupStr{1} = '1';
 else
@@ -1915,6 +1919,10 @@ else
             catch ME
             end
     end
+end
+%%% no group means no group - another workaround amongst hundreds
+if isempty(groupStr)
+    groupIdx = [];
 end
 
 % update experiment count and cell list
@@ -7771,7 +7779,7 @@ end
             elseif length(uncExpectedTemp) > length(uncMeasuredTemp) % probably because not all units were used, checked upstream
                 uncExpectedTemp = uncExpectedTemp(1:length(uncMeasuredTemp))
             else % no
-                errorString = sprintf('Error: group count in measured experiment exceeds unit count - check experiment pairs');
+                errorString = sprintf('Error: group count in measured experiment exceeds unit count - check experiment pairs (%s)', num2str(i));
                 error(errorString);
             end
             
