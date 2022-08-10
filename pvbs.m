@@ -65,7 +65,7 @@
 function pvbs()
 % main window
 pvbsTitle = 'Prairie View Browsing Solution (PVBS)';
-pvbsLastMod = '2022.07.30';
+pvbsLastMod = '2022.08.10';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -203,8 +203,9 @@ analysis = struct();
 % UI elements
 %  experiment list
 ui.experimentTitle = uicontrol('Style', 'text', 'string', 'Experiments', 'fontweight', 'bold', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.015, 0.955, 0.09, 0.02]);
-ui.saveMatButton = uicontrol('Style', 'pushbutton', 'String', 'Save Dataset (.mat)', 'backgroundcolor', [0.875, 0.875, 0.9], 'Units', 'normalized', 'Position', [0.015, 0.92, 0.121, 0.03], 'Callback', @saveMat, 'interruptible', 'off');
-ui.loadMatButton = uicontrol('Style', 'pushbutton', 'String', 'Load Dataset (.mat)', 'backgroundcolor', [0.875, 0.875, 0.9], 'Units', 'normalized', 'Position', [0.015, 0.89, 0.121, 0.03], 'Callback', @loadMat, 'interruptible', 'off');
+ui.newMatButton = uicontrol('Style', 'pushbutton', 'visible', 'off', 'String', 'New Dataset', 'backgroundcolor', [0.875, 0.875, 0.9], 'Units', 'normalized', 'Position', [0.015, 0.92, 0.121, 0.03], 'Callback', @newMat, 'interruptible', 'off');
+ui.loadMatButton = uicontrol('Style', 'pushbutton', 'String', 'Load Dataset (.mat)', 'backgroundcolor', [0.875, 0.875, 0.9], 'Units', 'normalized', 'Position', [0.015, 0.92, 0.121, 0.03], 'Callback', @loadMat, 'interruptible', 'off');
+ui.saveMatButton = uicontrol('Style', 'pushbutton', 'String', 'Save Dataset (.mat)', 'backgroundcolor', [0.875, 0.875, 0.9], 'Units', 'normalized', 'Position', [0.015, 0.89, 0.121, 0.03], 'Callback', @saveMat, 'interruptible', 'off');
 ui.saveGUIButton = uicontrol('Style', 'pushbutton', 'enable', 'off', 'String', 'Save GUI for Debugging (.mat)', 'backgroundcolor', [0.875, 0.875, 0.9], 'Units', 'normalized', 'Position', [0, 0, 0.0025, 0.005], 'Callback', @saveGUI, 'interruptible', 'off');
 ui.defaultSettingsButton = uicontrol('Style', 'pushbutton', 'String', 'Import Settings', 'backgroundcolor', [0.875, 0.875, 0.9], 'Units', 'normalized', 'Position', [0.015, 0.84, 0.121, 0.03], 'Callback', @defaultSettingsCallback, 'interruptible', 'off');
 ui.loadExpButton = uicontrol('Style', 'pushbutton', 'String', 'Load Experiment (.xml, .csv)', 'backgroundcolor', [0.85, 0.85, 0.95], 'Units', 'normalized', 'Position', [0.015, 0.81, 0.121, 0.03], 'Callback', @loadExp, 'interruptible', 'off'); % will be used for both vRec or tSer
@@ -1107,8 +1108,338 @@ end
 end
 
 
+function newMat(src, ~)
+% clear data in GUI
+
+% load
+h = guidata(src);
+
+% clear...
+% data structure
+exp.experimentCount = 0;
+exp.metadata = {}; % cell for tSeries metadata files
+%  below are for easier access without having to dig into metadata
+exp.fileName = {}; % file name
+exp.filePath = {}; % file path
+exp.sweeps = {}; % total sweep count for each tSeries
+%  actual data
+data.VRec = {}; % VRec (.csv)
+data.VRecOriginal = {}; % VRec (.csv), to preserve original in case of postprocessing - again real lack of foresight
+data.VRecMetadata = {}; % metadata for each VRec (.xml)
+data.VOut = {}; % VOut (.xml) - may have to omit due to PVBS insanity in formatting these
+data.VOutName = {}; % VRec experiment type (e.g. "single stim") - VOut name will work most of the time
+%data.lineScanMetadata = {}; % metadata for each LScn (.xml) - obsolete, linescans don't have separate metadata per cycle
+data.lineScan = {}; % LScn (.tiff)
+data.lineScanDFF = {}; % LScn dF/F
+data.lineScanDFFOriginal = {}; % LScn dF/F, to preserve original in case of postprocessing - again real lack of foresight
+data.lineScanF = {}; % LScn F
+data.lineScanFChannel = {}; % LScn channel used for F, dF/F
+data.lineScanROI = {}; % LScn ROI
+data.lineScanBaseline = {}; % LScn baseline period (time)
+data.lineScanCSV = {}; % LScn profile (.csv)
+data.postprocessing = {}; % postprocessing info (e.g. downsampling)
+data.artifactRemoval = {}; % artifact removal info
+data.markPointsIdx = {}; % indices for MkPts
+data.markPointsMetadata = {}; % MkPts metadata (.xml)
+data.intrinsicProperties = {}; % intrinsic properties, analyzed from file below
+data.intrinsicPropertiesVRec = {}; % intrinsic properties VRec (.csv)
+data.intrinsicPropertiesVRecMetadata = {}; % metadata for intrinsic properties VRec (.xml)
+data.intrinsicPropertiesFileName = {}; % file path and name for intrinsic properties
+data.zStack = {}; % z-stack
+data.zStackFileName = {}; % file path and name for z-stack
+data.singleScan = {}; % single-scan image
+data.singleScanFileName = {}; % file path and name for single-scan
+data.sweepIdx = {}; % sweep indices
+data.sweepStr = {}; % sweep strings for display
+data.groupIdx = {}; % sweep grouping indices
+data.groupStr = {}; % sweep grouping indices in string format for display
+data.notes = {}; % notes
+exp.data = data; % meta-struct for VRec data
+% analysis results
+results = {};
+% more analysis results - another unplanned mess "resulting" in more of really stupid naming and structuring
+analysis = struct();
+% gui elements
+%%% fixlater
+
+% save
+guidata(src, h);
+
+end
+
+
 function loadMat(src, ~)
-% import dataset from previously exported .mat
+% import dataset from previously exported .mat and appeend to current dataset
+
+% start stopwatch
+tic;
+
+% load
+h = guidata(src);
+win = src.Parent;
+
+% import cell data from a previously saved .mat file
+fprintf('Loading... ');
+[fName, fPath] = uigetfile({'*.mat', 'PVBS dataset'});
+if ~isempty(fName)
+    fprintf('(%s%s) ', fPath, fName);
+end
+
+% check if a file was loaded
+if fName ~= 0
+    dataset = load([fPath, fName]);
+    hNew = dataset.h; % "h" will be the name of the top level struct
+    experimentCountAdditional = hNew.exp.experimentCount;
+    h.exp.experimentCount = h.exp.experimentCount + hNew.exp.experimentCount;
+    for i = 1:experimentCountAdditional
+        % h.exp
+        h.exp.metadata{end + 1} = hNew.exp.metadata{i};
+        h.exp.fileName{end + 1} = hNew.exp.fileName{i};
+        h.exp.filePath{end + 1} = hNew.exp.filePath{i};
+        h.exp.sweeps{end + 1} = hNew.exp.sweeps{i};
+        % h.exp.data
+        h.exp.data.VRec{end + 1} = hNew.exp.data.VRec{i};
+        h.exp.data.VRecOriginal{end + 1} = hNew.exp.data.VRecOriginal{i};
+        h.exp.data.VRecMetadata{end + 1} = hNew.exp.data.VRecMetadata{i};
+        h.exp.data.VOut{end + 1} = hNew.exp.data.VOut{i};
+        h.exp.data.VOutName{end + 1} = hNew.exp.data.VOutName{i};
+        h.exp.data.lineScan{end + 1} = hNew.exp.data.lineScan{i};
+        h.exp.data.lineScanDFF{end + 1} = hNew.exp.data.lineScanDFF{i};
+        h.exp.data.lineScanDFFOriginal{end + 1} = hNew.exp.data.lineScanDFFOriginal{i};
+        h.exp.data.lineScanF{end + 1} = hNew.exp.data.lineScanF{i};
+        h.exp.data.lineScanFChannel{end + 1} = hNew.exp.data.lineScanFChannel{i};
+        h.exp.data.lineScanROI{end + 1} = hNew.exp.data.lineScanROI{i};
+        h.exp.data.lineScanBaseline{end + 1} = hNew.exp.data.lineScanBaseline{i};
+        h.exp.data.lineScanCSV{end + 1} = hNew.exp.data.lineScanCSV{i};
+        h.exp.data.postprocessing{end + 1} = hNew.exp.data.postprocessing{i};
+        h.exp.data.artifactRemoval{end + 1} = hNew.exp.data.artifactRemoval{i};
+        h.exp.data.markPointsIdx{end + 1} = hNew.exp.data.markPointsIdx{i};
+        h.exp.data.markPointsMetadata{end + 1} = hNew.exp.data.markPointsMetadata{i};
+        h.exp.data.intrinsicProperties{end + 1} = hNew.exp.data.intrinsicProperties{i};
+        h.exp.data.intrinsicPropertiesVRec{end + 1} = hNew.exp.data.intrinsicPropertiesVRec{i};
+        h.exp.data.intrinsicPropertiesVRecMetadata{end + 1} = hNew.exp.data.intrinsicPropertiesVRecMetadata{i};
+        h.exp.data.intrinsicPropertiesFileName{end + 1} = hNew.exp.data.intrinsicPropertiesFileName{i};
+        h.exp.data.zStack{end + 1} = hNew.exp.data.zStack{i};
+        h.exp.data.zStackFileName{end + 1} = hNew.exp.data.zStackFileName{i};
+        h.exp.data.singleScan{end + 1} = hNew.exp.data.singleScan{i};
+        h.exp.data.singleScanFileName{end + 1} = hNew.exp.data.singleScanFileName{i};
+        h.exp.data.sweepIdx{end + 1} = hNew.exp.data.sweepIdx{i};
+        h.exp.data.sweepStr{end + 1} = hNew.exp.data.sweepStr{i};
+        h.exp.data.groupIdx{end + 1} = hNew.exp.data.groupIdx{i};
+        h.exp.data.groupStr{end + 1} = hNew.exp.data.groupStr{i};
+        h.exp.data.notes{end + 1} = hNew.exp.data.notes{i};
+        % h.results
+        h.results{end + 1} = hNew.results{i};
+        % h.analysis %%% fixlater and also see below
+        % h.params - leave as is
+        % h.ui - leave as is, except...
+        h.ui.cellList{end + 1} = hNew.ui.cellList{i};
+    end
+    h.ui.cellListDisplay.String = h.ui.cellList; % not to be confused here
+        
+    %%% fixlater
+    if isempty(fieldnames(h.analysis))
+        h.analysis = hNew.analysis;
+    end
+
+    h = cellListClick2(h, 1); % select 1st entry by default - unfortunate, but has to select something to update trace display
+    
+    %{
+    h.exp = hNew.exp;
+    h.results = hNew.results;
+    h.analysis = hNew.analysis;
+    h.params = hNew.params;
+    h.ui.cellList = hNew.ui.cellList;
+    h.ui.cellListDisplay.String = h.ui.cellList;
+    h.ui.cellListDisplay.Value = 1;
+    h = cellListClick2(h, 1); % select 1st entry by default
+    %}
+else
+    fprintf('\ncanceled.\n\n');
+    return
+end
+
+% ugh...
+try % ... to display results
+    
+    resultsTempGrp = h.results{1}.VRec.groupResults;
+    resultsTemp2Grp = h.results{1}.dff.groupResults;
+    
+    %  plot 1: by default, display Vm, win 1, peak, by group, for current experiment
+    targetPlot = h.ui.analysisPlot1; % plot 1
+    winToPlot = 1; % analysis window 1
+    peakDirToPlot = h.params.actualParams.peakDirection1;
+    switch peakDirToPlot % converting to column indices for old code
+        case -1 % negative
+            peakDirToPlot = 1;
+        case 0 % absolute
+            peakDirToPlot = 2;
+        case 1 % positive
+            peakDirToPlot = 3;
+        otherwise
+            peakDirToPlot = 2; % default to absolute if not available
+    end
+    dataX = 1:length(resultsTempGrp.groups); % group number - will plot by groups
+    dataY = resultsTempGrp.peak; % grouped results, peak
+    dataY = dataY(winToPlot, :); % analysis window 1
+    dataYNew = nan(length(dataY), 1); % initialize
+    for i = 1:length(dataY)
+        dataYi = dataY{i}; % current sweep/group
+        if isempty(dataYi)
+            dataYi = NaN;
+        else
+            dataYi = dataYi(peakDirToPlot);
+        end
+        dataYNew(i) = dataYi; % update
+    end
+    dataY = dataYNew; % update
+    axes(targetPlot);
+    hold on;
+    color = [0, 0, 0];
+    targetPlot = displayResults(targetPlot, dataX, dataY, color);
+    set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
+    hold off;
+    xlabel('Group #');
+    ylabel('PSP (mV)');
+    %xticks(0:5:10000);
+    %%{
+    if nanmax(dataY) > 40
+        ylim([0, 40.5]);
+        %yticks(-1000:10:1000);
+    elseif nanmax(dataY) > 10
+        ylim([0, nanmax(dataY) + 0.5]);
+        %yticks(-1000:5:1000);
+    else
+        ylim([0, 10.5]);
+        %yticks(-1000:2:1000);
+    end
+    %}
+    set(gca, 'xminortick', 'on', 'yminortick', 'on');
+    h.ui.analysisPlot1 = targetPlot;
+    params.resultsPlot1YRange = targetPlot.YLim;
+    h.ui.analysisPlot1Menu1.Value = 2; % voltage
+    h.ui.analysisPlot1Menu2.Value = 2; % window 1
+    %h.ui.analysisPlot1Menu3.Value = 1; % results - will update later
+    h.ui.analysisPlot1Menu4.Value = 3; % by group
+    
+    %  plot 2: by default, display dF/F, win 2, peak, by group, for current experiment
+    try
+        targetPlot = h.ui.analysisPlot2; % plot 2
+        winToPlot = 2; % analysis window 2
+        peakDirToPlot = h.params.actualParams.peakDirection2;
+        switch peakDirToPlot % converting to column indices for old code
+            case -1 % negative
+                peakDirToPlot = 1;
+            case 0 % absolute
+                peakDirToPlot = 2;
+            case 1 % positive
+                peakDirToPlot = 3;
+            otherwise
+                peakDirToPlot = 2; % default to absolute if not available
+        end
+        dataX = 1:length(resultsTemp2Grp.groups); % group number - will plot by groups
+        dataY = resultsTemp2Grp.peak; % grouped results, peak
+        dataY = dataY(winToPlot, :); % analysis window 2
+        dataYNew = nan(length(dataY), 1); % initialize
+        %%%
+        %%%%%%%
+        % data grouping not fucking working properly - why???
+        %%%%%%% the fuck happened here? was it fixed? (2022-05-03)
+        for i = 1:length(dataY)
+            dataYi = dataY{i}; % current sweep/group
+            if isempty(dataYi)
+                dataYi = NaN;
+            else
+                dataYi = dataYi(peakDirToPlot);
+            end
+            dataYNew(i) = dataYi; % update
+        end
+        dataY = dataYNew; % update
+        axes(targetPlot);
+        hold on;
+        color = [0, 0.5, 0];
+        targetPlot = displayResults(targetPlot, dataX, dataY, color);
+        set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
+        hold off;
+        xlabel('Group #');
+        ylabel('dF/F');
+        %xticks(0:5:10000);
+        %{
+    if max(dataY) > 4
+        ylim([-0.5, max(dataY) + 0.5]);
+        yticks(-10:1:100);
+    else
+        ylim([-0.5, 4.5]);
+        yticks(-10:1:100);
+    end
+        %}
+        set(gca, 'xminortick', 'on', 'yminortick', 'on');
+        h.ui.analysisPlot2 = targetPlot;
+        params.resultsPlot2YRange = targetPlot.YLim;
+        h.ui.analysisPlot2Menu1.Value = 3; % fluorescence
+        h.ui.analysisPlot2Menu2.Value = 3; % window 2
+        %h.ui.analysisPlot2Menu3.Value = 1; % results - will update later
+        h.ui.analysisPlot2Menu4.Value = 3; % by group
+    catch ME
+        %ME
+    end
+    
+    % which results to plot
+    try
+        switch h.ui.analysisType1.Value % analysis type for window 1
+            case 1 % unselected
+            case 2 % peak/area/mean
+                switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
+                    case 1 % unselected
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    case 2 % window 1
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                        h.ui.analysisPlot1Menu3.Value = 2; % default to peak
+                    case 3 % window 2
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                end
+                %%% below not available yet
+            case 3 % threshold detection
+            case 4 % waveform
+        end
+    catch ME
+    end
+    try
+        switch h.ui.analysisType2.Value % analysis type for window 2
+            case 1 % unselected
+            case 2 % peak/area/mean
+                switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
+                    case 1 % unselected
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    case 2 % window 1
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    case 3 % window 2
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                        h.ui.analysisPlot2Menu3.Value = 2; % default to peak
+                end
+                %%% below not available yet
+            case 3 % threshold detection
+            case 4 % waveform
+        end
+    catch ME
+    end
+    
+catch ME
+end
+
+% save
+guidata(src, h);
+
+% print results
+elapsedTime = toc;
+fprintf('\nImport complete. (elapsed time: %.2f s) \n\n', elapsedTime);
+
+end
+
+
+
+function loadMatNew(src, ~)
+% import dataset from previously exported .mat and discard current dataset
 
 % start stopwatch
 tic;
@@ -1515,6 +1846,7 @@ else
 end
 groupIdx = {}; % groupIdx = {cell(sweeps, 1)};
 groupStr = {};
+
 notes = {};
 
 postprocessing = [h.params.actualParams.boxcarLength1, h.params.actualParams.besselFreq1, h.params.actualParams.besselOrder1];
@@ -2094,6 +2426,8 @@ lineScanCSVFile = {cell(sweeps, 1)};
 lineScanCSV = {cell(sweeps, 1)};
 lineScanFChannel = {cell(sweeps, 1)};
 lineScanROI = {cell(sweeps, 1)};
+postprocessing = [];
+artifactRemoval = [];
 markPointsMetadata = {cell(sweeps, 1)};
 markPointsIdx = {cell(sweeps, 1)};
 intrinsicProperties = struct(); % struct, not cell
@@ -2118,6 +2452,11 @@ if sweeps == 1 % just for convenience if there's only one sweep
     groupIdx{end + 1} = 1;
     groupStr{end + 1} = '1';
 end
+
+notes = {};
+
+postprocessing = [h.params.actualParams.boxcarLength1, h.params.actualParams.besselFreq1, h.params.actualParams.besselOrder1];
+postprocessing = [postprocessing; [h.params.actualParams.boxcarLength2, h.params.actualParams.besselFreq2, h.params.actualParams.besselOrder2]];
 
 % fill sweeps
 if csvColumnsAsSweeps
@@ -2169,6 +2508,8 @@ data.lineScanCSV{end + 1} = lineScanCSV;
 data.lineScanFChannel{end + 1} = lineScanFChannel;
 data.lineScanROI{end + 1} = lineScanROI;
 data.lineScanBaseline{end + 1} = lineScanBaseline;
+data.postprocessing{end + 1} = postprocessing;
+data.artifactRemoval{end + 1} = artifactRemoval;
 data.markPointsMetadata{end + 1} = markPointsMetadata;
 data.markPointsIdx{end + 1} = markPointsIdx;
 data.intrinsicProperties{end + 1} = intrinsicProperties;
