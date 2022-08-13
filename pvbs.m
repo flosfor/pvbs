@@ -65,7 +65,7 @@
 function pvbs()
 % main window
 pvbsTitle = 'Prairie View Browsing Solution (PVBS)';
-pvbsLastMod = '2022.08.10';
+pvbsLastMod = '2022.08.13';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -2524,6 +2524,7 @@ data.sweepIdx{end + 1} = sweepIdx;
 data.sweepStr{end + 1} = sweepStr;
 data.groupIdx{end + 1} = groupIdx;
 data.groupStr{end + 1} = groupStr;
+data.notes{end + 1} = notes;
 experiment.data = data;
 h.exp = experiment;
 h.results = results;
