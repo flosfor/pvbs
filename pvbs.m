@@ -59,11 +59,19 @@
 %
 %
 %
+%
+%
+%
+%
+%
+%
 %%
 
 
 function pvbs()
 % main window
+
+% version
 pvbsTitle = 'Prairie View Browsing Solution (PVBS)';
 pvbsLastMod = '2022.08.14';
 pvbsStage = '(b)';
