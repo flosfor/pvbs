@@ -65,7 +65,7 @@
 function pvbs()
 % main window
 pvbsTitle = 'Prairie View Browsing Solution (PVBS)';
-pvbsLastMod = '2022.08.13';
+pvbsLastMod = '2022.08.14';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -1211,8 +1211,19 @@ if fName ~= 0
         h.exp.data.lineScanROI{end + 1} = hNew.exp.data.lineScanROI{i};
         h.exp.data.lineScanBaseline{end + 1} = hNew.exp.data.lineScanBaseline{i};
         h.exp.data.lineScanCSV{end + 1} = hNew.exp.data.lineScanCSV{i};
-        h.exp.data.postprocessing{end + 1} = hNew.exp.data.postprocessing{i};
-        h.exp.data.artifactRemoval{end + 1} = hNew.exp.data.artifactRemoval{i};
+        try
+            h.exp.data.postprocessing{end + 1} = hNew.exp.data.postprocessing{i};
+        catch ME
+            postprocessingNew = [h.params.actualParams.boxcarLength1, h.params.actualParams.besselFreq1, h.params.actualParams.besselOrder1];
+            postprocessingNew = [postprocessingNew; [h.params.actualParams.boxcarLength2, h.params.actualParams.besselFreq2, h.params.actualParams.besselOrder2]];
+            h.exp.data.postprocessing{end + 1} = postprocessingNew;
+        end
+        try
+            h.exp.data.artifactRemoval{end + 1} = hNew.exp.data.artifactRemoval{i};
+        catch ME
+            artifactRemovalNew = [];
+            h.exp.data.artifactRemoval{end + 1} = artifactRemovalNew;
+        end
         h.exp.data.markPointsIdx{end + 1} = hNew.exp.data.markPointsIdx{i};
         h.exp.data.markPointsMetadata{end + 1} = hNew.exp.data.markPointsMetadata{i};
         h.exp.data.intrinsicProperties{end + 1} = hNew.exp.data.intrinsicProperties{i};
@@ -1227,7 +1238,12 @@ if fName ~= 0
         h.exp.data.sweepStr{end + 1} = hNew.exp.data.sweepStr{i};
         h.exp.data.groupIdx{end + 1} = hNew.exp.data.groupIdx{i};
         h.exp.data.groupStr{end + 1} = hNew.exp.data.groupStr{i};
-        h.exp.data.notes{end + 1} = hNew.exp.data.notes{i};
+        try
+            h.exp.data.notes{end + 1} = hNew.exp.data.notes{i};
+        catch ME
+            notesNew = {};
+            h.exp.data.notes{end + 1} = notesNew;
+        end
         % h.results
         h.results{end + 1} = hNew.results{i};
         % h.analysis %%% fixlater and also see below
