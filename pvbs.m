@@ -73,7 +73,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'Prairie View Browsing Solution (PVBS)';
-pvbsLastMod = '2022.08.14';
+pvbsLastMod = '2022.08.23';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -8101,12 +8101,17 @@ end
                         uncExpectedTemp = uncExpected{i};
                         uncExpectedTempTemp = uncUnitSize2Temp; % initializing to the shorter one
                         uncUnitSize2Idx = [1, cumsum(uncUnitSize2Temp)]; % will be used below as index
-                        for j = 1:length(uncExpectedTempTemp) %%% wtf
-                            %try
+                        for j = 1:length(uncExpectedTempTemp) %%%
+                            %%% will fail when encountering a unit - measured experiment pair having nonmatching number of groups,
+                            %%% can be ignored by uncommenting the following try catch block
+                            %%% (not recommended, but for quick and dirty troubleshooting)
+                            %{
+                            try
                             uncExpectedTempTemp(j) = sum(uncExpectedTemp(uncUnitSize2Idx(j):uncUnitSize2Idx(j + 1)));
-                            %catch ME
-                            %    [i, j]
-                            %end
+                            catch ME
+                                [i, j]
+                            end
+                            %}
                         end
                         uncExpected{i} = uncExpectedTempTemp;
                     end
@@ -9898,6 +9903,12 @@ for j = 2:size(windows, 1)
             peakNeg = min(0, peakNeg); % negative-going
         end
         % compare absolute values - will be used later
+        if isempty(peakPos) && isempty(peakNeg) %%% fixlater % this can happen with invalid analysis window
+            peakAbsFlag = 0;
+            peakAbs = NaN;
+            peakPos = NaN;
+            peakNeg = NaN;
+        else
         if isnan(peakPos) && isnan(peakNeg) % both NaN
             peakAbsFlag = 0;
             peakAbs = NaN;
@@ -9911,6 +9922,7 @@ for j = 2:size(windows, 1)
             else % negative-going peak has larger absolute value
                 peakAbsFlag = -1;
             end
+        end
         end
         if peakAbsFlag == 0
         else
