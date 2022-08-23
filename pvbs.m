@@ -72,7 +72,7 @@ function pvbs()
 % main window
 
 % version
-pvbsTitle = 'Prairie View Browsing Solution (PVBS)';
+pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
 pvbsLastMod = '2022.08.23';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
