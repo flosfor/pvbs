@@ -5266,7 +5266,11 @@ try
 catch ME
 end
 
-if length(vRecSwpFirst) == 1800000 % 90 s @ 20 kHz, which is what I use for i-V
+if length(vRecSwpFirst) == 1800000 % 90 s @ 20 kHz, which is what I'm using for i-V %%% lots and lots of junk data thanks to PV
+    segmentationLength = 5000; % segment length (ms)
+elseif length(vRecSwpFirst) == 3600000 % 180 s @ 20 kHz, which is what I'm using for longer i-V
+    segmentationLength = 5000; % segment length (ms)
+elseif length(vRecSwpFirst) == 2400000 % 120 s @ 20 kHz, which I don't even remember if I'm using
     segmentationLength = 5000; % segment length (ms)
 elseif length(vRecSwpFirst) == 1200000 % 60 s @ 20 kHz, which is what I used for quick i-V
     segmentationLength = 1000; % segment length (ms)
