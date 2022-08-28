@@ -65,9 +65,9 @@
 %  point. Hence, it is inevitably very far from effcient at all, but it 
 %  will still provide at least some basic means to browse through and 
 %  analyze data acquired with PV, which are unfortunately absent from
-%  the original software despite the difficulties of accessing those data
-%  in a comprehensible form. This code was conceptually influenced by Axon 
-%  pClamp.
+%  the original software despite the difficulties associated with 
+%  accessing those data in a comprehensible form. This code was 
+%  conceptually influenced by Axon pClamp.
 %
 %
 %
