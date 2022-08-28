@@ -4,7 +4,7 @@
 % Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 %
 %
-% Requires: Statistics & Machine Learning Toolbox
+% * Requires: Statistics & Machine Learning Toolbox
 %
 % -------------------------- <!> Important <!> ---------------------------
 %  See function setDefaultParams() or use the "Import Settings" button on 
@@ -13,31 +13,42 @@
 %  are correct for yours _before_ importing data!
 % ------------------------------------------------------------------------
 %
+%
 % Supported experiment types: 
 %  1) PV VoltageRecording
 %  2) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
 %  3) PV T-Series (of VoltageRecording experiments)
 %  4) Any data in .CSV format
-%     (When importing .CSV directly and not through PV metadata .XML, and 
-%      columns are defined as sweeps, code will tacitly assume that values 
-%      are in correct units (ms, mV, pA), represent voltage (see below), 
-%      without row or column offset, and include timestamp at column 1; 
-%      this is to avoid possible confusion caused by differences in .CSV 
+%
+%     (When importing .CSV directly and not through PV metadata .XML, 
+%      PVBS.m will tacitly assume the following:
+%      - column 1 represents timestamp,
+%      - columns represent sweeps (except for column 1),
+%      - values are in units of ms, mV, pA,
+%      - signals represent voltage by default (see below)
+%
+%      This is to avoid possible confusion caused by differences in .CSV 
 %      formatting conventions used by PV (scaled, gap-free) vs. others, 
-%      such as .CSV exported from PVBS (unscaled, episodic). See function 
-%      loadCSVMain() for the settings override, including defaulting to 
-%      interpret values as current instead of voltage; see also variable 
-%      "csvColumnsAsSweeps" in function setDefaultParmas(). Parameters in 
-%      "Import Settings" represent those used for importing .CSV saved
-%      from PV by loading them via metadata .XML (in which case columns 
-%      will not be considered as sweeps regardless of csvColumnsAsSweeps, 
-%      since PV data will always be in gap-free format))
+%      such as the .CSV exported from PVBS itself (unscaled, episodic). 
+%
+%      See function loadCSVMain() for settings, such as defaulting to 
+%      interpret values as current (pA) instead of voltage (mV). See also 
+%      variable "csvColumnsAsSweeps" in function setDefaultParams(). 
+%
+%      Parameters in "Import Settings" represent those used for importing 
+%      .CSV files saved from PV itself (not PVBS.m) when loading them via 
+%      their metadata .XML (wherein columns will not be considered as 
+%      sweeps regardless of csvColumnsAsSweeps, as a single data file from
+%      PV would always assume gap-free format))
+%
 %
 % NB.
-%  Electrophysiology-related labels and parameters assume by default iC 
-%  and positive peaks (e.g. EPSP), but are fully compatible with either 
-%  iC or VC, and peaks with any direction.
+%  Electrophysiology-related labels and parameters assume by default 
+%  current-clamp experiments and positive direction for peak detection 
+%  (e.g. EPSP), but are fully compatible with either current-clamp or
+%  voltage-clamp, or peaks in any direction.
 %  "If you only knew the power of the dark side... [of patch clamp]"
+%
 %
 % Features underway for future versions:
 %  - Artifact removal
@@ -53,8 +64,10 @@
 %  becoming a novice; even the variable naming convention changed at some 
 %  point. Hence, it is inevitably very far from effcient at all, but it 
 %  will still provide at least some basic means to browse through and 
-%  analyze data acquired with PV. This code was conceptually influenced by 
-%  Axon pClamp.
+%  analyze data acquired with PV, which are unfortunately absent from
+%  the original software despite the difficulties of accessing those data
+%  in a comprehensible form. This code was conceptually influenced by Axon 
+%  pClamp.
 %
 %
 %
@@ -73,7 +86,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.08.23';
+pvbsLastMod = '2022.08.28';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
