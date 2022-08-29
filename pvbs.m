@@ -86,7 +86,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.08.28';
+pvbsLastMod = '2022.08.29';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -13443,8 +13443,12 @@ if iscell(data_voltage_original)
     if length(data_voltage_original) == 1
         data_voltage_original = data_voltage_original{1};
     else
+        data_voltage_original = data_voltage_original(1); % use 1st sweep
+        data_voltage_original = data_voltage_original{1}; % mind the brackets
+        %{
         set(src, 'enable', 'on');
         error('Error: data has to be in single-sweep, gap-free format');
+        %}
     end
 else % let go, use the force
 end
