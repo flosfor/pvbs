@@ -86,7 +86,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.08.29';
+pvbsLastMod = '2022.08.31';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -13351,8 +13351,8 @@ hold on;
 % improve aesthetics and also how "hold on" is repeated for every sweep
 % just plot the first and the 2*rheo for now
 %for idx = 1:data_segment_count
-for idx = [1, resultsIntrinsicProperties{expIdx}.rheobase_x2_sweep]
-%for idx = [1, resultsIntrinsicProperties{expIdx}.rheobase_sweep]
+%for idx = [1, resultsIntrinsicProperties{expIdx}.rheobase_x2_sweep]
+for idx = [1, resultsIntrinsicProperties{expIdx}.rheobase_sweep]
     %plot(data_voltage_cycle_episodic(:,1,idx), data_voltage_cycle_episodic(:,1+voltage_signal_channel,idx), 'parent', displayWindow, 'color', [0.5, 0.5, 0.5]); % trace_episodic_color was for this
     plot(data_voltage_cycle_episodic(:,1,idx), data_voltage_cycle_episodic(:,1+voltage_signal_channel,idx), 'parent', h.ui.intrinsicPlot1, 'color', [0.5, 0.5, 0.5]); % trace_episodic_color was for this
 end
