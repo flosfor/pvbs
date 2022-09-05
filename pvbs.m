@@ -29,7 +29,7 @@
 %
 %      This is to avoid possible confusion caused by differences in .CSV 
 %      formatting conventions used by PV (scaled, gap-free) vs. others, 
-%      such as the .CSV exported from PVBS itself (unscaled, episodic). 
+%      such as the .CSV exported from PVBS.m itself (unscaled, episodic). 
 %
 %      See function loadCSVMain() for settings, such as defaulting to 
 %      interpret values as current (pA) instead of voltage (mV). See also 
@@ -62,7 +62,7 @@
 %
 %  This code was written since I was a complete beginner until eventually 
 %  becoming a novice; even the variable naming convention changed at some 
-%  point. Hence, it is inevitably very far from effcient at all, but it 
+%  point. Hence, it is inevitably very far from efficient at all, but it 
 %  will still provide at least some basic means to browse through and 
 %  analyze data acquired with PV, which are unfortunately absent from
 %  the original software despite the difficulties associated with 
@@ -86,7 +86,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.09.01';
+pvbsLastMod = '2022.09.05';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -185,7 +185,7 @@ exp.sweeps = {}; % total sweep count for each tSeries
 data.VRec = {}; % VRec (.csv)
 data.VRecOriginal = {}; % VRec (.csv), to preserve original in case of postprocessing - again real lack of foresight
 data.VRecMetadata = {}; % metadata for each VRec (.xml)
-data.VOut = {}; % VOut (.xml) - may have to omit due to PVBS insanity in formatting these
+data.VOut = {}; % VOut (.xml) - may have to omit due to PV insanity in formatting these
 data.VOutName = {}; % VRec experiment type (e.g. "single stim") - VOut name will work most of the time
 %data.lineScanMetadata = {}; % metadata for each LScn (.xml) - obsolete, linescans don't have separate metadata per cycle
 data.lineScan = {}; % LScn (.tiff)
@@ -485,7 +485,7 @@ h = guidata(win);
 pvbsVoltageScalingFactor = 100; % (mV/V); % 100 for P-IV (MIT MIBR 46-6178) and Rigs 1 & 2 (46-6190)
 pvbsCurrentScalingFactor = 2000; % (pA/V); % 2000 for P-IV (MIT MIBR 46-6178), or 10000 for Rigs 1 & 2 (46-6190) - 2022-07-19 JY
 
-% PVBS software conventions
+% PV software conventions
 %  below are set for single channel recording of V and i (in that order)
 %  multiple-channel support pending %%%
 timeColumn = 1; % column 1: timestamp
@@ -525,8 +525,8 @@ lineScanBackgroundThreshold = -0; % (s.d.); z-score for 2nd quartile
 lineScanColorMapRange = 1; % saturate displayed intensity for signals above this percentage of maximum
 offloadMarkPointsMetadata = 0; % delete markpoints metadata after retrieving point indices to save space (0: no, 1: yes)
 
-% PVBS hardware error correction
-%  PVBS GPIO box (DAC) can quite unbelievably have bleedthrough across channels, 
+% PV hardware error correction
+%  Prairie (now Bruker) GPIO box (DAC) can quite unbelievably have bleedthrough across channels, 
 %  which has to be corrected if present; otherwise, it could lead to introducing 
 %  "phantom" DC offset error in data...
 %  - DO NOT use if recordings DO have intentional baseline DC injection at the beginning!
@@ -619,7 +619,7 @@ end
 function intrinsicPropertiesAnalysis = setDefaultParamsIntrinsic(intrinsicPropertiesAnalysis, intrinsicPropertiesAnalysisInput)
 % separated for access from elsewhere
 
-% legacy
+% relics
 pvbsVoltageScalingFactor = intrinsicPropertiesAnalysisInput(1);
 pvbsCurrentScalingFactor = intrinsicPropertiesAnalysisInput(2);
 pvbsCurrentCorrectionFlag = intrinsicPropertiesAnalysisInput(3);
@@ -627,7 +627,7 @@ pvbsCurrentCorrectionFlag = intrinsicPropertiesAnalysisInput(3);
 % actual stuff
 intrinsicPropertiesAnalysis.v_rec_gain = pvbsVoltageScalingFactor; % gain for V, defined above
 intrinsicPropertiesAnalysis.i_cmd_gain = pvbsCurrentScalingFactor; % gain for i, defined above
-intrinsicPropertiesAnalysis.voltage_signal_channel = 1; % V_m channel, from PVBS (NB. defined differently above as .csv comlumn index)
+intrinsicPropertiesAnalysis.voltage_signal_channel = 1; % V_m channel, from PV (NB. defined differently above as .csv comlumn index)
 intrinsicPropertiesAnalysis.data_length_unit = 100; % (ms); truncate data to a nice multiple of this (e.g. 17919 ms -> 17900 ms)
 intrinsicPropertiesAnalysis.data_voltage_samplingrate = 20; % (kHz); sampling rate (e.g. 20 kHz = 20 points/ms)
 intrinsicPropertiesAnalysis.data_voltage_interval = 1/intrinsicPropertiesAnalysis.data_voltage_samplingrate; % (ms); data point interval (e.g. 20 kHz = 20 points/ms)
@@ -637,7 +637,7 @@ intrinsicPropertiesAnalysis.i_bsln_correction_window = 10; % GPIO error correcti
 %%{
 %  segmentation (episodic transformation)
 intrinsicPropertiesAnalysis.data_segmentation_cutoff_first = 0; % (ms); discard this length of data at the beginning
-intrinsicPropertiesAnalysis.data_segment_length = 5000; % Sweep duration (ms), synonymous with inter-sweep interval because of absolutely stupid gap-free PVBS
+intrinsicPropertiesAnalysis.data_segment_length = 5000; % Sweep duration (ms), synonymous with inter-sweep interval because of absolutely stupid gap-free PV
 %  detection window; for more than 2 windows, manually set them as n*3 arrays (start, end, direction) and pass them onto functions
 intrinsicPropertiesAnalysis.window_baseline_start = 0; % (ms); baseline start - this is not for main analysis window, but for intrinsic properties!
 intrinsicPropertiesAnalysis.window_baseline_end = 2000; % (ms); baseline end
@@ -658,7 +658,7 @@ intrinsicPropertiesAnalysis.window_2_direction = 0; % (ms); analysis window 2 di
 %{
 %  segmentation (episodic transformation)
 intrinsicPropertiesAnalysis.data_segmentation_cutoff_first = 0; % (ms); discard this length of data at the beginning
-intrinsicPropertiesAnalysis.data_segment_length = 1000; % Sweep duration (ms), synonymous with inter-sweep interval because of absolutely stupid gap-free PVBS
+intrinsicPropertiesAnalysis.data_segment_length = 1000; % Sweep duration (ms), synonymous with inter-sweep interval because of absolutely stupid gap-free PV
 %  detection window; for more than 2 windows, manually set them as n*3 arrays (start, end, direction) and pass them onto functions
 intrinsicPropertiesAnalysis.window_baseline_start = 0; % (ms); baseline start - this is not for main analysis window, but for intrinsic properties!
 intrinsicPropertiesAnalysis.window_baseline_end = 250; % (ms); baseline end
@@ -1147,7 +1147,7 @@ exp.sweeps = {}; % total sweep count for each tSeries
 data.VRec = {}; % VRec (.csv)
 data.VRecOriginal = {}; % VRec (.csv), to preserve original in case of postprocessing - again real lack of foresight
 data.VRecMetadata = {}; % metadata for each VRec (.xml)
-data.VOut = {}; % VOut (.xml) - may have to omit due to PVBS insanity in formatting these
+data.VOut = {}; % VOut (.xml) - may have to omit due to PV insanity in formatting these
 data.VOutName = {}; % VRec experiment type (e.g. "single stim") - VOut name will work most of the time
 %data.lineScanMetadata = {}; % metadata for each LScn (.xml) - obsolete, linescans don't have separate metadata per cycle
 data.lineScan = {}; % LScn (.tiff)
@@ -1770,8 +1770,8 @@ end
 function h = loadExpMain(h, fPath, fName, actualParams)
 % load each experiment - VRec, LScn, or tSer (of VRec)
 
-%  because PVBS records data in its own units, data must be scaled appropriately
-%  hard-coding here, instead of digging again into insane PVBS metadata
+%  because PV records data in its own units, data must be scaled appropriately
+%  hard-coding here, instead of digging again into insane PV metadata
 %  below are set for MC700B with Rf = 500 MO and usual gain settings for whole-cell recordings
 pvbsVoltageScalingFactor = actualParams.pvbsVoltageScalingFactor; % "100 mV" to mV
 pvbsCurrentScalingFactor = actualParams.pvbsCurrentScalingFactor; % "0.1 nA" to pA
@@ -1789,7 +1789,7 @@ lineScanROISmoothing = actualParams.lineScanDownsamplingFactor; % will average o
 lineScanROIThreshold = actualParams.lineScanROIThreshold; % (s.d.); z-score for 1st quartile
 lineScanBackgroundThreshold = actualParams.lineScanBackgroundThreshold; % (s.d.); z-score for 67th percentile
 offloadMarkPointsMetadata = actualParams.offloadMarkPointsMetadata; % delete markpoints metadata after retrieving point indices to save space (0: no, 1: yes)
-% PVBS GPIO box can quite unbelievably also introduce current measurement error
+% PV GPIO box can quite unbelievably also introduce current measurement error
 %  via bleedthrough across channels, which has to be corrected if present
 %  otherwise, there will be "phantom" DC injection present in data
 %  DO NOT use if recordings DO have intentional baseline DC injection at the beginning!
@@ -1889,7 +1889,7 @@ notes = {};
 postprocessing = [h.params.actualParams.boxcarLength1, h.params.actualParams.besselFreq1, h.params.actualParams.besselOrder1];
 postprocessing = [postprocessing; [h.params.actualParams.boxcarLength2, h.params.actualParams.besselFreq2, h.params.actualParams.besselOrder2]];
 
-if sweeps == 1 % this has to be separated because if sweep == 1, "Sequence" (in PVBS metadata) becomes a struct rather than a cell by xml2struct
+if sweeps == 1 % this has to be separated because if sweep == 1, "Sequence" (in PV metadata) becomes a struct rather than a cell by xml2struct
     VRecMetadata{1} = {metadata.PVScan.Sequence.VoltageRecording.Attributes.configurationFile}; % mind the curly braces on RHS
     VRecFile = metadata.PVScan.Sequence.VoltageRecording.Attributes.dataFile;
     VRecTemp = csvread([fPath, VRecFile], csvOffsetRow, csvOffsetColumn); % offset row by 1 ("time(ms), input 0, input 1"), and column by 0
@@ -1898,7 +1898,7 @@ if sweeps == 1 % this has to be separated because if sweep == 1, "Sequence" (in 
     VRecTemp(:, pvbsCurrentColumn) = VRecTemp(:, pvbsCurrentColumn)*pvbsCurrentScalingFactor;
     pvbsCurrentCorrectionAmount = nanmean(VRecTemp(1:pvbsCurrentCorrectionDataPoints, pvbsCurrentColumn));
     VRecTemp(:, pvbsCurrentColumn) = VRecTemp(:, pvbsCurrentColumn) - pvbsCurrentCorrectionFlag * pvbsCurrentCorrectionAmount;
-    % - end of PVBS correction -
+    % - end of PV correction -
             VRecOriginalTemp = VRecTemp;
             try
                 if logical(h.params.actualParams.besselFreq1) % do bessel first before boxcar if applicable, although menu order is backwards - another stupid me doing stupid things
@@ -1965,7 +1965,7 @@ if sweeps == 1 % this has to be separated because if sweep == 1, "Sequence" (in 
     end
     try
         % Applicable if the loaded .xml is a linescan
-        %  columns 1, 2, 3, 4 in the astounding PVBS metadata: framePeriod, linesPerFrame, pixelsPerLine, scanLinePeriod
+        %  columns 1, 2, 3, 4 in the astounding PV metadata: framePeriod, linesPerFrame, pixelsPerLine, scanLinePeriod
         %  i.e. 1 = 2*3*4, but 2 & 3 can be inferred from data
         %  unit is (s)
         lineScanChannelUsed = lineScanChannel;
@@ -2042,7 +2042,7 @@ else
         VRecTemp(:, pvbsCurrentColumn) = VRecTemp(:, pvbsCurrentColumn)*pvbsCurrentScalingFactor;
         pvbsCurrentCorrectionAmount = nanmean(VRecTemp(1:pvbsCurrentCorrectionDataPoints, pvbsCurrentColumn));
         VRecTemp(:, pvbsCurrentColumn) = VRecTemp(:, pvbsCurrentColumn) - pvbsCurrentCorrectionFlag * pvbsCurrentCorrectionAmount;
-        % - end of PVBS correction -
+        % - end of PV correction -
         VRecOriginalTemp = VRecTemp;
         try
             if logical(h.params.actualParams.besselFreq1)
@@ -2109,7 +2109,7 @@ else
         end
         try
             % Applicable if the loaded .xml is a linescan
-            %  columns 1, 2, 3, 4 in the astounding PVBS metadata: framePeriod, linesPerFrame, pixelsPerLine, scanLinePeriod
+            %  columns 1, 2, 3, 4 in the astounding PV metadata: framePeriod, linesPerFrame, pixelsPerLine, scanLinePeriod
             %  i.e. 1 = 2*3*4, but 2 & 3 can be inferred from data
             %  unit is (s)
             framePeriodIdx = 1;
@@ -2207,7 +2207,7 @@ try
 catch ME
 end
 
-% load one representative branch image for linescans %%% shockingly, PVBS LScn metadata doesn't have reference image information
+% load one representative branch image for linescans %%% shockingly, PV LScn metadata doesn't have reference image information
 %{
         try
             singleScanDisplay = h.ui.singleScanDisplay;
@@ -2354,8 +2354,8 @@ function h = loadCSV(h, fPath, fName, actualParams)
 % modified loadExpMain() for VRec (.csv)
 % currently treating all .csv as V, not F %%% fixlater ?
 
-%  because PVBS records data in its own units, data must be scaled appropriately
-%  hard-coding here, instead of digging again into insane PVBS metadata
+%  because PV records data in its own units, data must be scaled appropriately
+%  hard-coding here, instead of digging again into insane PV metadata
 %  below are set for MC700B with Rf = 500 MO and usual gain settings for whole-cell recordings
 pvbsVoltageScalingFactor = actualParams.pvbsVoltageScalingFactor; % "100 mV" to mV
 pvbsCurrentScalingFactor = actualParams.pvbsCurrentScalingFactor; % "0.1 nA" to pA
@@ -2373,7 +2373,7 @@ lineScanROISmoothing = actualParams.lineScanDownsamplingFactor; % will average o
 lineScanROIThreshold = actualParams.lineScanROIThreshold; % (s.d.); z-score for 1st quartile
 lineScanBackgroundThreshold = actualParams.lineScanBackgroundThreshold; % (s.d.); z-score for 67th percentile
 offloadMarkPointsMetadata = actualParams.offloadMarkPointsMetadata; % delete markpoints metadata after retrieving point indices to save space (0: no, 1: yes)
-% PVBS GPIO box can quite unbelievably also introduce current measurement error
+% PV GPIO box can quite unbelievably also introduce current measurement error
 %  via bleedthrough across channels, which has to be corrected if present
 %  otherwise, there will be "phantom" DC injection present in data
 %  DO NOT use if recordings DO have intentional baseline DC injection at the beginning!
@@ -2417,7 +2417,7 @@ if csvColumnsAsSweeps
         nonTimeColumn = 1:sweeps;
         nonTimeColumn = nonTimeColumn(nonTimeColumn ~= timeColumn);
     end
-    %  pvbs bleedthrough correction
+    %  pv bleedthrough correction
     if pvbsVoltageColumn ~= 0
         if pvbsCurrentColumn == 0 % just adding for possible future use of the next else block
             VRecTemp(:, nonTimeColumn) = VRecTemp(:, nonTimeColumn)*pvbsVoltageScalingFactor;
@@ -2433,7 +2433,7 @@ if csvColumnsAsSweeps
     end
 else
     sweeps = 1; % gap-free
-    %  pvbs bleedthrough correction
+    %  pv bleedthrough correction
     VRecTemp(:, pvbsVoltageColumn) = VRecTemp(:, pvbsVoltageColumn)*pvbsVoltageScalingFactor;
     VRecTemp(:, pvbsCurrentColumn) = VRecTemp(:, pvbsCurrentColumn)*pvbsCurrentScalingFactor;
     pvbsCurrentCorrectionAmount = nanmean(VRecTemp(1:pvbsCurrentCorrectionDataPoints, pvbsCurrentColumn));
@@ -2519,7 +2519,7 @@ VRecTemp(:, pvbsVoltageColumn) = VRecTemp(:, pvbsVoltageColumn)*pvbsVoltageScali
 VRecTemp(:, pvbsCurrentColumn) = VRecTemp(:, pvbsCurrentColumn)*pvbsCurrentScalingFactor;
 pvbsCurrentCorrectionAmount = nanmean(VRecTemp(1:pvbsCurrentCorrectionDataPoints, pvbsCurrentColumn));
 VRecTemp(:, pvbsCurrentColumn) = VRecTemp(:, pvbsCurrentColumn) - pvbsCurrentCorrectionFlag * pvbsCurrentCorrectionAmount;
-% - end of PVBS correction -
+% - end of PV correction -
 VRec = VRecTemp;
 VRecOriginal = VRecTemp;
 VOutName = [];
@@ -10464,7 +10464,7 @@ i_v_sweeps = find(spike_count == 0);
 if max(spike_count) == 0 % following code will not work properly if all sweeps were subthreshold
     i_v_sweeps = i_v_sweeps(1:9); % very arbitrary and annoying, but 9 should usually do in this case
 else
-    i_v_sweeps = i_v_sweeps(i_v_sweeps < min(find(spike_count > 0))); % discard discontinuous later sweeps (will be either due to inactivation or from dummy sweeps from PVBS gap-free recording)
+    i_v_sweeps = i_v_sweeps(i_v_sweeps < min(find(spike_count > 0))); % discard discontinuous later sweeps (will be either due to inactivation or from dummy sweeps from PV gap-free recording)
 end
 % Peak (no direction bias)
 for idx1 = i_v_sweeps(1):i_v_sweeps(end)
@@ -12618,9 +12618,9 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
 
     analysisParameters = h.params.actualParams.intrinsicPropertiesAnalysis;
 
-    % Unit conversion for V_rec (unit for raw numbers: 10 nV for Dagan - PVBS)
+    % Unit conversion for V_rec (unit for raw numbers: 10 nV for Dagan - PV)
     v_rec_gain = analysisParameters.v_rec_gain; % to convert to mV - NB. also useful to know when using ClampFit
-    % Unit conversion for i_cmd (unit for raw numbers: 10 nA for Dagan - PVBS)
+    % Unit conversion for i_cmd (unit for raw numbers: 10 nA for Dagan - PV)
     i_cmd_gain = analysisParameters.i_cmd_gain; % to convert to pA (10 for nA) - NB. also useful to know when using ClampFit
 
     if flagScalingOverride % lol
@@ -12629,16 +12629,16 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
     end
     
     % data processing %%% allow access and edit from main window later
-    voltage_signal_channel = analysisParameters.voltage_signal_channel; % V_m acquisition channel, from PVBS
+    voltage_signal_channel = analysisParameters.voltage_signal_channel; % V_m acquisition channel, from PV
     data_segmentation_cutoff_first = analysisParameters.data_segmentation_cutoff_first; % (ms); discard this length of data at the beginning
-    data_segment_length = analysisParameters.data_segment_length; % Sweep duration (ms), synonymous with inter-sweep interval because of absolutely stupid gap-free PVBS
+    data_segment_length = analysisParameters.data_segment_length; % Sweep duration (ms), synonymous with inter-sweep interval because of absolutely stupid gap-free PV
     data_length_unit = analysisParameters.data_length_unit; % (ms); truncate data to a nice multiple of this (e.g. 17078 ms -> 17070 ms)
     data_voltage_samplingrate = analysisParameters.data_voltage_samplingrate; % (kHz); sampling rate, after reduction: (e.g. 10 kHz = 10 points/ms)
     data_voltage_interval = analysisParameters.data_voltage_interval; % (ms)
     
-    % correction for phantom (i.e. cosmetic) current offset error produced by PVBS GPIO box
+    % correction for phantom (i.e. cosmetic) current offset error produced by PV GPIO box
     % this works by subtracting average current at the beginning, thus i_cmd (t = 0) must be 0 during recording!
-    i_bsln_correction = analysisParameters.i_bsln_correction; % (0: no, 1: yes) PVBS GPIO box bleedthrough correction
+    i_bsln_correction = analysisParameters.i_bsln_correction; % (0: no, 1: yes) PV GPIO box bleedthrough correction
     i_bsln_correction_window = analysisParameters.i_bsln_correction_window; % (ms); this should do
     
     % detection window; for more than 2 windows, manually set them as n*3 arrays (start, end, direction) and pass them onto functions
@@ -12699,7 +12699,7 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
     end
     data_voltage_cycle = data_voltage_new;
     
-    % correct for cosmetic error produced by PVBS GPIO box 
+    % correct for cosmetic error produced by PV GPIO box 
     %%%%%%% i is going away here!!!
     if i_bsln_correction == 1 %%% is it worth it to avoid using if?
         i_bsln_correction_value = nanmean(data_voltage_cycle(1:i_bsln_correction_window*data_voltage_samplingrate, 2));
@@ -12719,7 +12719,7 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
     clear v_rec_gain i_cmd_gain;
 
 
-    % Segmentation of moronic gap-free PVBS data into episodic-like form
+    % Segmentation of moronic gap-free PV data into episodic-like form
     %data_segment_length = size(data_voltage_cycle, 1); % un-comment this to default to no segmentation
     %if h.experiment.voltageRecording.analysisParameters.cyclesTotal == 1 || cycleCurrent == 1
         %{
@@ -13042,9 +13042,9 @@ function h = intrinsicAnalysis2(h, data_voltage_episodic, flagScalingOverride)
 
     analysisParameters = h.params.actualParams.intrinsicPropertiesAnalysis;
 
-    % Unit conversion for V_rec (unit for raw numbers: 10 nV for Dagan - PVBS)
+    % Unit conversion for V_rec (unit for raw numbers: 10 nV for Dagan - PV)
     v_rec_gain = analysisParameters.v_rec_gain; % to convert to mV - NB. also useful to know when using ClampFit
-    % Unit conversion for i_cmd (unit for raw numbers: 10 nA for Dagan - PVBS)
+    % Unit conversion for i_cmd (unit for raw numbers: 10 nA for Dagan - PV)
     i_cmd_gain = analysisParameters.i_cmd_gain; % to convert to pA (10 for nA) - NB. also useful to know when using ClampFit
 
     if flagScalingOverride % lol
@@ -13053,16 +13053,16 @@ function h = intrinsicAnalysis2(h, data_voltage_episodic, flagScalingOverride)
     end
     
     % data processing %%% allow access and edit from main window later
-    voltage_signal_channel = analysisParameters.voltage_signal_channel; % V_m acquisition channel, from PVBS
+    voltage_signal_channel = analysisParameters.voltage_signal_channel; % V_m acquisition channel, from PV
     data_segmentation_cutoff_first = analysisParameters.data_segmentation_cutoff_first; % (ms); discard this length of data at the beginning
-    data_segment_length = analysisParameters.data_segment_length; % Sweep duration (ms), synonymous with inter-sweep interval because of absolutely stupid gap-free PVBS
+    data_segment_length = analysisParameters.data_segment_length; % Sweep duration (ms), synonymous with inter-sweep interval because of absolutely stupid gap-free PV
     data_length_unit = analysisParameters.data_length_unit; % (ms); truncate data to a nice multiple of this (e.g. 17078 ms -> 17070 ms)
     data_voltage_samplingrate = analysisParameters.data_voltage_samplingrate; % (kHz); sampling rate, after reduction: (e.g. 10 kHz = 10 points/ms)
     data_voltage_interval = analysisParameters.data_voltage_interval; % (ms)
     
-    % correction for phantom (i.e. cosmetic) current offset error produced by PVBS GPIO box
+    % correction for phantom (i.e. cosmetic) current offset error produced by PV GPIO box
     % this works by subtracting average current at the beginning, thus i_cmd (t = 0) must be 0 during recording!
-    i_bsln_correction = analysisParameters.i_bsln_correction; % (0: no, 1: yes) PVBS GPIO box bleedthrough correction
+    i_bsln_correction = analysisParameters.i_bsln_correction; % (0: no, 1: yes) PV GPIO box bleedthrough correction
     i_bsln_correction_window = analysisParameters.i_bsln_correction_window; % (ms); this should do
     
     % detection window; for more than 2 windows, manually set them as n*3 arrays (start, end, direction) and pass them onto functions
