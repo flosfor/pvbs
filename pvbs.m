@@ -489,7 +489,7 @@ pvbsCurrentScalingFactor = 2000; % (pA/V); % 2000 for P-IV (MIT MIBR 46-6178), o
 
 % PV software conventions
 %  below are set for single channel recording of V and i (in that order)
-%  multiple-channel support pending %%%
+%  multiple-channel support pending %%% fixlater
 timeColumn = 1; % column 1: timestamp
 pvbsVoltageColumn = 2; % column 2: voltage
 pvbsCurrentColumn = 3; % column 3: current
@@ -15057,6 +15057,8 @@ end
 set(h.ui.traceDisplayXMoveLeft, 'enable', 'on');
 set(h.ui.traceDisplayXMoveRight, 'enable', 'on');
 set(h.ui.traceDisplayXZoomOut, 'enable', 'on');
+set(h.ui.traceDisplayXMoveToStart, 'enable', 'on');
+set(h.ui.traceDisplayXMoveToEnd, 'enable', 'on');
 
 % do display
 axes(traceDisplay);
@@ -15125,8 +15127,9 @@ else
     traceDisplayXRangeHigh = traceDisplayXRangeHigh + (traceDisplayXRangeHigh - traceDisplayXRangeLow)*(zoom - 1); % for x axis, retain lower end of range
     traceDisplayXRange = [traceDisplayXRangeLow, traceDisplayXRangeHigh];
     if traceDisplayXRangeHigh > dataLimit % do not roll above data limits
+        traceDisplayXRangeLow = traceDisplayXRangeLow - (traceDisplayXRangeHigh - dataLimit);
         traceDisplayXRangeHigh = dataLimit;
-        set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
+        %set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
     end
     traceDisplayXRange = [traceDisplayXRangeLow, traceDisplayXRangeHigh];
 end
@@ -15188,6 +15191,7 @@ else
     end
 end
 dataLimit = max(dataLimit); % max number of data points, i.e. recording length
+dataLimit = ceil(dataLimit); % for aesthetic reasons - to display last tick
 move = params.xRangeMove; % moving factor
 traceDisplayXRangeLow = traceDisplayXRange(1);
 traceDisplayXRangeHigh = traceDisplayXRange(2);
@@ -15202,6 +15206,7 @@ if traceDisplayXRangeHigh > dataLimit % do not roll above data limits
 end
 traceDisplayXRange = [traceDisplayXRangeLow, traceDisplayXRangeHigh];
 set(h.ui.traceDisplayXMoveLeft, 'enable', 'on'); % in case it had been disabled
+set(h.ui.traceDisplayXMoveToStart, 'enable', 'on'); % in case it had been disabled
 
 % do display
 axes(traceDisplay);
@@ -15243,6 +15248,7 @@ else
     end
     traceDisplayXRange = [traceDisplayXRangeLow, traceDisplayXRangeHigh];
     set(h.ui.traceDisplayXMoveRight, 'enable', 'on'); % in case it had been disabled
+    set(h.ui.traceDisplayXMoveToEnd, 'enable', 'on'); % in case it had been disabled
 end
 
 % do display
@@ -15276,6 +15282,9 @@ else
     traceDisplayXRangeSpan = traceDisplayXRange(2) - traceDisplayXRange(1);
     traceDisplayXRange = [0, traceDisplayXRangeSpan];
 end
+set(h.ui.traceDisplayXMoveRight, 'enable', 'on'); % in case it had been disabled
+set(h.ui.traceDisplayXMoveToStart, 'enable', 'off');
+set(h.ui.traceDisplayXMoveToEnd, 'enable', 'on'); % in case it had been disabled
 
 % do display
 axes(traceDisplay);
@@ -15343,6 +15352,9 @@ else
     dataLimit = ceil(dataLimit); % for aesthetic reasons - to display last tick
     traceDisplayXRange = [dataLimit - traceDisplayXRangeSpan, dataLimit];
 end
+set(h.ui.traceDisplayXMoveLeft, 'enable', 'on'); % in case it had been disabled
+set(h.ui.traceDisplayXMoveToStart, 'enable', 'on'); % in case it had been disabled
+set(h.ui.traceDisplayXMoveToEnd, 'enable', 'off');
 
 % do display
 axes(traceDisplay);
@@ -15684,6 +15696,8 @@ set(h.ui.traceDisplayXMoveRight, 'enable', 'on');
 set(h.ui.traceDisplayXZoomOut, 'enable', 'on');
 set(h.ui.traceDisplayY2MoveDown, 'enable', 'on');
 set(h.ui.traceDisplayY2ZoomOut, 'enable', 'on');
+set(h.ui.traceDisplayXMoveToStart, 'enable', 'on');
+set(h.ui.traceDisplayXMoveToEnd, 'enable', 'on');
 
 % do display
 axes(traceDisplay);
