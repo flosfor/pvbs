@@ -15282,6 +15282,7 @@ else
     traceDisplayXRangeSpan = traceDisplayXRange(2) - traceDisplayXRange(1);
     traceDisplayXRange = [0, traceDisplayXRangeSpan];
 end
+set(h.ui.traceDisplayXMoveLeft, 'enable', 'off');
 set(h.ui.traceDisplayXMoveRight, 'enable', 'on'); % in case it had been disabled
 set(h.ui.traceDisplayXMoveToStart, 'enable', 'off');
 set(h.ui.traceDisplayXMoveToEnd, 'enable', 'on'); % in case it had been disabled
@@ -15353,6 +15354,7 @@ else
     traceDisplayXRange = [dataLimit - traceDisplayXRangeSpan, dataLimit];
 end
 set(h.ui.traceDisplayXMoveLeft, 'enable', 'on'); % in case it had been disabled
+set(h.ui.traceDisplayXMoveRight, 'enable', 'off');
 set(h.ui.traceDisplayXMoveToStart, 'enable', 'on'); % in case it had been disabled
 set(h.ui.traceDisplayXMoveToEnd, 'enable', 'off');
 
