@@ -51,12 +51,13 @@
 %
 %
 % Features underway for future versions:
+%  - Multiple input channel support (e.g. for dual recordings)
+%  - Fix for Bessel LP filter for voltage signals
 %  - Artifact removal
 %  - Manual linescan ROI selection
 %  - Threshold detection
 %  - Waveform analysis
 %  - Improved intrinsic properties analysis
-%  - Multiple input channel support (e.g. for dual recordings)
 %  - .abf & .atf import
 %
 %
