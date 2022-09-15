@@ -1,4 +1,4 @@
-%% Prairie View Browsing Solution (PVBS)
+% Prairie View Browsing Solution (PVBS)
 % (https://github.com/flosfor/pvbs)
 %
 % Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
@@ -86,7 +86,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.09.05';
+pvbsLastMod = '2022.09.14';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -243,8 +243,10 @@ ui.traceDisplay = axes('Units', 'Normalized', 'Position', [0.19, 0.42, 0.57, 0.5
 ui.traceDisplayChannels = uicontrol('Style', 'pushbutton', 'enable', 'on', 'String', 'S#', 'backgroundcolor', [0.99, 0.99, 0.99], 'Units', 'normalized', 'Position', [0.735, 0.905, 0.015, 0.03], 'Callback', @traceDisplayChannels, 'interruptible', 'off');
 ui.traceDisplayXZoomIn = uicontrol('Style', 'pushbutton', 'String', '+', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.5245, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXZoomIn, 'interruptible', 'off');
 ui.traceDisplayXZoomOut = uicontrol('Style', 'pushbutton', 'String', '-', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.4115, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXZoomOut, 'interruptible', 'off');
-ui.traceDisplayXMoveRight = uicontrol('Style', 'pushbutton', 'String', '>', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.72, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveRight, 'interruptible', 'off');
-ui.traceDisplayXMoveLeft = uicontrol('Style', 'pushbutton', 'String', '<', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.216, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveLeft, 'interruptible', 'off');
+ui.traceDisplayXMoveRight = uicontrol('Style', 'pushbutton', 'String', '>', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.71, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveRight, 'interruptible', 'off');
+ui.traceDisplayXMoveLeft = uicontrol('Style', 'pushbutton', 'String', '<', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.226, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveLeft, 'interruptible', 'off');
+ui.traceDisplayXMoveToStart = uicontrol('Style', 'pushbutton', 'String', '<<', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.197, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveToStart, 'interruptible', 'off');
+ui.traceDisplayXMoveToEnd = uicontrol('Style', 'pushbutton', 'String', '>>', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.739, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveToEnd, 'interruptible', 'off');
 ui.traceDisplayYZoomIn = uicontrol('Style', 'pushbutton', 'String', '+', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.15, 0.76, 0.015, 0.03], 'Callback', @traceDisplayYZoomIn, 'interruptible', 'off');
 ui.traceDisplayYZoomOut = uicontrol('Style', 'pushbutton', 'String', '-', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.15, 0.58, 0.015, 0.03], 'Callback', @traceDisplayYZoomOut, 'interruptible', 'off');
 ui.traceDisplayYMoveUp = uicontrol('Style', 'pushbutton', 'String', '^', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.15, 0.89, 0.015, 0.03], 'Callback', @traceDisplayYMoveUp, 'interruptible', 'off');
@@ -15094,7 +15096,8 @@ else
 end
 
 % zoom
-pvbsTimeColumn = 1; % column for timestamp in .csv - this should not be a problem, so can be written here
+%pvbsTimeColumn = 1; % column for timestamp in .csv - this should not be a problem, so can be written here
+pvbsTimeColumn = h.params.actualParams.timeColumn;
 dataLimit = [];
 if sweepCount == 1
     if iscell(VRecToDisplay)
@@ -15166,7 +15169,8 @@ else
 end
 
 % move
-pvbsTimeColumn = 1; % column for timestamp in .csv - this should not be a problem, so can be written here
+%pvbsTimeColumn = 1; % column for timestamp in .csv - this should not be a problem, so can be written here
+pvbsTimeColumn = h.params.actualParams.timeColumn;
 dataLimit = [];
 if sweepCount == 1
     if iscell(VRecToDisplay)
@@ -15239,6 +15243,105 @@ else
     end
     traceDisplayXRange = [traceDisplayXRangeLow, traceDisplayXRangeHigh];
     set(h.ui.traceDisplayXMoveRight, 'enable', 'on'); % in case it had been disabled
+end
+
+% do display
+axes(traceDisplay);
+xlim(traceDisplayXRange);
+
+% save
+h.params = params;
+h.ui.traceDisplay = traceDisplay;
+h.ui.traceDisplayXRange = traceDisplayXRange;
+guidata(src, h);
+
+end
+
+
+function traceDisplayXMoveToStart(src, ~)
+% move main trace window to the start of recording in x axis
+
+% load
+h = guidata(src);
+params = h.params;
+traceDisplay = h.ui.traceDisplay;
+traceDisplayXRange = h.ui.traceDisplayXRange; % x range; to be shared across experiments
+
+% move
+if isempty(traceDisplayXRange)
+    return
+else
+    traceDisplayXRangeLow = traceDisplayXRange(1);
+    traceDisplayXRangeHigh = traceDisplayXRange(2);
+    traceDisplayXRangeSpan = traceDisplayXRange(2) - traceDisplayXRange(1);
+    traceDisplayXRange = [0, traceDisplayXRangeSpan];
+end
+
+% do display
+axes(traceDisplay);
+xlim(traceDisplayXRange);
+
+% save
+h.params = params;
+h.ui.traceDisplay = traceDisplay;
+h.ui.traceDisplayXRange = traceDisplayXRange;
+guidata(src, h);
+
+end
+
+
+function traceDisplayXMoveToEnd(src, ~)
+% move main trace window to the end of recording in x axis
+
+% load
+h = guidata(src);
+params = h.params;
+traceDisplay = h.ui.traceDisplay;
+traceDisplayXRange = h.ui.traceDisplayXRange; % x range; to be shared across experiments
+%  experiment selected
+itemSelected = h.ui.cellListDisplay.Value;
+itemSelected = itemSelected(1); % force single selection
+h.ui.cellListDisplay.Value = itemSelected;
+itemToDisplay = itemSelected(1); % display only the first one if multiple items are selected - obsolete
+VRec = h.exp.data.VRec;
+if isempty(VRec)
+    return
+elseif iscell(VRec{itemToDisplay}) == 1
+    VRecToDisplay = VRec{itemToDisplay};
+    sweepCount = length(VRecToDisplay);
+else
+    VRecToDisplay = VRec{itemToDisplay};
+    sweepCount = 1;
+end
+
+% move
+if isempty(traceDisplayXRange)
+    return
+else
+    traceDisplayXRangeLow = traceDisplayXRange(1);
+    traceDisplayXRangeHigh = traceDisplayXRange(2);
+    traceDisplayXRangeSpan = traceDisplayXRange(2) - traceDisplayXRange(1);
+    %pvbsTimeColumn = 1; % column for timestamp in .csv - this should not be a problem, so can be written here
+    pvbsTimeColumn = h.params.actualParams.timeColumn;
+    dataLimit = [];
+    if sweepCount == 1
+        if iscell(VRecToDisplay)
+            currentSweep = VRecToDisplay{1};
+        else
+            currentSweep = VRecToDisplay;
+        end
+        timeStampEnd = currentSweep(end, pvbsTimeColumn);
+        dataLimit(end + 1) = timeStampEnd;
+    else
+        for i = 1:sweepCount
+            currentSweep = VRecToDisplay{i};
+            timeStampEnd = currentSweep(end, pvbsTimeColumn);
+            dataLimit(end + 1) = timeStampEnd;
+        end
+    end
+    dataLimit = max(dataLimit); % max number of data points, i.e. recording length
+    dataLimit = ceil(dataLimit); % for aesthetic reasons - to display last tick
+    traceDisplayXRange = [dataLimit - traceDisplayXRangeSpan, dataLimit];
 end
 
 % do display
@@ -15553,7 +15656,8 @@ else
 end
 
 % zoom
-pvbsTimeColumn = 1; % column for timestamp in .csv - this should not be a problem, so can be written here
+%pvbsTimeColumn = 1; % column for timestamp in .csv - this should not be a problem, so can be written here
+pvbsTimeColumn = h.params.actualParams.timeColumn;
 dataLimit = [];
 if sweepCount == 1
     if iscell(VRecToDisplay)
@@ -15628,7 +15732,8 @@ else
 end
 
 % zoom
-pvbsTimeColumn = 1; % column for timestamp in .csv - this should not be a problem, so can be written here
+%pvbsTimeColumn = 1; % column for timestamp in .csv - this should not be a problem, so can be written here
+pvbsTimeColumn = h.params.actualParams.timeColumn;
 dataLimit = [];
 if sweepCount == 1
     if iscell(VRecToDisplay)
