@@ -15126,7 +15126,8 @@ else
     traceDisplayXRangeHigh = traceDisplayXRange(2);
     traceDisplayXRangeHigh = traceDisplayXRangeHigh + (traceDisplayXRangeHigh - traceDisplayXRangeLow)*(zoom - 1); % for x axis, retain lower end of range
     traceDisplayXRange = [traceDisplayXRangeLow, traceDisplayXRangeHigh];
-    if traceDisplayXRangeHigh > dataLimit % do not roll above data limits
+    if traceDisplayXRangeLow <= 0 % do not go below zero - this block can be left empty for intended functionality
+    elseif traceDisplayXRangeHigh > dataLimit % do not roll above data limits
         traceDisplayXRangeLow = traceDisplayXRangeLow - (traceDisplayXRangeHigh - dataLimit);
         traceDisplayXRangeHigh = dataLimit;
         %set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
