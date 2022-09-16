@@ -87,7 +87,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.09.14';
+pvbsLastMod = '2022.09.16';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -554,7 +554,7 @@ artifactFreq = 10; % (Hz)
 
 % sweep segmentation
 segmentationLength = 400; % segment length (ms)
-segmentationOffset = 150; % segmentation initial offset (ms)
+segmentationOffset = 350; % segmentation initial offset (ms)
 segmentationTruncate = 1; % truncate remainder (0: no, 1: yes)
 segmentationCount = 0; % keep only this many segments and discard the rest (0 to disable)
 
