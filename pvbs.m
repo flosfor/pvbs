@@ -87,7 +87,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.09.16';
+pvbsLastMod = '2022.09.18';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -688,6 +688,13 @@ intrinsicPropertiesAnalysis.displayMargin = 0.25; % relative to step length
 intrinsicPropertiesAnalysis.displayStart = intrinsicPropertiesAnalysis.stepStart - intrinsicPropertiesAnalysis.displayMargin * intrinsicPropertiesAnalysis.stepLength;
 intrinsicPropertiesAnalysis.displayEnd = intrinsicPropertiesAnalysis.stepEnd + intrinsicPropertiesAnalysis.displayMargin * intrinsicPropertiesAnalysis.stepLength;
 %}
+%  R_in calculation
+intrinsicPropertiesAnalysis.RinAtSteadyState = 1; % hate this, but everything seems backwards here
+intrinsicPropertiesAnalysis.RinByLinearFit = 1; % hate this too
+intrinsicPropertiesAnalysis.RinSweep = 1; %
+%  Spike threshold
+intrinsicPropertiesAnalysis.spikeThreshold = 10; %(mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
+intrinsicPropertiesAnalysis.spikeDetectionRearm = 0; % (mV)
 
 end
 
@@ -12620,6 +12627,19 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
 %  needs to cleaned up for performance... this part is really fucked up %%% fixlater
 
     analysisParameters = h.params.actualParams.intrinsicPropertiesAnalysis;
+    try
+        RinAtSteadyState = analysisParameters.RinAtSteadyState;
+        RinByLinearFit = analysisParameters.RinByLinearFit;
+        RinSweep = analysisParameters.RinSweep;
+        spikeThreshold = intrinsicPropertiesAnalysis.spikeThreshold;
+        spikeDetectionRearm = intrinsicPropertiesAnalysis.spikeDetectionRearm; 
+    catch ME
+        RinAtSteadyState = 1; % hate this, but everything seems backwards here
+        RinByLinearFit = 1; % hate this too
+        RinSweep = 1; %
+        spikeThreshold = 10; %(mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
+        spikeDetectionRearm = 0; % (mV)
+    end
 
     % Unit conversion for V_rec (unit for raw numbers: 10 nV for Dagan - PV)
     v_rec_gain = analysisParameters.v_rec_gain; % to convert to mV - NB. also useful to know when using ClampFit
@@ -13044,6 +13064,19 @@ function h = intrinsicAnalysis2(h, data_voltage_episodic, flagScalingOverride)
 %  needs to cleaned up for performance... this part is really fucked up %%% fixlater
 
     analysisParameters = h.params.actualParams.intrinsicPropertiesAnalysis;
+    try
+        RinAtSteadyState = analysisParameters.RinAtSteadyState;
+        RinByLinearFit = analysisParameters.RinByLinearFit;
+        RinSweep = analysisParameters.RinSweep;
+        spikeThreshold = intrinsicPropertiesAnalysis.spikeThreshold;
+        spikeDetectionRearm = intrinsicPropertiesAnalysis.spikeDetectionRearm; 
+    catch ME
+        RinAtSteadyState = 1; % hate this, but everything seems backwards here
+        RinByLinearFit = 1; % hate this too
+        RinSweep = 1; %
+        spikeThreshold = 10; %(mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
+        spikeDetectionRearm = 0; % (mV)
+    end
 
     % Unit conversion for V_rec (unit for raw numbers: 10 nV for Dagan - PV)
     v_rec_gain = analysisParameters.v_rec_gain; % to convert to mV - NB. also useful to know when using ClampFit
@@ -13564,6 +13597,19 @@ set(srcButton, 'enable', 'off');
 
 % load parameters
 analysisParameters = h.params.actualParams.intrinsicPropertiesAnalysis;
+try
+    RinAtSteadyState = analysisParameters.RinAtSteadyState;
+    RinByLinearFit = analysisParameters.RinByLinearFit;
+    RinSweep = analysisParameters.RinSweep;
+    spikeThreshold = analysisParameters.spikeThreshold;
+    spikeDetectionRearm = analysisParameters.spikeDetectionRearm;
+catch ME
+    RinAtSteadyState = 1; % hate this, but everything seems backwards here
+    RinByLinearFit = 1; % hate this too
+    RinSweep = 1; %
+    spikeThreshold = 10; %(mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
+    spikeDetectionRearm = 0; % (mV)
+end
 
 % options
 optionsWin = figure('Name', 'Intrinsic Properties Analysis Options', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.2, 0.4, 0.25, 0.4], 'resize', 'off', 'DeleteFcn', @winClosed); % use CloseRequestFcn?
@@ -13604,8 +13650,15 @@ oWin.stepLengthInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string'
 oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.4, 0.1, 0.05]);
 %oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms) [ = (Win 2 end) - (Win 1 start) ]', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.5, 0.4, 0.4, 0.05]);
 
-oWin.resetButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.425, 0.05, 0.25, 0.075], 'callback', @resetIntrinsicOptions, 'interruptible', 'off');
-oWin.saveButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Save', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.7, 0.05, 0.25, 0.075], 'callback', @saveIntrinsicOptions, 'interruptible', 'off');
+oWin.RinText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'R_in calculation', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.3, 0.9, 0.05]);
+oWin.Rin11 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'enable', 'off', 'string', 'Use transient state (negative peak)', 'value', logical(~RinAtSteadyState), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.225, 0.4, 0.05], 'callback', @intrinsicRadiobuttonBehavior1);
+oWin.Rin12 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use steady state', 'value', logical(RinAtSteadyState), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.225, 0.4, 0.05], 'callback', @intrinsicRadiobuttonBehavior2);
+oWin.Rin21 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'enable', 'off', 'string', 'Use sweep:', 'value', logical(~RinByLinearFit), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.15, 0.4, 0.05], 'callback', @intrinsicRadiobuttonBehavior3);
+oWin.Rin22 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'enable', 'off', 'string', num2str(RinSweep), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.15, 0.125, 0.05]);
+oWin.Rin23 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use linear fit', 'value', logical(RinByLinearFit), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.15, 0.4, 0.05], 'callback', @intrinsicRadiobuttonBehavior4);
+
+oWin.resetButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.45, 0.025, 0.25, 0.075], 'callback', @resetIntrinsicOptions, 'interruptible', 'off');
+oWin.saveButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Save', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.725, 0.025, 0.25, 0.075], 'callback', @saveIntrinsicOptions, 'interruptible', 'off');
 
 oWinSegmentLength = oWin.segmentLengthInput.String;
 oWinOffset = oWin.segmentOffsetInput.String;
@@ -13632,6 +13685,42 @@ oWinW22 = str2num(oWinW22);
     function winClosed(src, ~)
         set(srcButton, 'enable', 'on');
         %guidata(srcButton, h); % don't save when closed without using the save button
+    end
+
+    function intrinsicRadiobuttonBehavior1(src, ~)
+        if oWin.Rin11.Value
+            oWin.Rin12.Value = 0;
+        else
+            oWin.Rin11.Value = 1;
+            oWin.Rin12.Value = 0;
+        end
+    end
+
+    function intrinsicRadiobuttonBehavior2(src, ~)
+        if oWin.Rin12.Value
+            oWin.Rin11.Value = 0;
+        else
+            oWin.Rin12.Value = 1;
+            oWin.Rin11.Value = 0;
+        end
+    end
+
+    function intrinsicRadiobuttonBehavior3(src, ~)
+        if oWin.Rin21.Value
+            oWin.Rin23.Value = 0;
+        else
+            oWin.Rin21.Value = 1;
+            oWin.Rin23.Value = 0;
+        end
+    end
+
+    function intrinsicRadiobuttonBehavior4(src, ~)
+        if oWin.Rin23.Value
+            oWin.Rin21.Value = 0;
+        else
+            oWin.Rin23.Value = 1;
+            oWin.Rin21.Value = 0;
+        end
     end
 
     function lazyIntrinsicParamUpdate(src, ~)
@@ -13681,9 +13770,11 @@ oWinW22 = str2num(oWinW22);
         oWinOffset = num2str(intrinsicPropertiesAnalysis.data_segmentation_cutoff_first);
         oWinB1 = num2str(intrinsicPropertiesAnalysis.window_baseline_start);
         oWinB2 = num2str(intrinsicPropertiesAnalysis.window_baseline_end);
+        oWinW11 = num2str(intrinsicPropertiesAnalysis.window_start);
+        oWinW12 = num2str(intrinsicPropertiesAnalysis.window_end);
+        %{
         oWinW11 = num2str(intrinsicPropertiesAnalysis.window_1_start);
         oWinW12 = num2str(intrinsicPropertiesAnalysis.window_1_end);
-        %{
         oWinW21 = num2str(intrinsicPropertiesAnalysis.window_2_start);
         oWinW22 = num2str(intrinsicPropertiesAnalysis.window_2_end);
         %}
@@ -13701,6 +13792,20 @@ oWinW22 = str2num(oWinW22);
         
         oWinStepLength = num2str(intrinsicPropertiesAnalysis.stepLength);
         oWin.stepLengthInput.String = num2str(oWinStepLength);
+        
+        try
+            oWin.Rin12.Value = h.params.actualParams.intrinsicPropertiesAnalysis.RinAtSteadyState;
+            oWin.Rin11.Value = logical(~oWin.Rin12.Value);
+            oWin.Rin23.Value = h.params.actualParams.intrinsicPropertiesAnalysis.RinByLinearFit;
+            oWin.Rin21.Value = logical(~oWin.Rin23.Value);
+            oWin.Rin22.String = num2str(h.params.actualParams.intrinsicPropertiesAnalysis.RinSweep);
+        catch ME % for reverse compatibility with older versions of pvbs
+            oWin.Rin12.Value = 1; % hate this, but everything seems backwards here
+            oWin.Rin11.Value = 0;
+            oWin.Rin23.Value = 1; % hate this too
+            oWin.Rin21.Value = 0;
+            oWin.Rin22.String = '1';            
+        end
         
         %guidata(win1, h);
         %close(optionsWin);
@@ -13761,6 +13866,11 @@ oWinW22 = str2num(oWinW22);
         h.params.actualParams.intrinsicPropertiesAnalysis.displayStart = oWinW11 - displayMargin*(oWinW22 - oWinW11);
         h.params.actualParams.intrinsicPropertiesAnalysis.displayEnd = oWinW22 + displayMargin*(oWinW22 - oWinW11);
         %}
+        
+        % Rin calculation
+        h.params.actualParams.intrinsicPropertiesAnalysis.RinAtSteadyState = oWin.Rin12.Value;
+        h.params.actualParams.intrinsicPropertiesAnalysis.RinByLinearFit = oWin.Rin23.Value;
+        h.params.actualParams.intrinsicPropertiesAnalysis.RinSweep = str2num(oWin.Rin22.String);
         
         guidata(win1, h);
         close(optionsWin);
