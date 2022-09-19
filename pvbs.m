@@ -15273,12 +15273,15 @@ else
     elseif traceDisplayXRangeHigh >= dataLimit % display reached data limits
         traceDisplayXRangeLow = traceDisplayXRangeLow - (traceDisplayXRangeHigh - dataLimit);
         traceDisplayXRangeHigh = dataLimit;
-        set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
+        %set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
+        if traceDisplayXRangeLow <= 0 % do not go below zero - this block can be left empty for intended functionality
+            set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
+        end
     else
         traceDisplayXRangeLow = traceDisplayXRangeLow - (traceDisplayXRangeHigh - dataLimit);
         %traceDisplayXRangeLow = traceDisplayXRangeLow;
-        traceDisplayXRangeHigh = dataLimit;
-        set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
+        %traceDisplayXRangeHigh = dataLimit;
+        %set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
     end
     traceDisplayXRange = [traceDisplayXRangeLow, traceDisplayXRangeHigh];
 end
@@ -15353,7 +15356,7 @@ traceDisplayXRangeSpan = traceDisplayXRange(2) - traceDisplayXRange(1);
 move = move*traceDisplayXRangeSpan;
 traceDisplayXRangeLow = traceDisplayXRangeLow + move;
 traceDisplayXRangeHigh = traceDisplayXRangeHigh + move;
-if traceDisplayXRangeHigh >= dataLimit % do not roll above data limits
+if traceDisplayXRangeHigh > dataLimit % do not roll above data limits
     traceDisplayXRangeHigh = dataLimit;
     traceDisplayXRangeLow = dataLimit - traceDisplayXRangeSpan;
     set(h.ui.traceDisplayXMoveRight, 'enable', 'off');
@@ -15397,7 +15400,7 @@ else
     move = move*traceDisplayXRangeSpan;
     traceDisplayXRangeLow = traceDisplayXRangeLow - move;
     traceDisplayXRangeHigh = traceDisplayXRangeHigh - move;
-    if traceDisplayXRangeLow <= 0 % do not roll below zero
+    if traceDisplayXRangeLow < 0 % do not roll below zero
         traceDisplayXRangeLow = 0;
         traceDisplayXRangeHigh = traceDisplayXRangeSpan;
         set(h.ui.traceDisplayXMoveLeft, 'enable', 'off');
