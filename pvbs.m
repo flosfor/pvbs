@@ -96,6 +96,7 @@ matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
 theGreatCorona = 2020; % best year ever
 pvbsVer = [num2str(str2num(pvbsLastMod(1:4)) - theGreatCorona), pvbsLastMod(5:end)]; % why not
 win = figure('Name', [pvbsTitle, '  //  ', 'v. ', pvbsVer, ' ', pvbsStage, '  /  (PV. ', fpVer, '  &  Matlab ', matlabVer, ')'], 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.075, 0.15, 0.9, 0.8]);
+win.WindowState = 'maximized';
 h = struct();
 %%{
     ui.aboutPVBS = uicontrol('Style', 'pushbutton', 'String', '?', 'foregroundcolor', [0.75, 0.75, 0.75], 'backgroundcolor', [0.95, 0.95, 0.95], 'Units', 'normalized', 'Position', [0.00, 0.995, 0.0025, 0.005], 'Callback', @aboutPVBS, 'interruptible', 'off'); 
@@ -15267,14 +15268,21 @@ else
     traceDisplayXRangeHigh = traceDisplayXRange(2);
     traceDisplayXRangeHigh = traceDisplayXRangeHigh + (traceDisplayXRangeHigh - traceDisplayXRangeLow)*(zoom - 1); % for x axis, retain lower end of range
     traceDisplayXRange = [traceDisplayXRangeLow, traceDisplayXRangeHigh];
-    if traceDisplayXRangeLow <= 0 % do not go below zero - this block can be left empty for intended functionality
+    if traceDisplayXRangeLow < 0 % do not go below zero - this block can be left empty for intended functionality
+        set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
     elseif traceDisplayXRangeHigh > dataLimit % do not roll above data limits
-        traceDisplayXRangeLow = traceDisplayXRangeLow - (traceDisplayXRangeHigh - dataLimit);
+        %traceDisplayXRangeLow = traceDisplayXRangeLow - (traceDisplayXRangeHigh - dataLimit);
+        traceDisplayXRangeLow = traceDisplayXRangeLow;
         traceDisplayXRangeHigh = dataLimit;
-        %set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
+        set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
     end
     traceDisplayXRange = [traceDisplayXRangeLow, traceDisplayXRangeHigh];
 end
+
+%{
+set(h.ui.traceDisplayXMoveToStart, 'enable', 'on');
+set(h.ui.traceDisplayXMoveToEnd, 'enable', 'on');
+%}
 
 % do display
 axes(traceDisplay); 
@@ -15835,13 +15843,15 @@ dataLimit = ceil(dataLimit); % for aesthetic reasons - to display last tick
 traceDisplayXRange = [0, dataLimit];
 
 % re-enable move and zoom buttons in case they had been disabled
-set(h.ui.traceDisplayXMoveLeft, 'enable', 'on');
-set(h.ui.traceDisplayXMoveRight, 'enable', 'on');
 set(h.ui.traceDisplayXZoomOut, 'enable', 'on');
 set(h.ui.traceDisplayY2MoveDown, 'enable', 'on');
 set(h.ui.traceDisplayY2ZoomOut, 'enable', 'on');
-set(h.ui.traceDisplayXMoveToStart, 'enable', 'on');
-set(h.ui.traceDisplayXMoveToEnd, 'enable', 'on');
+
+% but disenanble these
+set(h.ui.traceDisplayXMoveLeft, 'enable', 'off');
+set(h.ui.traceDisplayXMoveRight, 'enable', 'off');
+set(h.ui.traceDisplayXMoveToStart, 'enable', 'off');
+set(h.ui.traceDisplayXMoveToEnd, 'enable', 'off');
 
 % do display
 axes(traceDisplay);
