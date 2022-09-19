@@ -693,7 +693,7 @@ intrinsicPropertiesAnalysis.RinAtSteadyState = 1; % hate this, but everything se
 intrinsicPropertiesAnalysis.RinByLinearFit = 1; % hate this too
 intrinsicPropertiesAnalysis.RinSweep = 1; %
 %  Spike threshold
-intrinsicPropertiesAnalysis.spikeThreshold = 10; %(mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
+intrinsicPropertiesAnalysis.spikeThreshold = 10; % (mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
 intrinsicPropertiesAnalysis.spikeDetectionRearm = 0; % (mV)
 
 end
@@ -10262,7 +10262,7 @@ end
 
 
 % VoltageRecording analysis selector
-function output = oldAnalysisVRec(input_data, input_data_name, param_window, param_baseline, param_data_voltage_interval)
+function output = oldAnalysisVRec(input_data, input_data_name, param_window, param_baseline, param_extra)
 
 % Select and run analysis
 %
@@ -10340,8 +10340,7 @@ for idx1 = 1:size(analysis_type_selected, 2) % iterate for analysis types select
                 output_temp{analysis_type_selected_idx(idx1), idx2} = analysis_mean_median(input_data, input_data_name, param_window(idx2, :), param_baseline(idx2, :));
             case analysis_type_list{6} % intrinsic_properties
                 %%% very fucked up but lazy to fix now %%% fixlater for hard-coded stuff, like signal channel or detection window
-                param_window;
-                output_temp{analysis_type_selected_idx(idx1), idx2} = oldAnalysisIntrinsic(input_data, input_data_name, param_window(idx2, :), param_baseline(idx2, :), param_data_voltage_interval);
+                output_temp{analysis_type_selected_idx(idx1), idx2} = oldAnalysisIntrinsic(input_data, input_data_name, param_window(idx2, :), param_baseline(idx2, :), param_extra);
             otherwise
                 disp(sprintf('\nfix later\n'));
         end
@@ -10366,7 +10365,7 @@ end
 
 
 % Calculate intrinsic membrane properties
-function output = oldAnalysisIntrinsic(input_data, input_data_name, param_window, param_baseline, param_data_voltage_interval)
+function output = oldAnalysisIntrinsic(input_data, input_data_name, param_window, param_baseline, param_extra)
 
 % Calculate i-V (& f-i) relationship, using analysis_peak.m & analysis_mean.m (or analysis_median.m)
 % Also calculate RMP, R_in, & sag ratio
@@ -10387,16 +10386,28 @@ function output = oldAnalysisIntrinsic(input_data, input_data_name, param_window
 %  j: number of sweeps (for each sweep in input_data)
 %  m: number of channels (for each channel in input_data)
 
-
+    %{
+    param_extra = struct();
+    param_extra.dataVoltageInterval = data_voltage_interval;
+    param_extra.RinAtSteadyState = RinAtSteadyState;
+    param_extra.RinByLinearFit = RinByLinearFit;
+    param_extra.RinSweep = RinSweep;
+    param_extra.spikeThreshold = spikeThreshold;
+    param_extra.spikeDetectionRearm = spikeDetectionRearm;
+    %}
+    
 % Round i_cmd because Dagan is stupid; will be recorded in results for safety
 %  changed to auto-detect (in multiples of 10 (pA));
 %i_cmd_step = 50; % round to a multiple of this value (pA); set to 0 to not round
 roundingfactor = 5; % auto-detect, but then again round to a multiple of this value (pA) %%%%%%%
 
 % Spike counting parameters - caution: will not be prompted!
+spike_trigger = param_extra.spikeThreshold;
+spike_rearm = param_extra.spikeDetectionRearm;
+%{
 spike_trigger = 10; % (mV); cationic E_rev, loosely correcting for usual LJP
 spike_rearm = 0; % (mV); re-arm threshold for spike detection, arbitrary; must have a good margin from triggering threshold
-
+%}
 
 % Supported output types; see also struct assignment at the bottom
 %  will be used for field names in a struct, so do not use spaces, etc.
@@ -10428,7 +10439,8 @@ param_window = param_window(1,:);
 sprintf('Only window 1 will be used for intrinsic property analysis! (set to i_cmd window)');
 
 % Get window length - will be used to convert spike count to frequency
-param_window_length = ((param_window(2) - param_window(1)) * param_data_voltage_interval)/1000; % convert datapoints to ms to s
+data_voltage_interval = param_extra.dataVoltageInterval;
+param_window_length = ((param_window(2) - param_window(1)) * data_voltage_interval)/1000; % convert datapoints to ms to s
 
 % Calculate baseline (i.e. RMP) and insert to output (1st dimension)
 if param_baseline(3) == 0 % use mean for baseline
@@ -12637,7 +12649,7 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
         RinAtSteadyState = 1; % hate this, but everything seems backwards here
         RinByLinearFit = 1; % hate this too
         RinSweep = 1; %
-        spikeThreshold = 10; %(mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
+        spikeThreshold = 10; % (mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
         spikeDetectionRearm = 0; % (mV)
     end
 
@@ -12971,7 +12983,16 @@ clear timestamp_fluorescence;
     h.ui.cellListDisplay.Value = expIdx;
     fName = h.exp.fileName{expIdx};
     fPath = h.exp.filePath{expIdx};
-    results = oldAnalysisVRec(data_voltage_episodic, [fPath, fName], window_detection, window_baseline, data_voltage_interval);     
+    %%{
+    param_extra = struct();
+    param_extra.dataVoltageInterval = data_voltage_interval;
+    param_extra.RinAtSteadyState = RinAtSteadyState;
+    param_extra.RinByLinearFit = RinByLinearFit;
+    param_extra.RinSweep = RinSweep;
+    param_extra.spikeThreshold = spikeThreshold;
+    param_extra.spikeDetectionRearm = spikeDetectionRearm;
+    %}
+    results = oldAnalysisVRec(data_voltage_episodic, [fPath, fName], window_detection, window_baseline, param_extra);     
     h.exp.data.intrinsicProperties{expIdx} = results.intrinsic_properties{1}; %%% cycle 1
     %h.exp.data.intrinsicPropertiesVRec{expIdx} = data_voltage_episodic;
     h.exp.data.intrinsicPropertiesVRec{expIdx} = data_voltage_cycle_episodic;
@@ -13074,7 +13095,7 @@ function h = intrinsicAnalysis2(h, data_voltage_episodic, flagScalingOverride)
         RinAtSteadyState = 1; % hate this, but everything seems backwards here
         RinByLinearFit = 1; % hate this too
         RinSweep = 1; %
-        spikeThreshold = 10; %(mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
+        spikeThreshold = 10; % (mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
         spikeDetectionRearm = 0; % (mV)
     end
 
@@ -13157,7 +13178,16 @@ function h = intrinsicAnalysis2(h, data_voltage_episodic, flagScalingOverride)
     h.ui.cellListDisplay.Value = expIdx;
     fName = h.exp.fileName{expIdx};
     fPath = h.exp.filePath{expIdx};
-    results = oldAnalysisVRec(data_voltage_episodic, [fPath, fName], window_detection, window_baseline, data_voltage_interval);     
+    %%{
+    param_extra = struct();
+    param_extra.dataVoltageInterval = data_voltage_interval;
+    param_extra.RinAtSteadyState = RinAtSteadyState;
+    param_extra.RinByLinearFit = RinByLinearFit;
+    param_extra.RinSweep = RinSweep;
+    param_extra.spikeThreshold = spikeThreshold;
+    param_extra.spikeDetectionRearm = spikeDetectionRearm;
+    %}
+    results = oldAnalysisVRec(data_voltage_episodic, [fPath, fName], window_detection, window_baseline, param_extra);     
     h.exp.data.intrinsicProperties{expIdx} = results.intrinsic_properties{1}; %%% cycle 1
     h.exp.data.intrinsicPropertiesVRec{expIdx} = data_voltage_episodic;
     %h.exp.data.intrinsicPropertiesVRec{expIdx} = data_voltage_cycle_episodic;
@@ -13607,7 +13637,7 @@ catch ME
     RinAtSteadyState = 1; % hate this, but everything seems backwards here
     RinByLinearFit = 1; % hate this too
     RinSweep = 1; %
-    spikeThreshold = 10; %(mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
+    spikeThreshold = 10; % (mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
     spikeDetectionRearm = 0; % (mV)
 end
 
