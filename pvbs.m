@@ -15843,11 +15843,11 @@ dataLimit = ceil(dataLimit); % for aesthetic reasons - to display last tick
 traceDisplayXRange = [0, dataLimit];
 
 % re-enable move and zoom buttons in case they had been disabled
-set(h.ui.traceDisplayXZoomOut, 'enable', 'on');
 set(h.ui.traceDisplayY2MoveDown, 'enable', 'on');
 set(h.ui.traceDisplayY2ZoomOut, 'enable', 'on');
 
-% but disenanble these
+% but disenable these
+set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
 set(h.ui.traceDisplayXMoveLeft, 'enable', 'off');
 set(h.ui.traceDisplayXMoveRight, 'enable', 'off');
 set(h.ui.traceDisplayXMoveToStart, 'enable', 'off');
