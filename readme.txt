@@ -1,5 +1,13 @@
+* Please state the use of this code in your methods section. Thank you.
+
+
+Instructions: 
+
 1) Run PVBS (pvbs.m)
-(designed for Prairie View 5.5; developed with Matlab 2020b, requires statistics & machine learning toolbox)
+(designed for Prairie View 5.5; developed with Matlab 2020b, requires statistics & machine learning toolbox, signal processing toolbox)
+
+
+For a usage example:
 
 2) Unzip sampledata.zip (, .z01, .z02)
 (Download from Github by left-clicking on each file name and then clicking "download", instead of right-clicking on the file names and choosing "save link as" - file sizes should be 14.2 MB (.zip) or 24.0 MB (.z01 & .z02))
