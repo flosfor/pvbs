@@ -1,4 +1,4 @@
-* Please state the use of this code in your methods section. Thank you.
+* Please mention this code in your methods section.
 
 
 Instructions: 

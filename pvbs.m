@@ -4,7 +4,7 @@
 % Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 %
 %
-% * Please state the use of this code in your methods section.
+% * Please mention this code in your methods section.
 %
 % * Required Matlab Toolboxes: 
 %   1) Statistics & Machine Learning
@@ -90,7 +90,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.10.13';
+pvbsLastMod = '2022.11.04';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -4707,7 +4707,11 @@ cWin.buttonNo = uicontrol('Parent', confirmWin, 'Style', 'pushbutton', 'string',
         h.exp.data.groupIdx{cellListIdx} = groupIdx;
         h.exp.data.groupStr{cellListIdx} = groupStr;
         
-        swpIdxTemp = groupIdx{h.ui.groupListDisplay.Value};
+        try
+            swpIdxTemp = groupIdx{h.ui.groupListDisplay.Value};
+        catch ME
+            swpIdxTemp = 1; % when no groups rem
+        end
         h.ui.sweepListDisplay.Value = swpIdxTemp;
         h = highlightSweep(h, swpIdxTemp);
         set(h.ui.groupSweepText, 'string', sprintf('(Group %s)', num2str(h.ui.groupListDisplay.Value)));
