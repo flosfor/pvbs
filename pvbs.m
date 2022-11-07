@@ -90,7 +90,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.11.04';
+pvbsLastMod = '2022.11.07';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -568,6 +568,13 @@ intrinsicPropertiesAnalysis = struct();
 intrinsicPropertiesAnalysisInput = [pvbsVoltageScalingFactor, pvbsCurrentScalingFactor, pvbsCurrentCorrectionFlag];
 intrinsicPropertiesAnalysis = setDefaultParamsIntrinsic(intrinsicPropertiesAnalysis, intrinsicPropertiesAnalysisInput);
 
+% uncaging analysis - moved from auto analysis macro (messed up old code)
+uncagingAnalysis = struct();
+uncagingAnalysis.winV = 1; % analysis window for V (NB. do not confuse with signal channel)
+uncagingAnalysis.winF = 2; % analysis window for dF/F (NB. do not confuse with signal channel)
+uncagingAnalysis.pspMax = 35; % max PSP (mV) for threshold detection
+uncagingAnalysis.uncUnitSizeDefault = 1; % default assumption for unit size (in number of spines), only used when markpoints metadata is not available
+
 % sweep grouping
 autoGroup = 'Automatic'; % somewhat arbitrary but whatever - currently set to MarkPoints for LineScan and VoltageOutput for TSeries, see loadExpMain()
 
@@ -616,6 +623,7 @@ defaultParams.segmentationOffset = segmentationOffset;
 defaultParams.segmentationTruncate = segmentationTruncate;
 defaultParams.segmentationCount = segmentationCount;
 defaultParams.intrinsicPropertiesAnalysis = intrinsicPropertiesAnalysis;
+defaultParams.uncagingAnalysis = uncagingAnalysis;
 
 %h.params.actualParams = actualParams;
 guidata(win, h);
@@ -7844,17 +7852,25 @@ switch analysisPresetValue
         uncExpIdx2 = expEven;
         
         % default parameters
-        uncParams = struct();
-        winV = 1; % analysis window for V
-        winF = 2; % analysis window for dF/F
-        pspMax = 35; % max PSP (mV) for threshold detection
-        uncUnitSizeDefault = 1; % default assumption for unit size (in number of spines), only used when markpoints metadata is not available
-        uncParams.winV = winV;
-        uncParams.winF = winF;
-        uncParams.pspMax = pspMax;
-        uncParams.uncUnitSizeDefault = uncUnitSizeDefault;
-        uncParams.defaultParams = uncParams; % for reverting
-        guidata(win2, uncParams);
+        try
+            uncParams = h.params.actualParams.uncagingAnalysis;
+            uncParamsDefault = h.params.defaultParams.uncagingAnalysis;
+        catch ME % for reverse compatibility
+            %%{
+            uncParams = struct();
+            winV = 1; % analysis window for V
+            winF = 2; % analysis window for dF/F
+            pspMax = 35; % max PSP (mV) for threshold detection
+            uncUnitSizeDefault = 1; % default assumption for unit size (in number of spines), only used when markpoints metadata is not available
+            uncParams.winV = winV;
+            uncParams.winF = winF;
+            uncParams.pspMax = pspMax;
+            uncParams.uncUnitSizeDefault = uncUnitSizeDefault;
+            %uncParams.defaultParams = uncParams; % for reverting
+            uncParamsDefault = uncParams;
+            %guidata(win2, uncParams);
+            %}
+        end
         
     otherwise
 end
@@ -7875,7 +7891,8 @@ end
     function uncAnalysisRun(src, ~)
         
         % parameters - link these up with default parameters later
-        uncParams = guidata(win2);
+        uncParams = h.params.actualParams.uncagingAnalysis;
+        %uncParams = guidata(win2);
         winV = uncParams.winV; % analysis window for V
         winF = uncParams.winF; % analysis window for dF/F
         pspMax = uncParams.pspMax; % max PSP (mV) for threshold detection
@@ -8163,7 +8180,7 @@ end
                     end
                 else % should be fixed from the experiment side, most likely grouping mistake (or missing units)
                     
-                    errorString = sprintf('Error: group count in measured experiment exceeds unit count - check experiment pairs');
+                    errorString = sprintf('Error: group count in measured experiment exceeds unit count \n - check experiment pairs for group definitions, and/or unit size assumption');
                     error(errorString);
                 end
             else % no need to do anything
@@ -9023,7 +9040,7 @@ end
         srcButton = src;
         set(srcButton, 'enable', 'off');
         
-        uncParams = guidata(win2);
+        %uncParams = guidata(win2);
         
         win3 = figure('Name', 'Uncaging Analysis Options', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.5, 0.25, 0.25, 0.2], 'DeleteFcn', @winClosed); % use CloseRequestFcn?
         
@@ -9070,9 +9087,7 @@ end
         end
         
         function resetParams(src, ~)
-            defaultParamsTemp = uncParams.defaultParams;
-            uncParams = uncParams.defaultParams;
-            uncParams.defaultParams = defaultParamsTemp;
+            uncParams = uncParamsDefault;
             uo112 = uncParams.winV;
             uo122 = uncParams.winF;
             uo212 = uncParams.pspMax;
@@ -9093,7 +9108,9 @@ end
             uncParams.winF = uo122;
             uncParams.pspMax = uo212;
             uncParams.uncUnitSizeDefault = uo312;
-            guidata(win2, uncParams);
+            %guidata(win2, uncParams);
+            h.params.actualParams.uncagingAnalysis = uncParams;
+            guidata(win, h);
             close(win3);
             set(srcButton, 'enable', 'on');
         end
