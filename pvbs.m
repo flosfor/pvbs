@@ -18,7 +18,7 @@
 % ------------------------------------------------------------------------
 %
 %
-% Supported experiment types: 
+% * Supported experiment types: 
 %   1) PV VoltageRecording
 %   2) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
 %   3) PV T-Series (of VoltageRecording experiments)
@@ -46,15 +46,15 @@
 %      PV would always assume gap-free format))
 %
 %
-% NB.
-%  Electrophysiology-related labels and parameters assume by default 
-%  current-clamp experiments and positive direction for peak detection 
-%  (e.g. EPSP), but are fully compatible with either current-clamp or
-%  voltage-clamp, or peaks in any direction.
-%  "If you only knew the power of the dark side... [of patch clamp]"
+% * NB.
+%   Electrophysiology-related labels and parameters assume by default 
+%   current-clamp experiments and positive direction for peak detection 
+%   (e.g. EPSP), but are fully compatible with either current-clamp or
+%   voltage-clamp, or peaks in any direction.
+%   "If you only knew the power of the dark side... [of patch clamp]"
 %
 %
-% Features underway for future versions:
+% * Features underway for future versions:
 %   - Multiple input channel support (e.g. for dual recordings)
 %   - Bug fix for Bessel LP filter for voltage signals
 %   - Artifact removal
@@ -90,7 +90,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.11.07';
+pvbsLastMod = '2022.11.08';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -9044,7 +9044,7 @@ end
         
         win3 = figure('Name', 'Uncaging Analysis Options', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.5, 0.25, 0.25, 0.2], 'DeleteFcn', @winClosed); % use CloseRequestFcn?
         
-        oWin.uo101 = uicontrol('Parent', win3, 'Style', 'text', 'fontweight', 'bold', 'string', 'Analysis windows', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.85, 0.9, 0.08]);
+        oWin.uo101 = uicontrol('Parent', win3, 'Style', 'text', 'fontweight', 'bold', 'string', 'Analysis window # (NB. Not signal channel #)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.85, 0.9, 0.08]);
         oWin.uo102 = uicontrol('Parent', win3, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.85, 0.6, 0.08]);
         oWin.uo111 = uicontrol('Parent', win3, 'Style', 'text', 'string', 'Voltage', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.75, 0.4, 0.08]);
         oWin.uo112 = uicontrol('Parent', win3, 'Style', 'edit', 'string', num2str(uncParams.winV), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.76, 0.125, 0.08], 'callback', @updateParams);
