@@ -18,7 +18,7 @@
 % ------------------------------------------------------------------------
 %
 %
-% Supported experiment types: 
+% * Supported experiment types: 
 %   1) PV VoltageRecording
 %   2) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
 %   3) PV T-Series (of VoltageRecording experiments)
@@ -46,15 +46,15 @@
 %      PV would always assume gap-free format))
 %
 %
-% NB.
-%  Electrophysiology-related labels and parameters assume by default 
-%  current-clamp experiments and positive direction for peak detection 
-%  (e.g. EPSP), but are fully compatible with either current-clamp or
-%  voltage-clamp, or peaks in any direction.
-%  "If you only knew the power of the dark side... [of patch clamp]"
+% * NB.
+%   Electrophysiology-related labels and parameters assume by default 
+%   current-clamp experiments and positive direction for peak detection 
+%   (e.g. EPSP), but are fully compatible with either current-clamp or
+%   voltage-clamp, or peaks in any direction.
+%   "If you only knew the power of the dark side... [of patch clamp]"
 %
 %
-% Features underway for future versions:
+% * Features underway for future versions:
 %   - Multiple input channel support (e.g. for dual recordings)
 %   - Bug fix for Bessel LP filter for voltage signals
 %   - Artifact removal
