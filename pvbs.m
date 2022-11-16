@@ -90,7 +90,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.11.08';
+pvbsLastMod = '2022.11.16';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -8312,7 +8312,7 @@ end
                 expIdx2 = uncExpIdx2;
                 expName1 = expList{expIdx1(i)};
                 expName2 = expList{expIdx2(i)};
-                warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration detected within experiment pair (Pair %s, Experiments: %s & %s))\n\n', num2str(i), expName1, expName2);
+                warningString = sprintf('<!> Warning: Missing MarkPoints metadata, or inconsistent laser power and/or duration detected within experiment pair (Pair %s, Experiments: %s & %s))\n\n', num2str(i), expName1, expName2);
                 fprintf(warningString);
             end
         end
