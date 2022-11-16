@@ -14575,7 +14575,8 @@ fileName = h.ui.zStackFileName;
 experimentNumber = h.ui.cellListDisplay.Value; % current experiment
 experimentNumber = experimentNumber(1); % force single selection
 h.ui.cellListDisplay.Value = experimentNumber;
-h.data.zStack{experimentNumber} = [];
+h.exp.data.zStack{experimentNumber} = {};
+h.exp.data.zStackFileName{experimentNumber} = [];
 cla(displayWindow);
 set(displayWindow, 'xtick', [], 'ytick', [], 'box', 'on', 'xcolor', [0.8, 0.8, 0.8], 'ycolor', [0.8, 0.8, 0.8], 'color', [0.95, 0.95, 0.95]);
 fileName.String = '(N/A)';
@@ -14601,7 +14602,8 @@ fileName = h.ui.singleScanFileName;
 experimentNumber = h.ui.cellListDisplay.Value; % current experiment
 experimentNumber = experimentNumber(1); % force single selection
 h.ui.cellListDisplay.Value = experimentNumber;
-h.data.zStack{experimentNumber} = [];
+h.exp.data.singleScan{experimentNumber} = {};
+h.exp.data.singleScanFileName{experimentNumber} = [];
 cla(displayWindow);
 set(displayWindow, 'xtick', [], 'ytick', [], 'box', 'on', 'xcolor', [0.8, 0.8, 0.8], 'ycolor', [0.8, 0.8, 0.8], 'color', [0.95, 0.95, 0.95]);
 fileName.String = '(N/A)';
