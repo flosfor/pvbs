@@ -8259,7 +8259,8 @@ end
                         uncLaserPowerTemp1 = [];
                         uncLaserDurationTemp1 = [];
                         expName = expList{i};
-                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', num2str(uncUnitSizeDefault), expName, num2str(j));
+                        %warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', num2str(uncUnitSizeDefault), expName, num2str(j)); %%% ???
+                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', expName, num2str(j));
                         fprintf(warningString);
                     end
                 end
@@ -8300,7 +8301,8 @@ end
                         uncLaserPowerTemp2 = [];
                         uncLaserDurationTemp2 = [];
                         expName = expList{i};
-                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', num2str(uncUnitSizeDefault), expName, num2str(j));
+                        %warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', num2str(uncUnitSizeDefault), expName, num2str(j)); %%% ???
+                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', expName, num2str(j));
                         fprintf(warningString);
                     end
                 end
