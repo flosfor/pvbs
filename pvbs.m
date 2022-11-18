@@ -511,7 +511,7 @@ riseDecay = [20, 80]; % low/high point for kinetics analysis (e.g. [20, 80] for 
 
 % fluorescence data
 lineScanChannel = 2; % primary channel for calcium imaging signal; e.g. for P4, 1: red, 2: green (primary)
-lineScanBaseline = [17, 34]; % (ms), baseline for F_0 in linescans, avoid starting from 0 to prevent possible contamination from shutter artifact
+lineScanBaseline = [27, 44]; % (ms), baseline for F_0 in linescans, avoid starting from 0 to prevent possible contamination from shutter artifact
 lineScanROIDetectDuringBaseline = 1; % detect linescan ROI only during baseline window specified above (0: no, 1: yes), in order to prevent possible errors from uncaging artifact
 lineScanDownsamplingFactor = 1; % downsampling factor for fluorescence signals, for the dF/F to be robust to noise
 %  NB. for best performance in ROI detection, use minimal (or zero) smoothing,
@@ -3189,9 +3189,11 @@ try
     colormap(lineScan2Display, 'gray');
     colormap(lineScan2Display, grayModified);
     h.ui.lineScan2Display = lineScan2Display;
-    % display ROIs
+    % display ROIs and linescan baseline window
     roi = h.exp.data.lineScanROI{experimentNumber}; % current experiment
     roi = roi{itemSelected}; % current sweep
+    lineScanBaseline = h.exp.data.lineScanBaseline{experimentNumber}; % current experiment; NB. not sweep-specific
+    %lineScanBaseline = lineScanBaseline{itemSelected}; % current sweep %%% not sweep-specific at this point
     channelNum = h.exp.data.lineScanFChannel{experimentNumber};
     channelNum = channelNum{itemSelected}; % channel number
     if channelNum == 1
@@ -3199,6 +3201,8 @@ try
         hold on;
         plot([roi(1), roi(1)], [1, size(lineScan{1, 1}, 1)], 'color', [0.2, 0.2, 1], 'linestyle', '--', 'linewidth', 0.5, 'marker', 'none');
         plot([roi(2), roi(2)], [1, size(lineScan{1, 1}, 1)], 'color', [0.2, 0.2, 1], 'linestyle', '--', 'linewidth', 0.5, 'marker', 'none');
+        plot([1, size(lineScan{1, 1}, 2)], [lineScanBaseline(1), lineScanBaseline(1)], 'color', [0.2, 0.2, 1], 'linestyle', '--', 'linewidth', 0.5, 'marker', 'none');
+        plot([1, size(lineScan{1, 1}, 2)], [lineScanBaseline(2), lineScanBaseline(2)], 'color', [0.2, 0.2, 1], 'linestyle', '--', 'linewidth', 0.5, 'marker', 'none');
         hold off;
         h.ui.lineScan1Display = lineScan1Display;
     elseif channelNum == 2
@@ -3206,6 +3210,8 @@ try
         hold on;
         plot([roi(1), roi(1)], [1, size(lineScan{2, 1}, 1)], 'color', [0.2, 0.2, 1], 'linestyle', '--', 'linewidth', 0.5, 'marker', 'none');
         plot([roi(2), roi(2)], [1, size(lineScan{2, 1}, 1)], 'color', [0.2, 0.2, 1], 'linestyle', '--', 'linewidth', 0.5, 'marker', 'none');
+        plot([1, size(lineScan{1, 1}, 2)], [lineScanBaseline(1), lineScanBaseline(1)], 'color', [0.2, 0.2, 1], 'linestyle', '--', 'linewidth', 0.5, 'marker', 'none');
+        plot([1, size(lineScan{1, 1}, 2)], [lineScanBaseline(2), lineScanBaseline(2)], 'color', [0.2, 0.2, 1], 'linestyle', '--', 'linewidth', 0.5, 'marker', 'none');
         hold off;
         h.ui.lineScan2Display = lineScan2Display;
     else
