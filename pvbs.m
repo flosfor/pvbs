@@ -511,7 +511,7 @@ riseDecay = [20, 80]; % low/high point for kinetics analysis (e.g. [20, 80] for 
 
 % fluorescence data
 lineScanChannel = 2; % primary channel for calcium imaging signal; e.g. for P4, 1: red, 2: green (primary)
-lineScanBaseline = [27, 44]; % (ms), baseline for F_0 in linescans, avoid starting from 0 to prevent possible contamination from shutter artifact
+lineScanBaseline = [17, 34]; % (ms), baseline for F_0 in linescans, avoid starting from 0 to prevent possible contamination from shutter artifact
 lineScanROIDetectDuringBaseline = 1; % detect linescan ROI only during baseline window specified above (0: no, 1: yes), in order to prevent possible errors from uncaging artifact
 lineScanDownsamplingFactor = 1; % downsampling factor for fluorescence signals, for the dF/F to be robust to noise
 %  NB. for best performance in ROI detection, use minimal (or zero) smoothing,
