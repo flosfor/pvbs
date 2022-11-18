@@ -1,6 +1,10 @@
 * Please mention this code in your methods section.
 
 
+* See also (https://github.com/flosfor/pvbs_auxiliary) for auxiliary scripts that can be used with PVBS.
+
+
+
 Instructions: 
 
 1) Run PVBS (pvbs.m)
