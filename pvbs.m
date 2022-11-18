@@ -93,7 +93,7 @@ pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
 pvbsLastMod = '2022.11.18';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
-matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
+matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) & Signal Processing Toolbox (v. 8.5)
 
 % open and initialize
 theGreatCorona = 2020; % best year ever
