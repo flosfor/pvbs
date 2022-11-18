@@ -8259,7 +8259,7 @@ end
                         uncLaserPowerTemp1 = [];
                         uncLaserDurationTemp1 = [];
                         expName = expList{i};
-                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration detected - correction needed (Experiment: %s (Group %s))\n\n', num2str(uncUnitSizeDefault), expName, num2str(j));
+                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', num2str(uncUnitSizeDefault), expName, num2str(j));
                         fprintf(warningString);
                     end
                 end
@@ -8300,7 +8300,7 @@ end
                         uncLaserPowerTemp2 = [];
                         uncLaserDurationTemp2 = [];
                         expName = expList{i};
-                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration detected - correction needed (Experiment: %s (Group %s))\n\n', num2str(uncUnitSizeDefault), expName, num2str(j));
+                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', num2str(uncUnitSizeDefault), expName, num2str(j));
                         fprintf(warningString);
                     end
                 end
@@ -8318,7 +8318,7 @@ end
                 expIdx2 = uncExpIdx2;
                 expName1 = expList{expIdx1(i)};
                 expName2 = expList{expIdx2(i)};
-                warningString = sprintf('<!> Warning: Missing MarkPoints metadata, or inconsistent laser power and/or duration detected within experiment pair (Pair %s, Experiments: %s & %s))\n\n', num2str(i), expName1, expName2);
+                warningString = sprintf('<!> Warning: Missing MarkPoints metadata or inconsistent laser power and/or duration (Pair %s, Experiments: %s & %s))\n\n', num2str(i), expName1, expName2);
                 fprintf(warningString);
             end
         end
