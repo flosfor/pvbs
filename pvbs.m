@@ -90,7 +90,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.11.16';
+pvbsLastMod = '2022.11.18';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0)
@@ -728,15 +728,15 @@ analysisParametersDefault = h.params.defaultParams;
 optionsWin = figure('Name', 'Import Settings', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.2, 0.25, 0.45, 0.6], 'resize', 'off', 'DeleteFcn', @winClosed); % use CloseRequestFcn?
 oWin.t101 = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'DAC gain', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.925, 0.9, 0.04]);
 oWin.t102 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(Cf.  Amplifier output  &  "Acquisition Channel Properties" in PV "Voltage Recording" window)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.125, 0.925, 0.8, 0.04]);
-oWin.t111 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Scaling factor (V)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.88, 0.4, 0.04]);
+oWin.t111 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Voltage scaling factor', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.88, 0.4, 0.04]);
 oWin.t112 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.pvbsVoltageScalingFactor), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.8875, 0.125, 0.04], 'callback', @updateParams);
 oWin.t113 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(mV/V)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.88, 0.1, 0.04]);
-oWin.t121 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Scaling factor (i)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.88, 0.4, 0.04]);
+oWin.t121 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Current scaling factor', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.88, 0.4, 0.04]);
 oWin.t122 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.pvbsCurrentScalingFactor), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.8875, 0.125, 0.04], 'callback', @updateParams);
 oWin.t123 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(pA/V)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.88, 0.1, 0.04]);
 
 oWin.t201 = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', '.CSV import', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.825, 0.9, 0.04]);
-oWin.t202 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(NB.  Settings overridden when directly*  importing .csv (instead of via PV metadata .xml),  if*  "Columns represent sweeps" is checked)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.125, 0.825, 0.85, 0.04]);
+oWin.t202 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(NB.  Settings overridden when directly importing .csv, instead of via PV metadata .xml;  _iff_  "Columns represent sweeps" is checked)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.125, 0.825, 0.85, 0.04]);
 oWin.t211 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Row offset:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.78, 0.4, 0.04]);
 oWin.t212 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.csvOffsetRow), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.7875, 0.125, 0.04], 'callback', @updateParams);
 oWin.t213 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.78, 0.1, 0.04]);
@@ -802,7 +802,7 @@ oWin.t463 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(kHz)', 
 oWin.t501 = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Sweep grouping', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.175, 0.9, 0.04]);
 oWin.t511 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Group by metadata:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.13, 0.4, 0.04]);
 oWin.t512 = uicontrol('Parent', optionsWin, 'Style', 'popupmenu', 'string', {'Disable', 'Automatic', 'MarkPoints', 'VoltageOutput'}, 'value', 2, 'enable', 'off', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.1375, 0.2, 0.04], 'callback', @updateParams);
-oWin.t513 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(MarkPoint for LineScan, VoltageOutput for TSeries)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.475, 0.13, 0.4, 0.04]);
+oWin.t513 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(Automatic: MarkPoint for LineScan, VoltageOutput for TSeries)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.475, 0.13, 0.4, 0.04]);
 
 oWin.resetButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.54, 0.05, 0.2, 0.06], 'callback', @resetParams, 'interruptible', 'off');
 oWin.saveButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Save', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.05, 0.2, 0.06], 'callback', @saveParams, 'interruptible', 'off');
