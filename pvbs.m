@@ -90,7 +90,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.11.18';
+pvbsLastMod = '2022.11.22';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -5811,11 +5811,14 @@ sweepIdx = h.exp.data.sweepIdx{expIdx}; % again very poor choice of variable nam
 sweepStr = h.exp.data.sweepStr{expIdx};
 %swpIdx = sweepIdx(swpIdx);
 
-% do nothing if no item or only one item was selected
+% do nothing if no sweep was selected
 if isempty(swpIdx)
     return
+% do do something even if only one sweep was selected, basically to duplicate sweeps
+%{
 elseif length(swpIdx) == 1 
     return
+%}
 end
 
 % force single selection for experiment
