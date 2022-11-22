@@ -15321,13 +15321,18 @@ else
     traceDisplayXRangeHigh = traceDisplayXRange(2);
     traceDisplayXRangeHigh = traceDisplayXRangeHigh + (traceDisplayXRangeHigh - traceDisplayXRangeLow)*(zoom - 1); % for x axis, retain lower end of range
     traceDisplayXRange = [traceDisplayXRangeLow, traceDisplayXRangeHigh];
-    if traceDisplayXRangeLow <= 0 % do not go below zero - this block can be left empty for intended functionality
-        set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
+    if traceDisplayXRangeLow <= 0 % do not go below zero - this block can be left empty for intended functionality %%% wtf?
+        %set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
+        traceDisplayXRangeHigh = min(dataLimit, traceDisplayXRangeHigh - traceDisplayXRangeLow); % NB. traceDisplayXRangeLow <= 0
+        traceDisplayXRangeLow = 0;
+        if traceDisplayXRangeHigh >= dataLimit % do not go above data range - this block can be left empty for intended functionality %%% wtf?
+            set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
+        end
     elseif traceDisplayXRangeHigh >= dataLimit % display reached data limits
         traceDisplayXRangeLow = traceDisplayXRangeLow - (traceDisplayXRangeHigh - dataLimit);
         traceDisplayXRangeHigh = dataLimit;
         %set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
-        if traceDisplayXRangeLow <= 0 % do not go below zero - this block can be left empty for intended functionality
+        if traceDisplayXRangeLow <= 0 % do not go below zero - this block can be left empty for intended functionality %%% wtf?
             set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
         end
     else
