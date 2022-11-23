@@ -1,7 +1,12 @@
+PVBS: Prairie View Browsing Solution
+
+* MATLAB-based GUI for browsing and analyzing electrophysiology (patch clamp) and imaging data acquired with Prairie View (Bruker)
+
+
 * Please mention this code in your methods section.
 
-
 * See also (https://github.com/flosfor/pvbs_auxiliary) for auxiliary scripts that can be used with PVBS.
+
 
 
 
