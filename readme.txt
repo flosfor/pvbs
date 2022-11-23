@@ -1,5 +1,7 @@
 PVBS: Prairie View Browsing Solution
 
+(yoonjy@mit.edu, yjy@snu.ac.kr)
+
 
 * MATLAB-based GUI for browsing and analyzing electrophysiology (patch clamp) and imaging data acquired with Prairie View (Bruker)
 
