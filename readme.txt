@@ -5,19 +5,22 @@ PVBS: Prairie View Browsing Solution
 
 * MATLAB-based GUI for browsing and analyzing electrophysiology (patch clamp) and imaging data acquired with Prairie View (Bruker)
 
-
 * Please mention this code in your methods section.
+
+* Supported experiment types: 
+1) PV VoltageRecording
+2) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
+3) PV T-Series (of VoltageRecording experiments)
+4) Any data in .CSV format
+
 
 * See also (https://github.com/flosfor/pvbs_auxiliary) for auxiliary scripts that can be used with PVBS.
 
 
-
-
-Instructions: 
+* Instructions: 
 
 1) Run PVBS (pvbs.m)
 (designed for Prairie View 5.5; developed with Matlab 2020b, requires statistics & machine learning toolbox, signal processing toolbox)
-
 
 For a usage example:
 
