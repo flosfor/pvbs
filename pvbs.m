@@ -13610,7 +13610,7 @@ try
 catch ME
     elapsedTime = toc;
     set(src, 'enable', 'on');
-    error('Error: Analysis parameters incompatible with data shape');
+    error('Error: Analysis parameters incompatible with data shape, or spike detected during subthreshold sweeps');
 end
 
 set(src, 'enable', 'on');
