@@ -1770,8 +1770,12 @@ if h.params.firstRun == 1
     h = displayTrace(h, 1);
     h.params.firstRun = 0;
 else
+    set(h.ui.cellListDisplay, 'value', length(cellList) + length(filesToImport));
+    h = displayTrace(h, length(cellList) + length(filesToImport));
+    %{
     set(h.ui.cellListDisplay, 'value', length(cellList));
     h = displayTrace(h, length(cellList));
+    %}
 end
 
 % highlight first sweep
