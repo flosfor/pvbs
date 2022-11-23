@@ -1,4 +1,4 @@
-PVBS: Prairie View Browsing Solution
+PVBS: "Prairie View Browsing Solution"
 
 (yoonjy@mit.edu, yjy@snu.ac.kr)
 
