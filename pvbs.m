@@ -98,7 +98,7 @@ matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and 
 % open and initialize
 theGreatCorona = 2020; % best year ever
 pvbsVer = [num2str(str2num(pvbsLastMod(1:4)) - theGreatCorona), pvbsLastMod(5:end)]; % why not
-win = figure('Name', [pvbsTitle, '  //  ', 'v. ', pvbsVer, ' ', pvbsStage, '  /  (PV. ', fpVer, '  &  Matlab ', matlabVer, ')'], 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.075, 0.15, 0.9, 0.8]);
+win = figure('Name', [pvbsTitle, '  //  ', 'v. ', pvbsVer, ' ', pvbsStage, '  /  (PV ', fpVer, '  &  Matlab ', matlabVer, ')'], 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.075, 0.15, 0.9, 0.8]);
 win.WindowState = 'maximized';
 h = struct();
 %%{
