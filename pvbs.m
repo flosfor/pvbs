@@ -90,7 +90,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.11.22';
+pvbsLastMod = '2022.11.23';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -12774,8 +12774,9 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
     if data_voltage_samplingrate_reductionfactor < 1
         clear;
         error(sprintf('\nDesignated sampling rate exceeds original sampling rate\n'));
+    elseif data_voltage_samplingrate_reductionfactor > 1
+        data_voltage_new = NaN(floor(size(data_voltage_cycle, 1)/data_voltage_samplingrate_reductionfactor), size(data_voltage_cycle, 2));
     end
-    data_voltage_new = NaN(floor(size(data_voltage_cycle, 1)/data_voltage_samplingrate_reductionfactor), size(data_voltage_cycle, 2));
     for idx2 = 1:size(data_voltage_cycle, 2) % for each column in data, e.g. V_rec, I_cmd
         for idx1 = 1:floor(size(data_voltage_cycle, 1)/data_voltage_samplingrate_reductionfactor)
             data_voltage_new(idx1, idx2) = ...
@@ -13609,7 +13610,7 @@ try
 catch ME
     elapsedTime = toc;
     set(src, 'enable', 'on');
-    error('Analysis parameters incompatible with data shape');
+    error('Error: Analysis parameters incompatible with data shape');
 end
 
 set(src, 'enable', 'on');
@@ -15336,7 +15337,6 @@ else
             set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
         end
     else
-        traceDisplayXRangeLow = traceDisplayXRangeLow - (traceDisplayXRangeHigh - dataLimit);
         %traceDisplayXRangeLow = traceDisplayXRangeLow;
         %traceDisplayXRangeHigh = dataLimit;
         %set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
