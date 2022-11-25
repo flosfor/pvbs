@@ -90,7 +90,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.11.23';
+pvbsLastMod = '2022.11.24';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -4030,7 +4030,7 @@ end
                 results{i} = results{i - 1};
             end
         end
-        exp.experimentCount = experimentCount + 1; % somehow i made this variable at some point and it's absolutely necessary that it is correct for the code to run properly
+        exp.experimentCount = experimentCount + length(itemSelected); % somehow i made this variable at some point and it's absolutely necessary that it is correct for the code to run properly
     end
 
 % update display
@@ -13365,8 +13365,8 @@ hold on;
 % improve aesthetics and also how "hold on" is repeated for every sweep
 % just plot the first and the 2*rheo for now
 %for idx = 1:data_segment_count
-%for idx = [1, results.intrinsic_properties{1}.rheobase_x2_sweep]
-for idx = [1, results.intrinsic_properties{1}.rheobase_sweep]
+for idx = [1, results.intrinsic_properties{1}.rheobase_x2_sweep]
+%for idx = [1, results.intrinsic_properties{1}.rheobase_sweep]
     %plot(data_voltage_cycle_episodic(:,1,idx), data_voltage_cycle_episodic(:,1+voltage_signal_channel,idx), 'parent', displayWindow, 'color', [0.5, 0.5, 0.5]); % trace_episodic_color was for this
     plot(data_voltage_cycle_episodic(:,1,idx), data_voltage_cycle_episodic(:,1+voltage_signal_channel,idx), 'parent', h.ui.intrinsicPlot1, 'color', [0.5, 0.5, 0.5]); % trace_episodic_color was for this
 end
