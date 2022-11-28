@@ -244,7 +244,7 @@ ui.cellListDel = uicontrol('Style', 'pushbutton', 'String', 'X', 'Units', 'norma
 %  main trace display window
 ui.traceDisplayTitle = uicontrol('Style', 'text', 'string', 'Traces', 'fontweight', 'bold', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.15, 0.955, 0.09, 0.02]);
 ui.traceDisplay = axes('Units', 'Normalized', 'Position', [0.19, 0.42, 0.57, 0.53], 'xminortick', 'on', 'yminortick', 'on', 'box', 'on');
-ui.traceDisplayChannels = uicontrol('Style', 'pushbutton', 'enable', 'off', 'String', 'S#', 'backgroundcolor', [0.99, 0.99, 0.99], 'Units', 'normalized', 'Position', [0.735, 0.905, 0.015, 0.03], 'Callback', @traceDisplayChannels, 'interruptible', 'off');
+ui.traceDisplaySignalsButton = uicontrol('Style', 'pushbutton', 'enable', 'off', 'String', 'S#', 'backgroundcolor', [0.99, 0.99, 0.99], 'Units', 'normalized', 'Position', [0.735, 0.905, 0.015, 0.03], 'Callback', @traceDisplaySignals, 'interruptible', 'off');
 ui.traceDisplayXZoomIn = uicontrol('Style', 'pushbutton', 'String', '+', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.5245, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXZoomIn, 'interruptible', 'off');
 ui.traceDisplayXZoomOut = uicontrol('Style', 'pushbutton', 'String', '-', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.4115, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXZoomOut, 'interruptible', 'off');
 ui.traceDisplayXMoveRight = uicontrol('Style', 'pushbutton', 'String', '>', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.71, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveRight, 'interruptible', 'off');
@@ -495,6 +495,7 @@ pvbsCurrentScalingFactor = 2000; % (pA/V); % 2000 for P-IV (MIT MIBR 46-6178), o
 %  below are set for single channel recording of V and i (in that order)
 %  multiple-channel support pending %%% fixlater
 timeColumn = 1; % column 1: timestamp
+timeColumnAvailable = 1; % flag for timestamp availability
 pvbsVoltageColumn = 2; % column 2: voltage
 pvbsCurrentColumn = 3; % column 3: current
 csvOffsetRow = 1; % row 1: title
@@ -502,7 +503,7 @@ csvOffsetColumn = 0; % no column offset
 csvColumnsAsSweeps = 1; % each column represents a sweep - set this to 0 if primarilily used for importing .csv saved directly from PV (not recommended; import .xls metadata instead for PV data)
 
 % voltage/current data
-analysisColumn = 2; % column for analysis; NB. column 1 will usually be timestamp in the current code
+analysisColumn = pvbsVoltageColumn; % column for analysis; NB. column 1 will usually be timestamp in the current code
 peakDirection1 = 1; % window 1 default peak direction (-1, 0, 1 : negative, absolute, positive)
 peakDirection2 = 1; % window 2 default peak direction (-1, 0, 1 : negative, absolute, positive)
 useMedian = 1; % use median instead of mean for baseline, "mean" (in peak analysis), etc., to be robust from noise
@@ -530,6 +531,12 @@ lineScanBackgroundThreshold = -0; % (s.d.); z-score for 2nd quartile
 %lineScanBackgroundThreshold = -2.05375; % (s.d.); z-score for 98th percentile
 lineScanColorMapRange = 1; % saturate displayed intensity for signals above this percentage of maximum
 offloadMarkPointsMetadata = 0; % delete markpoints metadata after retrieving point indices to save space (0: no, 1: yes)
+
+% signals to display
+signal1Type = 2; % current, voltage, fluorescence
+signal2Type = 3; % current, voltage, fluorescence
+signal1Channel = pvbsVoltageColumn; % corresponding to data column, but mind timestamp availability
+signal2Channel = lineScanChannel; % corresponding to data column, but mind timestamp availability
 
 % PV hardware error correction
 %  Prairie (now Bruker) GPIO box (DAC) can quite unbelievably have bleedthrough across channels, 
@@ -561,7 +568,7 @@ segmentationOffset = 350; % segmentation initial offset (ms)
 segmentationTruncate = 1; % truncate remainder (0: no, 1: yes)
 segmentationCount = 0; % keep only this many segments and discard the rest (0 to disable)
 
-% analysis - intrinsic properties (to be backwards compatible with ancient code)
+% analysis - intrinsic properties (to be reverse compatible with ancient code)
 %  data format
 intrinsicPropertiesAnalysis = struct();
 intrinsicPropertiesAnalysisInput = [pvbsVoltageScalingFactor, pvbsCurrentScalingFactor, pvbsCurrentCorrectionFlag];
@@ -585,11 +592,16 @@ dirLoadDefault = cd;
 defaultParams.pvbsVoltageScalingFactor = pvbsVoltageScalingFactor;
 defaultParams.pvbsCurrentScalingFactor = pvbsCurrentScalingFactor;
 defaultParams.timeColumn = timeColumn;
+defaultParams.timeColumnAvailable = timeColumnAvailable;
 defaultParams.pvbsVoltageColumn = pvbsVoltageColumn;
 defaultParams.pvbsCurrentColumn = pvbsCurrentColumn;
 defaultParams.csvOffsetRow = csvOffsetRow;
 defaultParams.csvOffsetColumn = csvOffsetColumn;
 defaultParams.csvColumnsAsSweeps = csvColumnsAsSweeps;
+defaultParams.signal1Type = signal1Type;
+defaultParams.signal2Type = signal2Type;
+defaultParams.signal1Channel = signal1Channel;
+defaultParams.signal2Channel = signal2Channel;
 defaultParams.analysisColumn = analysisColumn;
 defaultParams.peakDirection1 = peakDirection1;
 defaultParams.peakDirection2 = peakDirection2;
@@ -723,6 +735,13 @@ set(srcButton, 'enable', 'off');
 analysisParameters = h.params.actualParams;
 analysisParametersDefault = h.params.defaultParams;
 
+% reverse compatibility
+try
+    timeColumnAvailable = analysisParameters.timeColumnAvailable;
+catch ME
+    timeColumnAvailable = 1;
+end
+
 % options
 optionsWin = figure('Name', 'Import Settings', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.2, 0.25, 0.45, 0.6], 'resize', 'off', 'DeleteFcn', @winClosed); % use CloseRequestFcn?
 oWin.t101 = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'DAC gain', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.925, 0.9, 0.04]);
@@ -744,7 +763,7 @@ oWin.t222 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(a
 oWin.t223 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.78, 0.1, 0.04]);
 oWin.t231 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Timestamp (t; ms) at column:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.73, 0.4, 0.04]);
 oWin.t232 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'enable', 'off', 'string', num2str(analysisParameters.timeColumn), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.7375, 0.125, 0.04], 'callback', @updateParams);
-oWin.t233 = uicontrol('Parent', optionsWin, 'Style', 'checkbox', 'enable', 'off', 'string', '(available)', 'value', logical(analysisParameters.timeColumn), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.7375, 0.4, 0.04], 'callback', @updateParams);
+oWin.t233 = uicontrol('Parent', optionsWin, 'Style', 'checkbox', 'enable', 'off', 'string', '(available)', 'value', logical(timeColumnAvailable), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.7375, 0.4, 0.04], 'callback', @updateParams);
 oWin.t241 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Voltage (V; mV) at column:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.68, 0.4, 0.04]);
 oWin.t242 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.pvbsVoltageColumn), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.6875, 0.125, 0.04], 'callback', @updateParams);
 oWin.t243 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.68, 0.1, 0.04]);
@@ -3241,7 +3260,7 @@ h.ui.trace2 = trace2;
 end
 
 
-function traceDisplayChannels(src, ~)
+function traceDisplaySignals(src, ~)
 
 win1 = src.Parent;
 srcButton = src;
@@ -3254,25 +3273,250 @@ analysisParameters = h.params.actualParams;
 analysisParametersDefault = h.params.defaultParams;
 
 % options
-win2 = figure('Name', 'Channels to Display', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.55, 0.65, 0.2, 0.2], 'DeleteFcn', @winClosed); % use CloseRequestFcn?
+win2 = figure('Name', 'Signals to Display', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.55, 0.65, 0.2, 0.2], 'DeleteFcn', @winClosed); % use CloseRequestFcn?
+
+try % try-catch for reverse compatibility
+    timeColumnAvailable = h.params.actualParams.timeColumnAvailable;
+catch ME
+    timeColumnAvailable = 1;
+end
+
+try % ditto; but should be irrelevant because this feature was missing
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+    signal1Channel = h.params.actualParams.signal1Channel; % corresponding to data column, but mind timestamp availability
+    signal2Channel = h.params.actualParams.signal2Channel; % corresponding to data column, but mind timestamp availability
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+    end
+end
+
+switch signal1Type % i, V, F
+    case 1
+        e121Value = 1;
+        e131Value = 0;
+        e141Value = 0;
+        if timeColumnAvailable
+            signal1Channel = signal1Channel - 1; % only for straightforwardness, not to represent actual column
+            signal1ChannelOffset = 1; % for later reference
+        end
+    case 2
+        e121Value = 0;
+        e131Value = 1;
+        e141Value = 0;
+        if timeColumnAvailable
+            signal1Channel = signal1Channel - 1; % only for straightforwardness, not to represent actual column
+            signal1ChannelOffset = 1; % for later reference
+        end
+    case 3
+        e121Value = 0;
+        e131Value = 0;
+        e141Value = 1;
+        signal1ChannelOffset = 0; % for later reference
+    otherwise % absurd
+        e121Value = 0;
+        e131Value = 0;
+        e141Value = 0;
+        signal1ChannelOffset = 0; % for later reference
+end
+
+switch signal2Type % i, V, F
+    case 1
+        e122Value = 1;
+        e132Value = 0;
+        e142Value = 0;
+        if timeColumnAvailable
+            signal2Channel = signal2Channel - 1; % only for straightforwardness, not to represent actual column
+            signal2ChannelOffset = 1; % for later reference
+        end
+    case 2
+        e122Value = 0;
+        e132Value = 1;
+        e142Value = 0;
+        if timeColumnAvailable
+            signal2Channel = signal2Channel - 1; % only for straightforwardness, not to represent actual column
+            signal2ChannelOffset = 1; % for later reference
+        end
+    case 3
+        e122Value = 0;
+        e132Value = 0;
+        e142Value = 1;
+        signal2ChannelOffset = 0; % for later reference
+    otherwise % absurd
+        e122Value = 0;
+        e132Value = 0;
+        e142Value = 0;
+        signal2ChannelOffset = 0; % for later reference
+end
 
 ui2.e101 = uicontrol('Parent', win2, 'Style', 'text', 'fontweight', 'bold', 'string', ' <  Axis 1', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.85, 0.4, 0.08]);
 ui2.e102 = uicontrol('Parent', win2, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.85, 0.6, 0.08]);
 ui2.e103 = uicontrol('Parent', win2, 'Style', 'text', 'fontweight', 'bold', 'string', 'Axis 2  > ', 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.525, 0.85, 0.4, 0.08]);
-ui2.e111 = uicontrol('Parent', win2, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.75, 0.4, 0.08]);
-ui2.e112 = uicontrol('Parent', win2, 'Style', 'edit', 'string', num2str(1), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.76, 0.125, 0.08], 'callback', @updateCallback);
-ui2.e113 = uicontrol('Parent', win2, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.75, 0.1, 0.08]);
-ui2.e121 = uicontrol('Parent', win2, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.75, 0.4, 0.08]);
-ui2.e122 = uicontrol('Parent', win2, 'Style', 'edit', 'string', num2str(1), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.75, 0.76, 0.125, 0.08], 'callback', @updateCallback);
-ui2.e123 = uicontrol('Parent', win2, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.75, 0.1, 0.08]);
+ui2.e111 = uicontrol('Parent', win2, 'Style', 'text', 'string', 'Channel:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.7, 0.4, 0.08]);
+ui2.e112 = uicontrol('Parent', win2, 'Style', 'edit', 'string', num2str(signal1Channel), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.2, 0.71, 0.125, 0.08], 'callback', @updateCallbackAxis1Ch);
+ui2.e113 = uicontrol('Parent', win2, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.7, 0.1, 0.08]);
+ui2.e114 = uicontrol('Parent', win2, 'Style', 'text', 'string', 'Channel:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.6, 0.7, 0.4, 0.08]);
+ui2.e115 = uicontrol('Parent', win2, 'Style', 'edit', 'string', num2str(signal2Channel), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.71, 0.125, 0.08], 'callback', @updateCallbackAxis2Ch);
+ui2.e116 = uicontrol('Parent', win2, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.7, 0.1, 0.08]);
+ui2.e121 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Current', 'value', e121Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.55, 0.4, 0.08], 'callback', @updateCallbackAxis1);
+ui2.e122 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Current', 'value', e122Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.6, 0.55, 0.4, 0.08], 'callback', @updateCallbackAxis2);
+ui2.e131 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Voltage', 'value', e131Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.45, 0.4, 0.08], 'callback', @updateCallbackAxis1);
+ui2.e132 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Voltage', 'value', e132Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.6, 0.45, 0.4, 0.08], 'callback', @updateCallbackAxis2);
+ui2.e141 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Fluorescence', 'value', e141Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.35, 0.4, 0.08], 'callback', @updateCallbackAxis1);
+ui2.e142 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Fluorescence', 'value', e142Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.6, 0.35, 0.4, 0.08], 'callback', @updateCallbackAxis2);
 
 ui2.resetButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.44, 0.05, 0.25, 0.12], 'callback', @resetCallback, 'interruptible', 'off');
 ui2.saveButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Save', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.7, 0.05, 0.25, 0.12], 'callback', @saveCallback, 'interruptible', 'off');
 
-
     function winClosed(src, ~)
         set(srcButton, 'enable', 'on');
         %guidata(srcButton, h); % don't save when closed without using the save button
+    end
+
+    function updateDispaly(src, ~)
+    end
+
+    function updateCallbackAxis1(src, ~)
+        %{
+        axis1i = ui2.e121.Value;
+        axis1V = ui2.e131.Value;
+        axis1F = ui2.e141.Value;
+        %}
+        if ~src.Value
+            src.Value = 1;
+            return
+        elseif strcmp(src.String, 'Current')
+            signal1Type = 1;
+            axis1i = src.Value;
+            axis1V = 0;
+            axis1F = 0;
+        elseif strcmp(src.String, 'Voltage')
+            signal1Type = 2;
+            axis1i = 0;
+            axis1V = src.Value;
+            axis1F = 0;
+        elseif strcmp(src.String, 'Fluorescence')
+            signal1Type = 3;
+            axis1i = 0;
+            axis1V = 0;
+            axis1F = src.Value;
+        end
+        ui2.e121.Value = axis1i;
+        ui2.e131.Value = axis1V;
+        ui2.e141.Value = axis1F;
+    end
+
+    function updateCallbackAxis2(src, ~)
+        %{
+        axis2i = ui2.e122.Value;
+        axis2V = ui2.e132.Value;
+        axis2F = ui2.e142.Value;
+        %}
+        if ~src.Value
+            src.Value = 1;
+            return
+        elseif strcmp(src.String, 'Current')
+            signal2Type = 1;
+            axis2i = src.Value;
+            axis2V = 0;
+            axis2F = 0;
+        elseif strcmp(src.String, 'Voltage')
+            signal2Type = 2;
+            axis2i = 0;
+            axis2V = src.Value;
+            axis2F = 0;
+        elseif strcmp(src.String, 'Fluorescence')
+            signal2Type = 3;
+            axis2i = 0;
+            axis2V = 0;
+            axis2F = src.Value;
+        end
+        ui2.e122.Value = axis2i;
+        ui2.e132.Value = axis2V;
+        ui2.e142.Value = axis2F;
+    end
+
+    function updateCallbackAxis1Ch(src, ~) % obsolete
+    end
+
+    function updateCallbackAxis2Ch(src, ~) % obsolete
+    end
+
+    function resetCallback(src, ~)
+        signal1Channel = h.params.defaultParams.signal1Channel;
+        signal2Channel = h.params.defaultParams.signal2Channel;
+        signal1Channel = signal1Channel - signal1ChannelOffset; % signal1ChannelOffset defined at the beginning
+        signal2Channel = signal2Channel - signal2ChannelOffset; % signal2ChannelOffset defined at the beginning
+        ui2.e112.String = num2str(signal1Channel);
+        ui2.e115.String = num2str(signal2Channel);
+        signal1Type = h.params.defaultParams.signal1Type;
+        signal2Type = h.params.defaultParams.signal2Type;
+        switch signal1Type
+            case 1
+                axis1i = 1;
+                axis1V = 0;
+                axis1F = 0;
+            case 2
+                axis1i = 0;
+                axis1V = 1;
+                axis1F = 0;
+            case 3
+                axis1i = 0;
+                axis1V = 0;
+                axis1F = 1;
+            otherwise % absurd
+                axis1i = 0;
+                axis1V = 0;
+                axis1F = 0;
+        end
+        ui2.e121.Value = axis1i;
+        ui2.e131.Value = axis1V;
+        ui2.e141.Value = axis1F;
+        switch signal2Type
+            case 1
+                axis2i = 1;
+                axis2V = 0;
+                axis2F = 0;
+            case 2
+                axis2i = 0;
+                axis2V = 1;
+                axis2F = 0;
+            case 3
+                axis2i = 0;
+                axis2V = 0;
+                axis2F = 1;
+            otherwise % absurd
+                axis2i = 0;
+                axis2V = 0;
+                axis2F = 0;
+        end
+        ui2.e122.Value = axis2i;
+        ui2.e132.Value = axis2V;
+        ui2.e142.Value = axis2F;
+    end
+
+    function saveCallback(src, ~)
+        signal1Channel = str2num(ui2.e112.String);
+        signal2Channel = str2num(ui2.e115.String);
+        if signal1ChannelOffset
+            signal1Channel = signal1Channel + signal1ChannelOffset; % mind the sign
+        end
+        if signal2ChannelOffset
+            signal2Channel = signal2Channel + signal2ChannelOffset; % mind the sign
+        end
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.actualParams.signal1Type = signal1Type;
+        h.params.actualParams.signal2Type = signal2Type;
+        guidata(win1, h);
+        close(win2);
     end
 
 end
