@@ -2649,8 +2649,30 @@ if isempty(VRec)
 end
 
 % experiment to display
+try % try-catch for reverse compatibility
+    timeColumnAvailable = h.params.actualParams.timeColumnAvailable;
+catch ME
+    timeColumnAvailable = 1;
+end
+try % ditto
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+    signal1Channel = h.params.actualParams.signal1Channel; % corresponding to data column, but mind timestamp availability
+    signal2Channel = h.params.actualParams.signal2Channel; % corresponding to data column, but mind timestamp availability
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+    end
+end
 columnTimeStamp = h.params.actualParams.timeColumn;
-columnToDisplay = h.params.actualParams.pvbsVoltageColumn; %%% fixlater
+%columnToDisplay = h.params.actualParams.pvbsVoltageColumn; %%% fixlater
+columnToDisplay = signal1Channel;
 itemToDisplay = itemSelected(1); % display only the first one if multiple items are selected - obsolete
 VRecToDisplay = VRec{itemToDisplay};
 if iscell(VRecToDisplay)
@@ -2784,7 +2806,8 @@ try
 
     % experiment to display
     columnTimeStamp2 = 1;
-    columnToDisplay2 = 2; % assuming data columns are timestamp, dF/F
+    %columnToDisplay2 = 2; % assuming data columns are timestamp, dF/F
+    columnToDisplay = signal2Channel;
     dFFToDisplay = dff{itemToDisplay};
     
     % obsolete because of data structure format
@@ -2880,8 +2903,30 @@ if isempty(VRec)
 end
 
 % experiment to display
+try % try-catch for reverse compatibility
+    timeColumnAvailable = h.params.actualParams.timeColumnAvailable;
+catch ME
+    timeColumnAvailable = 1;
+end
+try % ditto
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+    signal1Channel = h.params.actualParams.signal1Channel; % corresponding to data column, but mind timestamp availability
+    signal2Channel = h.params.actualParams.signal2Channel; % corresponding to data column, but mind timestamp availability
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+    end
+end
 columnTimeStamp = h.params.actualParams.timeColumn;
-columnToDisplay = h.params.actualParams.pvbsVoltageColumn; %%% fixlater
+%columnToDisplay = h.params.actualParams.pvbsVoltageColumn; %%% fixlater
+columnToDisplay = signal1Channel;
 itemToDisplay = itemSelected(1); % display only the first one if multiple items are selected - obsolete
 VRecToDisplay = VRec{itemToDisplay};
 if iscell(VRecToDisplay)
@@ -2979,7 +3024,8 @@ if displayFlag(2)
         
         % experiment to display
         columnTimeStamp2 = 1;
-        columnToDisplay2 = 2; % assuming data columns are timestamp, dF/F
+        %columnToDisplay2 = 2; % assuming data columns are timestamp, dF/F
+        columnToDisplay = signal2Channel;
         dFFToDisplay = dff{itemToDisplay};
         
         % obsolete because of data structure format
@@ -3373,14 +3419,11 @@ ui2.e141 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Fluoresc
 ui2.e142 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Fluorescence', 'value', e142Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.6, 0.35, 0.4, 0.08], 'callback', @updateCallbackAxis2);
 
 ui2.resetButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.44, 0.05, 0.25, 0.12], 'callback', @resetCallback, 'interruptible', 'off');
-ui2.saveButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Save', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.7, 0.05, 0.25, 0.12], 'callback', @saveCallback, 'interruptible', 'off');
+ui2.saveButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Update', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.7, 0.05, 0.25, 0.12], 'callback', @saveCallback, 'interruptible', 'off');
 
     function winClosed(src, ~)
         set(srcButton, 'enable', 'on');
         %guidata(srcButton, h); % don't save when closed without using the save button
-    end
-
-    function updateDispaly(src, ~)
     end
 
     function updateCallbackAxis1(src, ~)
@@ -3515,8 +3558,20 @@ ui2.saveButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Sav
         h.params.actualParams.signal2Channel = signal2Channel;
         h.params.actualParams.signal1Type = signal1Type;
         h.params.actualParams.signal2Type = signal2Type;
+        updateDisplay()
         guidata(win1, h);
         close(win2);
+    end
+
+    function updateDisplay()
+        if isempty(h.ui.cellListDisplay) || isempty(h.ui.sweepListDisplay)
+        else
+            expIdx = h.ui.cellListDisplay.Value;
+            expIdx = expIdx(1); % force single selection
+            swpIdx = h.ui.sweepListDisplay.Value;
+            h = displayTrace(h, expIdx); % this also populates sweep list and sets up strings, etc.
+            h = highlightSweep(h, swpIdx);
+        end
     end
 
 end
