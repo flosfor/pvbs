@@ -244,7 +244,7 @@ ui.cellListDel = uicontrol('Style', 'pushbutton', 'String', 'X', 'Units', 'norma
 %  main trace display window
 ui.traceDisplayTitle = uicontrol('Style', 'text', 'string', 'Traces', 'fontweight', 'bold', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.15, 0.955, 0.09, 0.02]);
 ui.traceDisplay = axes('Units', 'Normalized', 'Position', [0.19, 0.42, 0.57, 0.53], 'xminortick', 'on', 'yminortick', 'on', 'box', 'on');
-ui.traceDisplayChannels = uicontrol('Style', 'pushbutton', 'enable', 'on', 'String', 'S#', 'backgroundcolor', [0.99, 0.99, 0.99], 'Units', 'normalized', 'Position', [0.735, 0.905, 0.015, 0.03], 'Callback', @traceDisplayChannels, 'interruptible', 'off');
+ui.traceDisplayChannels = uicontrol('Style', 'pushbutton', 'enable', 'off', 'String', 'S#', 'backgroundcolor', [0.99, 0.99, 0.99], 'Units', 'normalized', 'Position', [0.735, 0.905, 0.015, 0.03], 'Callback', @traceDisplayChannels, 'interruptible', 'off');
 ui.traceDisplayXZoomIn = uicontrol('Style', 'pushbutton', 'String', '+', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.5245, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXZoomIn, 'interruptible', 'off');
 ui.traceDisplayXZoomOut = uicontrol('Style', 'pushbutton', 'String', '-', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.4115, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXZoomOut, 'interruptible', 'off');
 ui.traceDisplayXMoveRight = uicontrol('Style', 'pushbutton', 'String', '>', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.71, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveRight, 'interruptible', 'off');
