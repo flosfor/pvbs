@@ -90,7 +90,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.11.24';
+pvbsLastMod = '2022.11.28';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -12592,6 +12592,7 @@ try
         guidata(src, h);
     catch ME
         elapsedTime = toc;
+        set(h.ui.intrinsicFileName, 'String', '(N/A)');
         error('Analysis parameters incompatible with data shape');
     end
 catch ME
@@ -12737,7 +12738,7 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
     window_1_start = analysisParameters.window_start; % (ms); detection window 1 start
     window_1_end = analysisParameters.window_end; % (ms); detection window 1 end
     window_1_direction = analysisParameters.window_direction; % (ms); detection window 1 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
-    %  below became redundant %%% fixlater
+    %  below became redundant %%% fixlater %%% do also for intrinsicAnalysis2()
     window_2_start = analysisParameters.window_start; % (ms); analysis window 2 start
     window_2_end = analysisParameters.window_end; % (ms); analysis window 2 end
     window_2_direction = analysisParameters.window_direction; % (ms); analysis window 2 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
@@ -13181,13 +13182,22 @@ function h = intrinsicAnalysis2(h, data_voltage_episodic, flagScalingOverride)
     window_baseline_start = analysisParameters.window_baseline_start; % (ms); baseline start - this is not for main analysis window, but for intrinsic properties!
     window_baseline_end = analysisParameters.window_baseline_end; % (ms); baseline end
     window_n = analysisParameters.window_n; % number of detection windows (1 or 2)
+    window_1_start = analysisParameters.window_start; % (ms); detection window 1 start
+    window_1_end = analysisParameters.window_end; % (ms); detection window 1 end
+    window_1_direction = analysisParameters.window_direction; % (ms); detection window 1 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
+    %  below became redundant %%% fixlater %%% do also for intrinsicAnalysis()
+    window_2_start = analysisParameters.window_start; % (ms); analysis window 2 start
+    window_2_end = analysisParameters.window_end; % (ms); analysis window 2 end
+    window_2_direction = analysisParameters.window_direction; % (ms); analysis window 2 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
+    %{
     window_1_start = analysisParameters.window_1_start; % (ms); detection window 1 start
     window_1_end = analysisParameters.window_1_end; % (ms); detection window 1 end
     window_1_direction = analysisParameters.window_1_direction; % (ms); detection window 1 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
     window_2_start = analysisParameters.window_2_start; % (ms); analysis window 2 start
     window_2_end = analysisParameters.window_2_end; % (ms); analysis window 2 end
     window_2_direction = analysisParameters.window_2_direction; % (ms); analysis window 2 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
- 
+    %}
+    
     % get data sampling rate from raw data; could also be fetched from metadata, but easier and more straightforward this way
     data_voltage_episodic_firstsweep = data_voltage_episodic(:,:,1);
     data_voltage_interval_original = data_voltage_episodic_firstsweep(2,1) - data_voltage_episodic_firstsweep(1,1); % (ms)
@@ -13614,6 +13624,7 @@ try
 catch ME
     elapsedTime = toc;
     set(src, 'enable', 'on');
+    set(h.ui.intrinsicFileName, 'String', '(N/A)');
     error('Error: Analysis parameters incompatible with data shape, or spike detected during subthreshold sweeps');
 end
 
@@ -13659,6 +13670,7 @@ try
     h = intrinsicAnalysis2(h, data_voltage_episodic, 1); %%% fixlater: doesnt work after having used the recording in main display for intrinsic properties analysis 
     elapsedTime = toc;
     fprintf('\n Analysis complete. (elapsed time: %.2f s)\n\n', elapsedTime);
+    set(src, 'enable', 'on');
     guidata(src, h);
 catch ME
     elapsedTime = toc;
