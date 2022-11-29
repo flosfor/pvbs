@@ -55,7 +55,6 @@
 %
 %
 % * Features underway for future versions:
-%   - Multiple input channel support (e.g. for dual recordings)
 %   - Artifact removal
 %   - Manual linescan ROI selection
 %   - Threshold detection
@@ -89,7 +88,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.11.28';
+pvbsLastMod = '2022.11.29';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -155,14 +154,18 @@ params.analysisWindow2Color = [0, 0.6, 0.6]; % analysis window 2 color
 params.xRange = []; % x axis range for main trace display; leave this empty
 params.xRangeZoom = 2; % x range zooming factor
 params.xRangeMove = 0.166666667; % x range moving factor
-params.yRangeDefault = [-140, 20]; % y axis range for main trace display
+params.yRangeDefault = [-140, 20]; % y axis range for main trace display, for V
 params.yRange = params.yRangeDefault; 
-params.yRangeZoom = 2; % y range zooming factor
-params.yRangeMove = 0.083333334; % y range moving factor
-params.y2RangeDefault = [-1, 4]; % y axis (right) range for main trace display
+params.yRangeZoom = 2; % y range zooming factor, for V
+params.yRangeMove = 0.083333334; % y range moving factor, for V
+params.y2RangeDefault = [-1, 4]; % y axis range for main trace display, for F
 params.y2Range = params.y2RangeDefault; 
-params.y2RangeZoom = 2; % y range (right) zooming factor
-params.y2RangeMove = 0.083333334; % y range (right) moving factor
+params.y2RangeZoom = 2; % y range zooming factor, for F
+params.y2RangeMove = 0.083333334; % y range moving factor, for F
+params.y3RangeDefault = [-1000, 2000]; % y axis range for main trace display, for i
+params.y3Range = params.y3RangeDefault; 
+params.y3RangeZoom = 2; % y range zooming factor, for i
+params.y3RangeMove = 0.083333334; % y range moving factor, for i
 params.traceColorInactive = [0.6, 0.6, 0.6]; % color for inactive traces
 params.traceColorActive = [1, 0, 0]; % color for active (selected) traces
 params.trace2ColorInactive = [0.9, 0.95, 0.9]; % secondary color for inactive traces
@@ -172,7 +175,7 @@ params.groupSelectionInterval = 0; % default selection interval for grouping
 params.groupSweepIdx = 0; % index of sweep to display within group
 %params.peakDirection = 0; % direction for peak detection (-1: negative, 0: absolute, 1: positive) - obsolete
 params.traceProcessingTargetList = {'Voltage / Current', 'Fluorescence'}; % obsolete, using params.analysisPlotMenuList1 instead
-params.exportTarget = 1; % which signal to export - default to 1
+%params.exportTarget = 1; % which signal to export - default to 1 - obsolete
 params.resultsPlot1YRange = []; % will be updated upon analysis
 params.resultsPlot2YRange = []; % will be updated upon analysis
 params.lastSweepDeleted = 0; % flag to indicate if last sweep had been deleted; for correct indexing
@@ -244,7 +247,7 @@ ui.cellListDel = uicontrol('Style', 'pushbutton', 'String', 'X', 'Units', 'norma
 %  main trace display window
 ui.traceDisplayTitle = uicontrol('Style', 'text', 'string', 'Traces', 'fontweight', 'bold', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.15, 0.955, 0.09, 0.02]);
 ui.traceDisplay = axes('Units', 'Normalized', 'Position', [0.19, 0.42, 0.57, 0.53], 'xminortick', 'on', 'yminortick', 'on', 'box', 'on');
-ui.traceDisplaySignalsButton = uicontrol('Style', 'pushbutton', 'enable', 'off', 'String', 'S#', 'backgroundcolor', [0.99, 0.99, 0.99], 'Units', 'normalized', 'Position', [0.735, 0.905, 0.015, 0.03], 'Callback', @traceDisplaySignals, 'interruptible', 'off');
+ui.traceDisplaySignalsButton = uicontrol('Style', 'pushbutton', 'enable', 'on', 'String', 'S#', 'backgroundcolor', [0.99, 0.99, 0.99], 'Units', 'normalized', 'Position', [0.735, 0.905, 0.015, 0.03], 'Callback', @traceDisplaySignals, 'interruptible', 'off');
 ui.traceDisplayXZoomIn = uicontrol('Style', 'pushbutton', 'String', '+', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.5245, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXZoomIn, 'interruptible', 'off');
 ui.traceDisplayXZoomOut = uicontrol('Style', 'pushbutton', 'String', '-', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.4115, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXZoomOut, 'interruptible', 'off');
 ui.traceDisplayXMoveRight = uicontrol('Style', 'pushbutton', 'String', '>', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.71, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveRight, 'interruptible', 'off');
@@ -2641,6 +2644,7 @@ groupListDisplay = h.ui.groupListDisplay;
 
 % axis range information
 traceDisplayYRange = h.ui.traceDisplayYRange; % y range; to be shared across experiments
+traceDisplayY2Range = h.ui.traceDisplayY2Range; % y range; to be shared across experiments
 traceDisplayXRange = h.ui.traceDisplayXRange; % x range; to be shared across experiments
 
 % break if invalid - for when called before loading experiments
@@ -2670,9 +2674,10 @@ catch ME
         signal2Channel = 2;
     end
 end
+
 columnTimeStamp = h.params.actualParams.timeColumn;
 %columnToDisplay = h.params.actualParams.pvbsVoltageColumn; %%% fixlater
-columnToDisplay = signal1Channel;
+
 itemToDisplay = itemSelected(1); % display only the first one if multiple items are selected - obsolete
 VRecToDisplay = VRec{itemToDisplay};
 if iscell(VRecToDisplay)
@@ -2689,73 +2694,211 @@ groupIdx = h.exp.data.groupIdx{itemSelected};
 groupStr = h.exp.data.groupStr{itemSelected};
 
 % do display
-traceColor = params.traceColorInactive;
 axes(traceDisplay);
-yyaxis left;
-if sweepCount == 1
-    if iscell(VRecToDisplay)
-        currentSweep = VRecToDisplay{1};
-    else
-        currentSweep = VRecToDisplay;
+
+try % use try-catch here
+    
+    workingAxis = 1;
+    if signal1Type == 3 % i, V, F
+        displayTraceF(workingAxis);
+    elseif signal1Type == 1
+        displayTraceV(workingAxis); % can't think of a better name; also separate axis labeling from this function
+    else % default to V in case signal1Type is incorrectly set due to whatever miracle
+        displayTraceV(workingAxis); % can't think of a better name; also separate axis labeling from this function
     end
-    trace{1} = plot(currentSweep(:, columnTimeStamp), currentSweep(:, columnToDisplay), 'parent', traceDisplay, 'color', traceColor, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
-    trace{1}.ZData = ones(size(trace{1}.XData)); % assigning z value for display order
-    %sweepList{end + 1} = num2str(1);
-    %{
-    if rem(sweepIdx(i), 1) ~= 0
-        sweepList{end + 1} = num2str(sweepIdx(i), '%.3f');
-    else
-        sweepList{end + 1} = num2str(sweepIdx(i));
+    
+    workingAxis = 2;
+    if signal2Type == 3 % i, V, F
+        displayTraceF(workingAxis);
+    elseif signal2Type == 1
+        displayTraceV(workingAxis); % can't think of a better name; also separate axis labeling from this function
+    else % default to V in case signal1Type is incorrectly set due to whatever miracle
+        displayTraceV(workingAxis); % can't think of a better name; also separate axis labeling from this function
     end
-    %}
-    sweepList{end + 1} = sweepStr{1};
-else
-    hold on;
-    for i = 1:sweepCount
-        currentSweep = VRecToDisplay{i};
-        trace{i} = plot(currentSweep(:, columnTimeStamp), currentSweep(:, columnToDisplay), 'parent', traceDisplay, 'color', traceColor, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
-        trace{i}.ZData = ones(size(trace{i}.XData)); % assigning z value for display order
-        %sweepList{end + 1} = num2str(i);
-        %{
-        if rem(sweepIdx(i), 1) ~= 0
-            sweepList{end + 1} = num2str(sweepIdx(i), '%.3f');
-        else
-            sweepList{end + 1} = num2str(sweepIdx(i));
+    
+catch ME
+    errorString = sprintf(' Warning: invalid display parameters (Axis #%s) - check signal channels\n', num2str(workingAxis));
+    %error(errorString);
+    fprintf(errorString); % not exactly an error
+    yyaxis left; % return to left axis as a failsafe
+    return
+end
+
+    function displayTraceF(axisIdx)
+        axes(traceDisplay);
+        
+            % load
+            dff = h.exp.data.lineScanDFF;
+            traceDisplayY2Range = h.ui.traceDisplayY2Range; % y range (right); to be shared across experiments
+            
+            % experiment to display
+            dFFToDisplay = dff{itemToDisplay};
+            sweep2Count = length(dFFToDisplay);
+            columnTimeStamp2 = 1; %%% ugh
+            
+            % do display
+            if axisIdx == 1
+                columnToDisplay2 = signal1Channel;
+                trace2Color = params.traceColorInactive;
+                yyaxis left;
+                trace = {}; % clear current plot
+                hold on;
+                for i = 1:sweep2Count
+                    currentSweep = dFFToDisplay{i};
+                    if iscell(currentSweep) % cell with same number of empty arrays as number of sweeps, resulting from dF/F detection failure (most likely from absence of data in the first place) - first sweep only? %%% find out exactly when - fixlater
+                        trace{i} = [];
+                    elseif isempty(currentSweep) % empty array - similar to above, but for every other sweep than the first? %%% find out exactly when - fixlater
+                        trace{i} = [];
+                    else
+                        %%% the line below somehow introduces box ticks and disables y (left) minor tick only when sweep2Count == 1
+                        trace{i} = plot(currentSweep(:, columnTimeStamp2), currentSweep(:, columnToDisplay2), 'parent', traceDisplay, 'color', trace2Color, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
+                        trace{i}.ZData = ones(size(trace{i}.XData)); % assigning z value for display order
+                    end
+                end
+                ylabel('dF/F', 'color', 'k'); % keep the color convention from older version where left axis was Vm, right axis was dF/F
+                set(gca, 'ycolor', 'k', 'yminortick', 'on');
+                h.ui.trace = trace;
+            else % default to axis 2
+                columnToDisplay2 = signal2Channel;
+                trace2Color = params.trace2ColorInactive;
+                yyaxis right;
+                trace2 = {}; % clear current plot
+                hold on;
+                for i = 1:sweep2Count
+                    currentSweep = dFFToDisplay{i};
+                    if iscell(currentSweep) % cell with same number of empty arrays as number of sweeps, resulting from dF/F detection failure (most likely from absence of data in the first place) - first sweep only? %%% find out exactly when - fixlater
+                        trace2{i} = [];
+                    elseif isempty(currentSweep) % empty array - similar to above, but for every other sweep than the first? %%% find out exactly when - fixlater
+                        trace2{i} = [];
+                    else
+                        %%% the line below somehow introduces box ticks and disables y (left) minor tick only when sweep2Count == 1
+                        trace2{i} = plot(currentSweep(:, columnTimeStamp2), currentSweep(:, columnToDisplay2), 'parent', traceDisplay, 'color', trace2Color, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
+                        trace2{i}.ZData = -2*ones(size(trace2{i}.XData)); % assigning z value for display order
+                    end
+                end
+                ylabel('dF/F', 'color', [0, 0.5, 0]);
+                set(gca, 'ycolor', [0, 0.5, 0], 'yminortick', 'on');
+                h.ui.trace2 = trace2;
+            end
+            %ylim(traceDisplayY2Range);
+            hold off;
+            yyaxis left; % return to y axis (left), just to be safe
+            
+            % save
+            %h.exp.data.lineScanDFF = dff;
+            h.ui.traceDisplay = traceDisplay;
+    end
+
+    function displayTraceV(axisIdx)
+        axes(traceDisplay);
+        
+        if axisIdx == 2
+            columnToDisplay = signal2Channel;
+            traceColor = params.trace2ColorInactive;
+            yyaxis right;
+            if sweepCount == 1
+                if iscell(VRecToDisplay)
+                    currentSweep = VRecToDisplay{1};
+                else
+                    currentSweep = VRecToDisplay;
+                end
+                trace2{1} = plot(currentSweep(:, columnTimeStamp), currentSweep(:, columnToDisplay), 'parent', traceDisplay, 'color', traceColor, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
+                trace2{1}.ZData = ones(size(trace2{1}.XData)); % assigning z value for display order
+            else
+                hold on;
+                for i = 1:sweepCount
+                    currentSweep = VRecToDisplay{i};
+                    trace2{i} = plot(currentSweep(:, columnTimeStamp), currentSweep(:, columnToDisplay), 'parent', traceDisplay, 'color', traceColor, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
+                    trace2{i}.ZData = ones(size(trace2{i}.XData)); % assigning z value for display order
+                end
+                hold off;
+            end
+            if signal2Type == 1 % i, V, F
+                ylabel('i (pA)', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
+                %ylim(traceDisplayYRange);
+            else % default to V; cannot be F from how this function is called
+                ylabel('V_m (mV)', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
+                %ylim(traceDisplayYRange);
+            end
+            set(gca, 'ycolor', [0, 0.5, 0], 'yminortick', 'on');
+            %yticks(-2000:10:1000); yticklabels(-2000:10:1000); % y ticks in 10 mV from -200 mV to +100 mV
+            h.ui.trace2 = trace2;
+        else % default to axis 1
+            columnToDisplay = signal1Channel;
+            traceColor = params.traceColorInactive;
+            yyaxis left;
+            if sweepCount == 1
+                if iscell(VRecToDisplay)
+                    currentSweep = VRecToDisplay{1};
+                else
+                    currentSweep = VRecToDisplay;
+                end
+                trace{1} = plot(currentSweep(:, columnTimeStamp), currentSweep(:, columnToDisplay), 'parent', traceDisplay, 'color', traceColor, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
+                trace{1}.ZData = ones(size(trace{1}.XData)); % assigning z value for display order
+                sweepList{end + 1} = sweepStr{1};
+            else
+                hold on;
+                for i = 1:sweepCount
+                    currentSweep = VRecToDisplay{i};
+                    trace{i} = plot(currentSweep(:, columnTimeStamp), currentSweep(:, columnToDisplay), 'parent', traceDisplay, 'color', traceColor, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
+                    trace{i}.ZData = ones(size(trace{i}.XData)); % assigning z value for display order
+                    sweepList{end + 1} = sweepStr{i};
+                end
+                hold off;
+            end
+            if signal1Type == 1 % i, V, F
+                ylabel('i (pA)', 'color', 'k');
+                %ylim(traceDisplayYRange);
+            else % default to V; cannot be F from how this function is called
+                ylabel('V_m (mV)', 'color', 'k');
+                %ylim(traceDisplayYRange);
+            end
+            set(gca, 'ycolor', 'k', 'yminortick', 'on');
+            %yticks(-2000:10:1000); yticklabels(-2000:10:1000); % y ticks in 10 mV from -200 mV to +100 mV
+            h.ui.trace = trace;
         end
-        %}
-        sweepList{end + 1} = sweepStr{i};
+
+        xlabel('t (ms)');
+        if isempty(h.ui.traceDisplayXRange) % if displaying for the first time, display full range and save
+            traceDisplayXRange = xlim(traceDisplay);
+            h.ui.traceDisplayXRange = traceDisplayXRange;
+            xlim(traceDisplayXRange);
+            set(h.ui.traceDisplayXMoveLeft, 'enable', 'off'); % disable "move x left" button, since it will start from zero
+        else % otherwise retain x range
+            xlim(traceDisplayXRange);
+        end
+        %xticks(0:1000:600000); xticklabels(0:1000:600000); % x ticks in 1000 ms up to 600000 ms (600 s)
+
+        hold off;
+        yyaxis left; % return to y axis (left), just to be safe
+        
+        %  reset sweep and group list selection
+        if axisIdx == 1 %%% convoluted af at this point... %%% fixlater
+            set(sweepListDisplay, 'string', sweepList);
+            set(groupListDisplay, 'string', groupStr);
+            sweepListDisplay.Value = 1; % select first sweep
+            if isempty(groupIdx)
+            else
+                groupListDisplay.Value = 1; % select first group, unless there is no group
+            end
+        end
+        
+        % save
+        %h.exp.data.VRec = VRec;
+        h.ui.traceDisplay = traceDisplay;
+        h.ui.sweepListDisplay = sweepListDisplay;
+        h.ui.sweepList = sweepList;
+        h.ui.sweepListSelected = itemSelected; % need to save this for grouping function
+
     end
-    hold off;
-end
-xlabel('t (ms)');
-if isempty(h.ui.traceDisplayXRange) % if displaying for the first time, display full range and save
-    traceDisplayXRange = xlim(traceDisplay);
-    h.ui.traceDisplayXRange = traceDisplayXRange;
-    xlim(traceDisplayXRange);
-    set(h.ui.traceDisplayXMoveLeft, 'enable', 'off'); % disable "move x left" button, since it will start from zero
-else % otherwise retain x range
-    xlim(traceDisplayXRange);
-end
-%xticks(0:1000:600000); xticklabels(0:1000:600000); % x ticks in 1000 ms up to 600000 ms (600 s)
-%ylabel('V_m (mV)');
-yyaxis left;
-ylabel('V_m (mV)', 'color', 'k');
-ylim(traceDisplayYRange);
-set(gca, 'ycolor', 'k', 'yminortick', 'on');
-%yticks(-2000:10:1000); yticklabels(-2000:10:1000); % y ticks in 10 mV from -200 mV to +100 mV
-set(sweepListDisplay, 'string', sweepList);
-set(groupListDisplay, 'string', groupStr);
-%  do not display tick labels as multiples of powers of 10 
+
+% do not display tick labels as multiples of powers of 10
 ax = gca;
 ax.XRuler.Exponent = 0;
+yyaxis right;
 ax.YRuler.Exponent = 0;
-yyaxis right; ax.YRuler.Exponent = 0; yyaxis left;
-%  reset sweep and group list selection
-sweepListDisplay.Value = 1; % select first sweep
-if isempty(groupIdx)
-else
-    groupListDisplay.Value = 1; % select first group, unless there is no group
-end
+yyaxis left;
+ax.YRuler.Exponent = 0;
 
 % also display baseline and analysis windows
 analysisBaseline = h.params.analysisBaseline;
@@ -2788,77 +2931,6 @@ end
 %}
 h.ui.analysisWindowHandle = analysisWindowHandle;
 
-% save
-h.exp.data.VRec = VRec;
-h.ui.traceDisplay = traceDisplay;
-h.ui.trace = trace;
-h.ui.sweepListDisplay = sweepListDisplay;
-h.ui.sweepList = sweepList;
-h.ui.sweepListSelected = itemSelected; % need to save this for grouping function
-
-% try 2nd display where applicable
-try
-    % load
-    dff = h.exp.data.lineScanDFF;
-    trace2 = {}; % clear current plot
-    %  axis range information
-    traceDisplayY2Range = h.ui.traceDisplayY2Range; % y range (right); to be shared across experiments
-
-    % experiment to display
-    columnTimeStamp2 = 1;
-    %columnToDisplay2 = 2; % assuming data columns are timestamp, dF/F
-    columnToDisplay = signal2Channel;
-    dFFToDisplay = dff{itemToDisplay};
-    
-    % obsolete because of data structure format
-    %{
-    if iscell(dFFToDisplay)
-        sweep2Count = length(dFFToDisplay);
-    else
-        sweep2Count = 1;
-    end
-    %}
-    sweep2Count = length(dFFToDisplay);
-    
-    % do display
-    trace2Color = params.trace2ColorInactive;
-    axes(traceDisplay);
-    yyaxis right; % right y axis
-    
-    % obsolete because of data structure format
-    %{
-    if sweep2Count == 1
-        currentSweep = dFFToDisplay{1};
-        trace2{1} = plot(currentSweep(:, columnTimeStamp2), currentSweep(:, columnToDisplay2), 'parent', traceDisplay, 'color', trace2Color, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
-        trace2{1}.ZData = -2*ones(size(trace2{1}.XData)); % assigning z value for display order
-    else
-    %}
-        hold on;
-        for i = 1:sweep2Count
-            currentSweep = dFFToDisplay{i};
-            if iscell(currentSweep) % cell with same number of empty arrays as number of sweeps, resulting from dF/F detection failure (most likely from absence of data in the first place) - first sweep only? %%% find out exactly when - fixlater
-                trace2{i} = [];
-            elseif isempty(currentSweep) % empty array - similar to above, but for every other sweep than the first? %%% find out exactly when - fixlater
-                trace2{i} = [];
-            else
-                %%% the line below somehow introduces box ticks and disables y (left) minor tick only when sweep2Count == 1
-                trace2{i} = plot(currentSweep(:, columnTimeStamp2), currentSweep(:, columnToDisplay2), 'parent', traceDisplay, 'color', trace2Color, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
-                trace2{i}.ZData = -2*ones(size(trace2{i}.XData)); % assigning z value for display order
-            end
-        end
-        ylabel('dF/F', 'color', 'g');
-        %ylim(traceDisplayY2Range);
-        set(gca, 'ycolor', [0, 0.5, 0], 'yminortick', 'on');
-        hold off;
-    %end
-    yyaxis left; % return to y axis (left), just to be safe
-    % save
-    h.exp.data.lineScanDFF = dff;
-    h.ui.trace2 = trace2;
-    h.ui.traceDisplay = traceDisplay;
-    
-catch ME
-end
 yyaxis left; % do this to avoid staying on right y axis when the try block is interrupted
 set(traceDisplay, 'xminortick', 'on', 'yminortick', 'on', 'box', 'on'); % for some magical reason, yminorticks are disabled when there is only 1 trace to plot on the y axis (right)
 
@@ -2880,11 +2952,9 @@ axes(traceDisplay); % absolutely necessary - bring focus to main display, since 
 trace = {}; % clear current plot
 analysisWindowHandle = {}; % clear current analysis window display
 axes(traceDisplay);
-yyaxis left;
-cla;
+yyaxis left; cla;
 set(gca, 'ycolor', 'k', 'yminortick', 'on');
-yyaxis right;
-cla;
+yyaxis right; cla;
 set(gca, 'ycolor', [0, 0.5, 0], 'yminortick', 'on');
 yyaxis left;
 
@@ -2895,6 +2965,7 @@ groupListDisplay = h.ui.groupListDisplay;
 
 % axis range information
 traceDisplayYRange = h.ui.traceDisplayYRange; % y range; to be shared across experiments
+traceDisplayY2Range = h.ui.traceDisplayY2Range; % y2 range; to be shared across experiments
 traceDisplayXRange = h.ui.traceDisplayXRange; % x range; to be shared across experiments
 
 % break if invalid - for when called before loading experiments
@@ -2924,9 +2995,10 @@ catch ME
         signal2Channel = 2;
     end
 end
+
 columnTimeStamp = h.params.actualParams.timeColumn;
 %columnToDisplay = h.params.actualParams.pvbsVoltageColumn; %%% fixlater
-columnToDisplay = signal1Channel;
+
 itemToDisplay = itemSelected(1); % display only the first one if multiple items are selected - obsolete
 VRecToDisplay = VRec{itemToDisplay};
 if iscell(VRecToDisplay)
@@ -2943,147 +3015,194 @@ groupIdx = h.exp.data.groupIdx{itemSelected};
 groupStr = h.exp.data.groupStr{itemSelected};
 
 % do display
-traceColor = params.traceColorInactive;
 axes(traceDisplay);
-yyaxis left;
-if displayFlag(1)
-    if sweepCount == 1
-        if iscell(VRecToDisplay)
-            currentSweep = VRecToDisplay{1};
-        else
-            currentSweep = VRecToDisplay;
-        end
-        trace{1} = plot(currentSweep(:, columnTimeStamp), currentSweep(:, columnToDisplay), 'parent', traceDisplay, 'color', traceColor, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
-        trace{1}.ZData = ones(size(trace{1}.XData)); % assigning z value for display order
-        %sweepList{end + 1} = num2str(1);
-        %{
-    if rem(sweepIdx(i), 1) ~= 0
-        sweepList{end + 1} = num2str(sweepIdx(i), '%.3f');
-    else
-        sweepList{end + 1} = num2str(sweepIdx(i));
-    end
-        %}
-        sweepList{end + 1} = sweepStr{1};
-    else
-        hold on;
-        for i = 1:sweepCount
-            currentSweep = VRecToDisplay{i};
-            trace{i} = plot(currentSweep(:, columnTimeStamp), currentSweep(:, columnToDisplay), 'parent', traceDisplay, 'color', traceColor, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
-            trace{i}.ZData = ones(size(trace{i}.XData)); % assigning z value for display order
-            %sweepList{end + 1} = num2str(i);
-            %{
-        if rem(sweepIdx(i), 1) ~= 0
-            sweepList{end + 1} = num2str(sweepIdx(i), '%.3f');
-        else
-            sweepList{end + 1} = num2str(sweepIdx(i));
-        end
-            %}
-            sweepList{end + 1} = sweepStr{i};
-        end
-        hold off;
-    end
-    xlabel('t (ms)');
-    if isempty(h.ui.traceDisplayXRange) % if displaying for the first time, display full range and save
-        traceDisplayXRange = xlim(traceDisplay);
-        h.ui.traceDisplayXRange = traceDisplayXRange;
-        xlim(traceDisplayXRange);
-        set(h.ui.traceDisplayXMoveLeft, 'enable', 'off'); % disable "move x left" button, since it will start from zero
-    else % otherwise retain x range
-        xlim(traceDisplayXRange);
-    end
-    %xticks(0:1000:600000); xticklabels(0:1000:600000); % x ticks in 1000 ms up to 600000 ms (600 s)
-    %ylabel('V_m (mV)');
-    yyaxis left;
-    ylabel('V_m (mV)', 'color', 'k');
-    ylim(traceDisplayYRange);
-    set(gca, 'ycolor', 'k', 'yminortick', 'on');
-    %yticks(-2000:10:1000); yticklabels(-2000:10:1000); % y ticks in 10 mV from -200 mV to +100 mV
-    set(sweepListDisplay, 'string', sweepList);
-    set(groupListDisplay, 'string', groupStr);
-    %  do not display tick labels as multiples of powers of 10
-    ax = gca;
-    ax.XRuler.Exponent = 0;
-    ax.YRuler.Exponent = 0;
-    yyaxis right; ax.YRuler.Exponent = 0; yyaxis left;
-    %  reset sweep and group list selection
-    sweepListDisplay.Value = 1; % select first sweep
-    if isempty(groupIdx)
-    else
-        groupListDisplay.Value = 1; % select first group, unless there is no group
-    end
-end
 
-% try 2nd display where applicable
-if displayFlag(2)
-    try
-        % load
-        dff = h.exp.data.lineScanDFF;
-        trace2 = {}; % clear current plot
-        %  axis range information
-        traceDisplayY2Range = h.ui.traceDisplayY2Range; % y range (right); to be shared across experiments
-        
-        % experiment to display
-        columnTimeStamp2 = 1;
-        %columnToDisplay2 = 2; % assuming data columns are timestamp, dF/F
-        columnToDisplay = signal2Channel;
-        dFFToDisplay = dff{itemToDisplay};
-        
-        % obsolete because of data structure format
-        %{
-    if iscell(dFFToDisplay)
-        sweep2Count = length(dFFToDisplay);
-    else
-        sweep2Count = 1;
-    end
-        %}
-        sweep2Count = length(dFFToDisplay);
-        
-        % do display
-        trace2Color = params.trace2ColorInactive;
-        axes(traceDisplay);
-        yyaxis right; % right y axis
-        
-        % obsolete because of data structure format
-        %{
-    if sweep2Count == 1
-        currentSweep = dFFToDisplay{1};
-        trace2{1} = plot(currentSweep(:, columnTimeStamp2), currentSweep(:, columnToDisplay2), 'parent', traceDisplay, 'color', trace2Color, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
-        trace2{1}.ZData = -2*ones(size(trace2{1}.XData)); % assigning z value for display order
-    else
-        %}
-        hold on;
-        for i = 1:sweep2Count
-            currentSweep = dFFToDisplay{i};
-            if iscell(currentSweep) % cell with same number of empty arrays as number of sweeps, resulting from dF/F detection failure (most likely from absence of data in the first place) - first sweep only? %%% find out exactly when - fixlater
-                trace2{i} = [];
-            elseif isempty(currentSweep) % empty array - similar to above, but for every other sweep than the first? %%% find out exactly when - fixlater
-                trace2{i} = [];
-            else
-                %%% the line below somehow introduces box ticks and disables y (left) minor tick only when sweep2Count == 1
-                trace2{i} = plot(currentSweep(:, columnTimeStamp2), currentSweep(:, columnToDisplay2), 'parent', traceDisplay, 'color', trace2Color, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
-                trace2{i}.ZData = -2*ones(size(trace2{i}.XData)); % assigning z value for display order
-            end
-        end
-        ylabel('dF/F', 'color', 'g');
-        ylim(traceDisplayY2Range);
-        set(gca, 'ycolor', [0, 0.5, 0], 'yminortick', 'on');
-        hold off;
-        %end
-        yyaxis left; % return to y axis (left), just to be safe
-        % save
-        h.exp.data.lineScanDFF = dff;
-        h.ui.trace2 = trace2;
-        h.ui.traceDisplay = traceDisplay;
-        
-    catch ME
-    end
-end
-
-    yyaxis left; % do this to avoid staying on right y axis when the try block is interrupted
-    set(traceDisplay, 'xminortick', 'on', 'yminortick', 'on', 'box', 'on'); % for some magical reason, yminorticks are disabled when there is only 1 trace to plot on the y axis (right)
+try % use try-catch here
     
-    % bring voltage traces to top - %%%%%%%
-    set(traceDisplay, 'SortMethod', 'depth');
+    if displayFlag(1)
+        workingAxis = 1;
+        if signal1Type == 3 % i, V, F
+            displayTraceF2(workingAxis);
+        elseif signal1Type == 1
+            displayTraceV2(workingAxis); % can't think of a better name; also separate axis labeling from this function
+        else % default to V in case signal1Type is incorrectly set due to whatever miracle
+            displayTraceV2(workingAxis); % can't think of a better name; also separate axis labeling from this function
+        end
+    end
+    
+    if displayFlag(2)
+        workingAxis = 2;
+        if signal2Type == 3 % i, V, F
+            displayTraceF2(workingAxis);
+        elseif signal2Type == 1
+            displayTraceV2(workingAxis); % can't think of a better name; also separate axis labeling from this function
+        else % default to V in case signal1Type is incorrectly set due to whatever miracle
+            displayTraceV2(workingAxis); % can't think of a better name; also separate axis labeling from this function
+        end
+    end
+    
+catch ME
+    %errorString = sprintf(' Warning: invalid display parameters (Axis #%s) - check signal channels\n', num2str(workingAxis));
+    %error(errorString);
+    %fprintf(errorString); % not exactly an error
+    yyaxis left; % return to left axis as a failsafe
+    return
+end
+
+    function displayTraceF2(axisIdx)
+        axes(traceDisplay);
+        
+            % load
+            dff = h.exp.data.lineScanDFF;
+            traceDisplayY2Range = h.ui.traceDisplayY2Range; % y range (right); to be shared across experiments
+            
+            % experiment to display
+            dFFToDisplay = dff{itemToDisplay};
+            sweep2Count = length(dFFToDisplay);
+            columnTimeStamp2 = 1; %%% ugh
+            
+            % do display
+            if axisIdx == 1
+                columnToDisplay2 = signal1Channel;
+                trace2Color = params.traceColorInactive;
+                yyaxis left;
+                trace = {}; % clear current plot
+                hold on;
+                for i = 1:sweep2Count
+                    currentSweep = dFFToDisplay{i};
+                    if iscell(currentSweep) % cell with same number of empty arrays as number of sweeps, resulting from dF/F detection failure (most likely from absence of data in the first place) - first sweep only? %%% find out exactly when - fixlater
+                        trace{i} = [];
+                    elseif isempty(currentSweep) % empty array - similar to above, but for every other sweep than the first? %%% find out exactly when - fixlater
+                        trace{i} = [];
+                    else
+                        %%% the line below somehow introduces box ticks and disables y (left) minor tick only when sweep2Count == 1
+                        trace{i} = plot(currentSweep(:, columnTimeStamp2), currentSweep(:, columnToDisplay2), 'parent', traceDisplay, 'color', trace2Color, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
+                        trace{i}.ZData = ones(size(trace{i}.XData)); % assigning z value for display order
+                    end
+                end
+                ylabel('dF/F', 'color', 'k'); % keep the color convention from older version where left axis was Vm, right axis was dF/F
+                set(gca, 'ycolor', 'k', 'yminortick', 'on');
+            else % default to axis 2
+                columnToDisplay2 = signal2Channel;
+                trace2Color = params.trace2ColorInactive;
+                yyaxis right;
+                trace2 = {}; % clear current plot
+                hold on;
+                for i = 1:sweep2Count
+                    currentSweep = dFFToDisplay{i};
+                    if iscell(currentSweep) % cell with same number of empty arrays as number of sweeps, resulting from dF/F detection failure (most likely from absence of data in the first place) - first sweep only? %%% find out exactly when - fixlater
+                        trace2{i} = [];
+                    elseif isempty(currentSweep) % empty array - similar to above, but for every other sweep than the first? %%% find out exactly when - fixlater
+                        trace2{i} = [];
+                    else
+                        %%% the line below somehow introduces box ticks and disables y (left) minor tick only when sweep2Count == 1
+                        trace2{i} = plot(currentSweep(:, columnTimeStamp2), currentSweep(:, columnToDisplay2), 'parent', traceDisplay, 'color', trace2Color, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
+                        trace2{i}.ZData = -2*ones(size(trace2{i}.XData)); % assigning z value for display order
+                    end
+                end
+                ylabel('dF/F', 'color', [0, 0.5, 0]);
+                set(gca, 'ycolor', [0, 0.5, 0], 'yminortick', 'on');
+            end
+            %ylim(traceDisplayY2Range);
+            hold off;
+            yyaxis left; % return to y axis (left), just to be safe
+
+    end
+
+    function displayTraceV2(axisIdx)
+        axes(traceDisplay);
+        
+        if axisIdx == 2
+            columnToDisplay = signal2Channel;
+            traceColor = params.trace2ColorInactive;
+            yyaxis right;
+            if sweepCount == 1
+                if iscell(VRecToDisplay)
+                    currentSweep = VRecToDisplay{1};
+                else
+                    currentSweep = VRecToDisplay;
+                end
+                trace2{1} = plot(currentSweep(:, columnTimeStamp), currentSweep(:, columnToDisplay), 'parent', traceDisplay, 'color', traceColor, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
+                trace2{1}.ZData = ones(size(trace2{1}.XData)); % assigning z value for display order
+            else
+                hold on;
+                for i = 1:sweepCount
+                    currentSweep = VRecToDisplay{i};
+                    trace2{i} = plot(currentSweep(:, columnTimeStamp), currentSweep(:, columnToDisplay), 'parent', traceDisplay, 'color', traceColor, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
+                    trace2{i}.ZData = ones(size(trace2{i}.XData)); % assigning z value for display order
+                end
+                hold off;
+            end
+            if signal2Type == 1 % i, V, F
+                ylabel('i (pA)', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
+                %ylim(traceDisplayYRange);
+            else % default to V; cannot be F from how this function is called
+                ylabel('V_m (mV)', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
+                %ylim(traceDisplayYRange);
+            end
+            set(gca, 'ycolor', [0, 0.5, 0], 'yminortick', 'on');
+            %yticks(-2000:10:1000); yticklabels(-2000:10:1000); % y ticks in 10 mV from -200 mV to +100 mV
+        else % default to axis 1
+            columnToDisplay = signal1Channel;
+            traceColor = params.traceColorInactive;
+            yyaxis left;
+            if sweepCount == 1
+                if iscell(VRecToDisplay)
+                    currentSweep = VRecToDisplay{1};
+                else
+                    currentSweep = VRecToDisplay;
+                end
+                trace{1} = plot(currentSweep(:, columnTimeStamp), currentSweep(:, columnToDisplay), 'parent', traceDisplay, 'color', traceColor, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
+                trace{1}.ZData = ones(size(trace{1}.XData)); % assigning z value for display order
+            else
+                hold on;
+                for i = 1:sweepCount
+                    currentSweep = VRecToDisplay{i};
+                    trace{i} = plot(currentSweep(:, columnTimeStamp), currentSweep(:, columnToDisplay), 'parent', traceDisplay, 'color', traceColor, 'linestyle', '-', 'linewidth', 0.25, 'marker', 'none');
+                    trace{i}.ZData = ones(size(trace{i}.XData)); % assigning z value for display order
+                end
+                hold off;
+            end
+            if signal1Type == 1 % i, V, F
+                ylabel('i (pA)', 'color', 'k');
+                %ylim(traceDisplayYRange);
+            else % default to V; cannot be F from how this function is called
+                ylabel('V_m (mV)', 'color', 'k');
+                %ylim(traceDisplayYRange);
+            end
+            set(gca, 'ycolor', 'k', 'yminortick', 'on');
+            %yticks(-2000:10:1000); yticklabels(-2000:10:1000); % y ticks in 10 mV from -200 mV to +100 mV
+        end
+
+        xlabel('t (ms)');
+        if isempty(h.ui.traceDisplayXRange) % if displaying for the first time, display full range and save
+            traceDisplayXRange = xlim(traceDisplay);
+            xlim(traceDisplayXRange);
+        else % otherwise retain x range
+            xlim(traceDisplayXRange);
+        end
+        %xticks(0:1000:600000); xticklabels(0:1000:600000); % x ticks in 1000 ms up to 600000 ms (600 s)
+        
+        hold off;
+        yyaxis left; % return to y axis (left), just to be safe
+
+    end
+
+% make display range consistent; do not display tick labels as multiples of powers of 10
+ax = gca;
+ax.XRuler.Exponent = 0;
+yyaxis right;
+ylim(traceDisplayY2Range);
+ax.YRuler.Exponent = 0;
+yyaxis left;
+ylim(traceDisplayYRange);
+ax.YRuler.Exponent = 0;
+
+yyaxis left; % do this to avoid staying on right y axis when the try block is interrupted
+set(traceDisplay, 'xminortick', 'on', 'yminortick', 'on', 'box', 'on'); % for some magical reason, yminorticks are disabled when there is only 1 trace to plot on the y axis (right)
+
+% bring voltage traces to top - %%%%%%%
+set(traceDisplay, 'SortMethod', 'depth');
 
 if ~displayFlag(1)
     yyaxis left;
@@ -3096,6 +3215,7 @@ if ~displayFlag(2)
 end
 
 end
+
 
 %{
 function h = displayTrace2(h, itemSelected) % append trace on existing display using right y axis - obsolete
@@ -3190,6 +3310,7 @@ for i = 1:length(trace)
         trace{i}.ZData = ones(size(trace{i}.XData)); % assigning z value for display order
     end
 end
+
 traceColor2 = params.traceColorActive;
 for i = 1:length(itemSelected)
     if isempty(trace{itemSelected(i)})
@@ -3323,8 +3444,10 @@ win2 = figure('Name', 'Signals to Display', 'NumberTitle', 'off', 'MenuBar', 'no
 
 try % try-catch for reverse compatibility
     timeColumnAvailable = h.params.actualParams.timeColumnAvailable;
+    timeColumnAvailableF = 1; % this will always be 1 from PVBS
 catch ME
     timeColumnAvailable = 1;
+    timeColumnAvailableF = 1; % this will always be 1 from PVBS
 end
 
 try % ditto; but should be irrelevant because this feature was missing
@@ -3365,12 +3488,12 @@ switch signal1Type % i, V, F
         e121Value = 0;
         e131Value = 0;
         e141Value = 1;
-        signal1ChannelOffset = 0; % for later reference
+        if timeColumnAvailableF
+            signal1Channel = signal1Channel - 1; % only for straightforwardness, not to represent actual column
+            signal1ChannelOffset = 1; % for later reference
+        end
     otherwise % absurd
-        e121Value = 0;
-        e131Value = 0;
-        e141Value = 0;
-        signal1ChannelOffset = 0; % for later reference
+        return
 end
 
 switch signal2Type % i, V, F
@@ -3394,12 +3517,12 @@ switch signal2Type % i, V, F
         e122Value = 0;
         e132Value = 0;
         e142Value = 1;
-        signal2ChannelOffset = 0; % for later reference
+        if timeColumnAvailableF
+            signal2Channel = signal2Channel - 1; % only for straightforwardness, not to represent actual column
+            signal2ChannelOffset = 1; % for later reference
+        end
     otherwise % absurd
-        e122Value = 0;
-        e132Value = 0;
-        e142Value = 0;
-        signal2ChannelOffset = 0; % for later reference
+        return
 end
 
 ui2.e101 = uicontrol('Parent', win2, 'Style', 'text', 'fontweight', 'bold', 'string', ' <  Axis 1', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.85, 0.4, 0.08]);
@@ -3415,7 +3538,7 @@ ui2.e121 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Current'
 ui2.e122 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Current', 'value', e122Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.6, 0.55, 0.4, 0.08], 'callback', @updateCallbackAxis2);
 ui2.e131 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Voltage', 'value', e131Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.45, 0.4, 0.08], 'callback', @updateCallbackAxis1);
 ui2.e132 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Voltage', 'value', e132Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.6, 0.45, 0.4, 0.08], 'callback', @updateCallbackAxis2);
-ui2.e141 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Fluorescence', 'value', e141Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.35, 0.4, 0.08], 'callback', @updateCallbackAxis1);
+ui2.e141 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Fluorescence', 'enable', 'off', 'value', e141Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.35, 0.4, 0.08], 'callback', @updateCallbackAxis1);
 ui2.e142 = uicontrol('Parent', win2, 'Style', 'radiobutton', 'string', 'Fluorescence', 'value', e142Value, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.6, 0.35, 0.4, 0.08], 'callback', @updateCallbackAxis2);
 
 ui2.resetButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.44, 0.05, 0.25, 0.12], 'callback', @resetCallback, 'interruptible', 'off');
@@ -3564,13 +3687,15 @@ ui2.saveButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Upd
     end
 
     function updateDisplay()
-        if isempty(h.ui.cellListDisplay) || isempty(h.ui.sweepListDisplay)
+        if isempty(h.ui.cellListDisplay.String) || isempty(h.ui.sweepListDisplay.String)
+            return
         else
             expIdx = h.ui.cellListDisplay.Value;
             expIdx = expIdx(1); % force single selection
             swpIdx = h.ui.sweepListDisplay.Value;
             h = displayTrace(h, expIdx); % this also populates sweep list and sets up strings, etc.
             h = highlightSweep(h, swpIdx);
+            h = traceDisplayResetCalled(h);
         end
     end
 
@@ -3748,6 +3873,9 @@ end
 % reset index for sweep to display within group
 h.params.groupSweepIdx = 0;
 %set(h.ui.groupSweepText, 'string', '(All sweeps)');
+
+set(h.ui.traceDisplayXZoomOut, 'enable', 'on'); % in case it had been disabled from another experiment - simply enable instead of calculating data length
+%h = traceDisplayResetCalled(h); % may or may not want to retain window display range
 
 end
 
@@ -7487,6 +7615,14 @@ if isempty(h.ui.cellListDisplay.String)
     error('Error: No experiment file present to perform analysis');
 end
 
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
 % current experiment
 %expIdx = h.ui.cellListDisplay.Value;
 expIdx = expIdx(1); % take only the first one if multiple items are selected - obsolete %%% actually, must fix for multiple selection
@@ -7495,6 +7631,7 @@ sweepIdx = sweepIdx{expIdx};
 sweepStr = sweepStr{expIdx};
 groupIdx = groupIdx{expIdx};
 groupStr = groupStr{expIdx};
+
 
 % initialize
 experimentCount = h.exp.experimentCount;
@@ -7560,6 +7697,8 @@ end
 %}
 resultsTemp.sweeps = sweeps; % for recordkeeping
 resultsTemp.groups = groups; % for recordkeeping
+resultsTemp2.sweeps = sweeps; % for recordkeeping
+resultsTemp2.groups = groups; % for recordkeeping
 
 % analysis windows
 window0 = params.analysisBaseline; % baseline is shared for all windows - don't use h.ui.analysisBaselineStart.String
@@ -7571,6 +7710,9 @@ window2 = params.analysisWindow2;
 resultsTemp.windowBaseline = window0;
 resultsTemp.window1 = window1;
 resultsTemp.window2 = window2;
+resultsTemp2.windowBaseline = window0;
+resultsTemp2.window1 = window1;
+resultsTemp2.window2 = window2;
 
 % analysis type
 %  window 1
@@ -7583,6 +7725,33 @@ analysisType2 = h.ui.analysisType2;
 analysisType2String = h.ui.analysisType2.String;
 analysisType2Idx = h.ui.analysisType2.Value;
 analysisTypeIdx = [analysisTypeIdx , analysisType2Idx];
+
+try % try-catch for reverse compatibility
+    timeColumnAvailable = h.params.actualParams.timeColumnAvailable;
+catch ME
+    timeColumnAvailable = 1;
+end
+try % ditto
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+    signal1Channel = h.params.actualParams.signal1Channel; % corresponding to data column, but mind timestamp availability
+    signal2Channel = h.params.actualParams.signal2Channel; % corresponding to data column, but mind timestamp availability
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+    end
+end
+if signal2Type == 3 % fluorescence disabled for signal 1, so only consider signal 2
+    dFFAnalysisColumn = signal2Channel;
+else % failsafe
+    dFFAnalysisColumn = 2;
+end
 
 % check for analysis type match %%% currently supports only a total of 2 analysis windows
 if analysisType1Idx == analysisType2Idx
@@ -7601,7 +7770,11 @@ if analysisTypeMatch
             analysisType2Idx = 2;
             h.ui.analysisType1.Value = analysisType1Idx;
             h.ui.analysisType2.Value = analysisType2Idx;
-            resultsTemp = analysisPeak(resultsTemp, params, VRecData, window);
+            resultsTemp = analysisPeak(resultsTemp, params, VRecData, window, signal1Channel);
+            if signal2Type ~= 3 % i, V, F
+                resultsTemp2 = analysisPeak(resultsTemp2, params, VRecData, window, signal2Channel);
+            else
+            end
         case 2 % peak/mean/area
             %{
             switch analysisOption1Idx % peak direction, to be passed onto analysis function
@@ -7615,11 +7788,23 @@ if analysisTypeMatch
                     analysisOption1Idx = -1;
             end
             %}
-            resultsTemp = analysisPeak(resultsTemp, params, VRecData, window);
+            resultsTemp = analysisPeak(resultsTemp, params, VRecData, window, signal1Channel);
+            if signal2Type ~= 3 % i, V, F
+                resultsTemp2 = analysisPeak(resultsTemp2, params, VRecData, window, signal2Channel);
+            else
+            end
         case 3 % threshold detection
-            resultsTemp = analysisThresholdDetection(resultsTemp, params, VRecData, window);
+            resultsTemp = analysisThresholdDetection(resultsTemp, params, VRecData, window, signal1Channel);
+            if signal2Type ~= 3 % i, V, F
+                resultsTemp2 = analysisThresholdDetection(resultsTemp2, params, VRecData, window, signal2Channel);
+            else
+            end
         case 4 % waveform analysis
-            resultsTemp = analysisAPWaveform(resultsTemp, params, VRecData, window);
+            resultsTemp = analysisAPWaveform(resultsTemp, params, VRecData, window, signal1Channel);
+            if signal2Type ~= 3 % i, V, F
+                resultsTemp2 = analysisAPWaveform(resultsTemp2, params, VRecData, window, signal2Channel);
+            else
+            end
     end
 else
     windowNan = [NaN, NaN]; % to be passed on for irrelevant window
@@ -7629,7 +7814,8 @@ else
         case 1 % unselected - default to peak
             analysisType1Idx = 2;
             h.ui.analysisType1.Value = analysisType1Idx;
-            resultsTemp = analysisPeak(resultsTemp, params, VRecData, window);
+            resultsTemp = analysisPeak(resultsTemp, params, VRecData, window, signal1Channel);
+            resultsTemp2 = analysisPeak(resultsTemp2, params, VRecData, window, signal2Channel);
         case 2 % peak/mean/area
             %{
             switch analysisOption1Idx % peak direction, to be passed onto analysis function
@@ -7643,11 +7829,23 @@ else
                     analysisOption1Idx = -1;
             end
             %}
-            resultsTemp = analysisPeak(resultsTemp, params, VRecData, window);
+            resultsTemp = analysisPeak(resultsTemp, params, VRecData, window, signal1Channel);
+            if signal2Type ~= 3 % i, V, F
+                resultsTemp2 = analysisPeak(resultsTemp2, params, VRecData, window, signal2Channel);
+            else
+            end
         case 3 % threshold detection
-            resultsTemp = analysisThresholdDetection(resultsTemp, params, VRecData, window);
+            resultsTemp = analysisThresholdDetection(resultsTemp, params, VRecData, window, signal1Channel);
+            if signal2Type ~= 3 % i, V, F
+                resultsTemp2 = analysisThresholdDetection(resultsTemp2, params, VRecData, window, signal2Channel);
+            else
+            end
         case 4 % waveform analysis
-            resultsTemp = analysisAPWaveform(resultsTemp, params, VRecData, window);
+            resultsTemp = analysisAPWaveform(resultsTemp, params, VRecData, window, signal1Channel);
+            if signal2Type ~= 3 % i, V, F
+                resultsTemp2 = analysisAPWaveform(resultsTemp2, params, VRecData, window, signal2Channel);
+            else
+            end
     end
     % window 2
     window = [window0; windowNan; window2];
@@ -7655,7 +7853,8 @@ else
         case 1 % unselected - default to peak
             analysisType2Idx = 2;
             h.ui.analysisType2.Value = analysisType2Idx;
-            resultsTemp = analysisPeak(resultsTemp, params, VRecData, window);
+            resultsTemp = analysisPeak(resultsTemp, params, VRecData, window, signal1Channel);
+            resultsTemp2 = analysisPeak(resultsTemp2, params, VRecData, window, signal2Channel);
         case 2 % peak/mean/area
             %{
             switch analysisOption1Idx % peak direction, to be passed onto analysis function
@@ -7669,11 +7868,23 @@ else
                     analysisOption1Idx = -1;
             end
             %}
-            resultsTemp = analysisPeak(resultsTemp, params, VRecData, window2);
+            resultsTemp = analysisPeak(resultsTemp, params, VRecData, window, signal1Channel);
+            if signal2Type ~= 3 % i, V, F
+                resultsTemp2 = analysisPeak(resultsTemp2, params, VRecData, window, signal2Channel);
+            else
+            end
         case 3 % threshold detection
-            resultsTemp = analysisThresholdDetection(resultsTemp, params, VRecData, window2);
+            resultsTemp = analysisThresholdDetection(resultsTemp, params, VRecData, window, signal1Channel);
+            if signal2Type ~= 3 % i, V, F
+                resultsTemp2 = analysisThresholdDetection(resultsTemp2, params, VRecData, window, signal2Channel);
+            else
+            end
         case 4 % waveform analysis
-            resultsTemp = analysisAPWaveform(resultsTemp, params, VRecData, window2);
+            resultsTemp = analysisAPWaveform(resultsTemp, params, VRecData, window, signal1Channel);
+            if signal2Type ~= 3 % i, V, F
+                resultsTemp2 = analysisAPWaveform(resultsTemp2, params, VRecData, window, signal2Channel);
+            else
+            end
     end
 end
 
@@ -7682,11 +7893,11 @@ try
     dffData = h.exp.data.lineScanDFF; % load
     dffData = dffData{expIdx}; % current experiment
     dffData = dffData(sweeps); % leave relevant data
-    resultsTemp2.sweeps = sweeps;
-    resultsTemp2.groups = groups;
-    resultsTemp2.windowBaseline = window0;
-    resultsTemp2.window1 = window1;
-    resultsTemp2.window2 = window2;
+    resultsTemp3.sweeps = sweeps;
+    resultsTemp3.groups = groups;
+    resultsTemp3.windowBaseline = window0;
+    resultsTemp3.window1 = window1;
+    resultsTemp3.window2 = window2;
     % run same analysis for both windows if applicable
     if analysisTypeMatch
         % append windows
@@ -7697,7 +7908,7 @@ try
                 analysisType2Idx = 2;
                 h.ui.analysisType1.Value = analysisType1Idx;
                 h.ui.analysisType2.Value = analysisType2Idx;
-                resultsTemp2 = analysisPeak(resultsTemp2, params, dffData, window);
+                resultsTemp3 = analysisPeak(resultsTemp3, params, dffData, window, dFFAnalysisColumn);
             case 2 % peak/mean/area
                 %{
             switch analysisOption1Idx % peak direction, to be passed onto analysis function
@@ -7711,11 +7922,11 @@ try
                     analysisOption1Idx = -1;
             end
                 %}
-                resultsTemp2 = analysisPeak(resultsTemp2, params, dffData, window);
+                resultsTemp3 = analysisPeak(resultsTemp3, params, dffData, window, dFFAnalysisColumn);
             case 3 % threshold detection
-                resultsTemp2 = analysisThresholdDetection(resultsTemp2, params, dffData, window);
+                resultsTemp3 = analysisThresholdDetection(resultsTemp3, params, dffData, window, dFFAnalysisColumn);
             case 4 % waveform analysis
-                resultsTemp2 = analysisAPWaveform(resultsTemp2, params, dffData, window);
+                resultsTemp3 = analysisAPWaveform(resultsTemp3, params, dffData, window, dFFAnalysisColumn);
         end
     else
         % window 1
@@ -7724,7 +7935,7 @@ try
             case 1 % unselected - default to peak
                 analysisType1Idx = 2;
                 h.ui.analysisType1.Value = analysisType1Idx;
-                resultsTemp2 = analysisPeak(resultsTemp2, params, dffData, window);
+                resultsTemp3 = analysisPeak(resultsTemp3, params, dffData, window, dFFAnalysisColumn);
             case 2 % peak/mean/area
                 %{
             switch analysisOption1Idx % peak direction, to be passed onto analysis function
@@ -7738,11 +7949,11 @@ try
                     analysisOption1Idx = -1;
             end
                 %}
-                resultsTemp2 = analysisPeak(resultsTemp2, params, dffData, window);
+                resultsTemp3 = analysisPeak(resultsTemp3, params, dffData, window, dFFAnalysisColumn);
             case 3 % threshold detection
-                resultsTemp2 = analysisThresholdDetection(resultsTemp2, params, dffData, window);
+                resultsTemp3 = analysisThresholdDetection(resultsTemp3, params, dffData, window, dFFAnalysisColumn);
             case 4 % waveform analysis
-                resultsTemp2 = analysisAPWaveform(resultsTemp2, params, dffData, window);
+                resultsTemp3 = analysisAPWaveform(resultsTemp3, params, dffData, window, dFFAnalysisColumn);
         end
         
         % window 2
@@ -7751,7 +7962,7 @@ try
             case 1 % unselected - default to peak
                 analysisType2Idx = 2;
                 h.ui.analysisType2.Value = analysisType2Idx;
-                resultsTemp2 = analysisPeak(resultsTemp2, params, dffData, window);
+                resultsTemp3 = analysisPeak(resultsTemp3, params, dffData, window, dFFAnalysisColumn);
             case 2 % peak/mean/area
                 %{
             switch analysisOption1Idx % peak direction, to be passed onto analysis function
@@ -7765,11 +7976,11 @@ try
                     analysisOption1Idx = -1;
             end
                 %}
-                resultsTemp2 = analysisPeak(resultsTemp2, params, dffData, window2);
+                resultsTemp3 = analysisPeak(resultsTemp3, params, dffData, window2, dFFAnalysisColumn);
             case 3 % threshold detection
-                resultsTemp2 = analysisThresholdDetection(resultsTemp2, params, dffData, window2);
+                resultsTemp3 = analysisThresholdDetection(resultsTemp3, params, dffData, window2, dFFAnalysisColumn);
             case 4 % waveform analysis
-                resultsTemp2 = analysisAPWaveform(resultsTemp2, params, dffData, window2);
+                resultsTemp3 = analysisAPWaveform(resultsTemp3, params, dffData, window2, dFFAnalysisColumn);
         end
     end
 catch ME
@@ -7876,6 +8087,57 @@ try
     end
 catch ME
 end
+try
+    groups = h.exp.data.groupIdx{expIdx};
+    resultsTemp3Grp = resultsTemp3; % easier way to initialize; overwrite afterwards
+    resultsTemp3Grp.peak = cell(size(resultsTemp3.peak, 1), length(groups));
+    resultsTemp3Grp.timeOfPeak = cell(size(resultsTemp3.timeOfPeak, 1), length(groups));
+    resultsTemp3Grp.riseTime = cell(size(resultsTemp3.riseTime, 1), length(groups));
+    resultsTemp3Grp.decayTime = cell(size(resultsTemp3.decayTime, 1), length(groups));
+    resultsTemp3Grp.riseSlope = cell(size(resultsTemp3.riseSlope, 1), length(groups));
+    resultsTemp3Grp.decaySlope = cell(size(resultsTemp3.decaySlope, 1), length(groups));
+    resultsTemp3Grp.area = cell(size(resultsTemp3.area, 1), length(groups));
+    resultsTemp3Grp.mean = cell(size(resultsTemp3.mean, 1), length(groups));
+    for i = 1:length(groups)
+        sweepsInGroup = groups{i};
+        %  converting to absolute indices from ordinal indices on sweep list
+        sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
+        sweepsInGroup = find(sweepsInGroup == 1); % find their indices
+        for j = sweepsInGroup
+            resultsTemp3Grp.baseline{i} = resultsTemp3Grp.baseline{i} + resultsTemp3.baseline{j};
+        end
+        resultsTemp3Grp.baseline{i} = resultsTemp3Grp.baseline{i}./length(sweepsInGroup);       
+        for k = 1:size(resultsTemp3.peak, 1) % this will suffice
+            resultsTemp3Grp.peak{k, i} = zeros(size(resultsTemp3.peak{1}));
+            resultsTemp3Grp.timeOfPeak{k, i} = zeros(size(resultsTemp3.timeOfPeak{1}));
+            resultsTemp3Grp.riseTime{k, i} = zeros(size(resultsTemp3.riseTime{1}));
+            resultsTemp3Grp.decayTime{k, i} = zeros(size(resultsTemp3.decayTime{1}));
+            resultsTemp3Grp.riseSlope{k, i} = zeros(size(resultsTemp3.riseSlope{1}));
+            resultsTemp3Grp.decaySlope{k, i} = zeros(size(resultsTemp3.decaySlope{1}));
+            resultsTemp3Grp.area{k, i} = zeros(size(resultsTemp3.area{1}));
+            resultsTemp3Grp.mean{k, i} = zeros(size(resultsTemp3.mean{1}));
+            for j = sweepsInGroup
+                resultsTemp3Grp.peak{k, i} = resultsTemp3Grp.peak{k, i} + resultsTemp3.peak{k, j};
+                resultsTemp3Grp.timeOfPeak{k, i} = resultsTemp3Grp.timeOfPeak{k, i} + resultsTemp3.timeOfPeak{k, j};
+                resultsTemp3Grp.riseTime{k, i} = resultsTemp3Grp.riseTime{k, i} + resultsTemp3.riseTime{k, j};
+                resultsTemp3Grp.decayTime{k, i} = resultsTemp3Grp.decayTime{k, i} + resultsTemp3.decayTime{k, j};
+                resultsTemp3Grp.riseSlope{k, i} = resultsTemp3Grp.riseSlope{k, i} + resultsTemp3.riseSlope{k, j};
+                resultsTemp3Grp.decaySlope{k, i} = resultsTemp3Grp.decaySlope{k, i} + resultsTemp3.decaySlope{k, j};
+                resultsTemp3Grp.area{k, i} = resultsTemp3Grp.area{k, i} + resultsTemp3.area{k, j};
+                resultsTemp3Grp.mean{k, i} = resultsTemp3Grp.mean{k, i} + resultsTemp3.mean{k, j};
+            end
+            resultsTemp3Grp.peak{k, i} = resultsTemp3Grp.peak{k, i}./length(sweepsInGroup);
+            resultsTemp3Grp.timeOfPeak{k, i} = resultsTemp3Grp.timeOfPeak{k, i}./length(sweepsInGroup);
+            resultsTemp3Grp.riseTime{k, i} = resultsTemp3Grp.riseTime{k, i}./length(sweepsInGroup);
+            resultsTemp3Grp.decayTime{k, i} = resultsTemp3Grp.decayTime{k, i}./length(sweepsInGroup);
+            resultsTemp3Grp.riseSlope{k, i} = resultsTemp3Grp.riseSlope{k, i}./length(sweepsInGroup);
+            resultsTemp3Grp.decaySlope{k, i} = resultsTemp3Grp.decaySlope{k, i}./length(sweepsInGroup);
+            resultsTemp3Grp.area{k, i} = resultsTemp3Grp.area{k, i}./length(sweepsInGroup);
+            resultsTemp3Grp.mean{k, i} = resultsTemp3Grp.mean{k, i}./length(sweepsInGroup);
+        end
+    end
+catch ME
+end
 
 % color scheme - %%% no longer used and no idea what it was for
 colorMapX = 1;
@@ -7921,7 +8183,16 @@ targetPlot = displayResults(targetPlot, dataX, dataY, color);
 set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
 hold off;
 xlabel('Group #');
-ylabel('PSP (mV)');
+switch signal1Type % i, V, F
+    case 1
+        ylabel('PSC (pA)'); % although it might not actually be PSC...
+    case 2
+        ylabel('PSP (mV)'); % although it might not actually be PSP...
+    case 3 % should be irrelevant here
+        ylabel('dF/F');
+    otherwise
+        ylabel('Value');
+end
 %xticks(0:5:10000);
 %%{
 if nanmax(dataY) > 40
@@ -7938,7 +8209,7 @@ end
 set(gca, 'xminortick', 'on', 'yminortick', 'on');
 h.ui.analysisPlot1 = targetPlot;
 params.resultsPlot1YRange = targetPlot.YLim;
-h.ui.analysisPlot1Menu1.Value = 2; % voltage
+h.ui.analysisPlot1Menu1.Value = 2; % signal 1
 h.ui.analysisPlot1Menu2.Value = 2; % window 1
 %h.ui.analysisPlot1Menu3.Value = 1; % results - will update later
 h.ui.analysisPlot1Menu4.Value = 3; % by group
@@ -7958,8 +8229,8 @@ try
         otherwise
             peakDirToPlot = 2; % default to absolute if not available
     end
-    dataX = 1:length(resultsTemp2Grp.groups); % group number - will plot by groups
-    dataY = resultsTemp2Grp.peak; % grouped results, peak
+    dataX = 1:length(resultsTemp3Grp.groups); % group number - will plot by groups
+    dataY = resultsTemp3Grp.peak; % grouped results, peak
     dataY = dataY(winToPlot, :); % analysis window 2
     dataYNew = nan(length(dataY), 1); % initialize
     %%%
@@ -7983,6 +8254,18 @@ try
     set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
     hold off;
     xlabel('Group #');
+    %{
+    switch signal2Type % i, V, F
+        case 1 % should be irrelevant here
+            ylabel('PSC (pA)'); % although it might not actually be PSC...
+        case 2 % should be irrelevant here
+            ylabel('PSP (mV)'); % although it might not actually be PSP...
+        case 3 % should be irrelevant here
+            ylabel('dF/F');
+        otherwise
+            ylabel('Value');
+    end
+    %}
     ylabel('dF/F');
     %xticks(0:5:10000);
     %{
@@ -7997,7 +8280,7 @@ try
     set(gca, 'xminortick', 'on', 'yminortick', 'on');
     h.ui.analysisPlot2 = targetPlot;
     params.resultsPlot2YRange = targetPlot.YLim;
-    h.ui.analysisPlot2Menu1.Value = 3; % fluorescence
+    h.ui.analysisPlot2Menu1.Value = 3; % signal 2
     h.ui.analysisPlot2Menu2.Value = 3; % window 2
     %h.ui.analysisPlot2Menu3.Value = 1; % results - will update later
     h.ui.analysisPlot2Menu4.Value = 3; % by group
@@ -8086,9 +8369,21 @@ resultsCurrentExp.VRec.sweepResults = resultsTemp;
 resultsCurrentExp.VRec.groupResults = resultsTempGrp; 
 results{expIdx} = resultsCurrentExp;
 try
-    resultsTemp2.analysisTypeIdx = analysisTypeIdx;
-    resultsCurrentExp.dff.sweepResults = resultsTemp2;
-    resultsCurrentExp.dff.groupResults = resultsTemp2Grp;
+    if signal2Type ~= 3 % i, V, F
+        resultsTemp2.analysisTypeIdx = analysisTypeIdx;
+        resultsCurrentExp.VRec2.sweepResults = resultsTemp2;
+        resultsCurrentExp.VRec2.groupResults = resultsTemp2Grp;
+        results{expIdx} = resultsCurrentExp;
+    else
+        resultsCurrentExp.VRec2 = struct();
+        results{expIdx} = resultsCurrentExp;
+    end
+catch ME
+end
+try
+    resultsTemp3.analysisTypeIdx = analysisTypeIdx;
+    resultsCurrentExp.dff.sweepResults = resultsTemp3;
+    resultsCurrentExp.dff.groupResults = resultsTemp3Grp;
     results{expIdx} = resultsCurrentExp;
 catch ME
 end
@@ -9587,10 +9882,10 @@ end
     % uncaging - display help message
     function ui2Help(src, ~)
         winHelp = figure('Name', sprintf('How to use analysis preset: %s', analysisPresetString), 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.4, 0.375, 0.2, 0.3], 'resize', 'off');
-        winHelpText1 = uicontrol('Parent', winHelp, 'Style', 'text', 'string', sprintf('"%s" assumes pairwise arrangement of experiments. Place corresponding experiments into each list (aligned with its matching pair):', analysisPresetString), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.75, 0.8, 0.2]);
+        winHelpText1 = uicontrol('Parent', winHelp, 'Style', 'text', 'string', sprintf('"%s" assumes pairwise arrangement of experiments. Signals 1 & 2 must be Vm & dF/F, respectively. Place experiments into each list (aligned with its matching pair):', analysisPresetString), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.75, 0.8, 0.2]);
         winHelpText2 = uicontrol('Parent', winHelp, 'Style', 'text', 'string', sprintf('Left: Units (Single, or group of, spine(s))  /  Right: Measured'), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.675, 0.8, 0.1]);
-        winHelpText3 = uicontrol('Parent', winHelp, 'Style', 'text', 'string', sprintf('Code will automatically detect unit size and spine increment (for Measured experiments) from metadata. Measured experiment results must have increasing number of spines, recruited in the same order as in the associated Units experiment. Increment in spine count does not have to match each unit size, i.e. units can be added together.'), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.35, 0.8, 0.35]);
-        winHelpText4 = uicontrol('Parent', winHelp, 'Style', 'text', 'string', sprintf('When metadata are not available for each sweep (e.g. when units were recorded in a single sweep, and truncated afterwards), unit size of 1 spine will be assumed. <!> Use caution when working without metadata while groups of spines are defined as units.'), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.15, 0.8, 0.25]);
+        winHelpText3 = uicontrol('Parent', winHelp, 'Style', 'text', 'string', sprintf('Code will automatically detect unit size and spine increment (for Measured experiments) from metadata. Results from Measured experiments must be ordered in increasing number of spines, recruited in the same order as in the associated Units experiment. Increment in spine count does not have to match each unit size, i.e. units can be added together.'), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.35, 0.8, 0.35]);
+        winHelpText4 = uicontrol('Parent', winHelp, 'Style', 'text', 'string', sprintf('When metadata are not available for each sweep (e.g. when units were recorded in a single sweep, and truncated afterwards), unit size of 1 spine will be assumed by default, which can be changed in Options. Use caution when working without metadata.'), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.15, 0.8, 0.25]);
         winHelpClose = uicontrol('Parent', winHelp, 'Style', 'pushbutton', 'string', 'Close', 'horizontalalignment', 'center', 'backgroundcolor', [0.9, 0.9, 0.9], 'Units', 'normalized', 'Position', [0.4, 0.02, 0.2, 0.08], 'Callback', @closeWinHelp, 'interruptible', 'off');
         function closeWinHelp(src, ~)
             delete(winHelp);
@@ -10015,7 +10310,7 @@ guidata(src, h);
 end
 
 
-function results = analysisPeak(results, params, data, windows)
+function results = analysisPeak(results, params, data, windows, analysisColumn)
 % peak analysis - also calculate area and mean
 % code as old as time
 
@@ -10031,7 +10326,7 @@ riseDecay = [20, 80]; % percentage of peak for rise/decay calculation
 useMedian = 1; % use median instead of mean if 1 %%% implement later, this is not important
 %}
 timeColumn = params.actualParams.timeColumn;
-analysisColumn = params.actualParams.analysisColumn; %%% either use array later to iterate for multiple signals, or simply iterate argument to be passed on
+%analysisColumn = params.actualParams.analysisColumn; %%% either use array later to iterate for multiple signals, or simply iterate argument to be passed on
 riseDecay = params.actualParams.riseDecay; % percentage of peak for rise/decay calculation
 useMedian = params.actualParams.useMedian; % use median instead of mean if 1 %%% implement later, this is not important
 
@@ -10497,7 +10792,7 @@ results.decaySlope = decaySlope;
 end
 
 
-function resultsTemp = analysisThresholdDetection(resultsTemp, params, VRecData, window)
+function resultsTemp = analysisThresholdDetection(resultsTemp, params, VRecData, window, analysisColumn)
 
 errorMessage = 'Error: Feature currently unavailable, under development';
 fprintf(errorMessage);
@@ -10506,7 +10801,7 @@ fprintf(errorMessage);
 end
 
 
-function resultsTemp = analysisAPWaveform(resultsTemp, params, VRecData, window)
+function resultsTemp = analysisAPWaveform(resultsTemp, params, VRecData, window, analysisColumn)
 
 errorMessage = 'Error: Feature currently unavailable, under development';
 fprintf(errorMessage);
@@ -12125,15 +12420,32 @@ params = h.params;
 
 % fetch plot info
 try
-    analysisPlot1Menu1 = h.ui.analysisPlot1Menu1.Value; % (sel), v, dff
+    analysisPlot1Menu1 = h.ui.analysisPlot1Menu1.Value; % (sel), S1, S2
     analysisPlot1Menu2 = h.ui.analysisPlot1Menu2.Value; % (sel), win1, win2
     analysisPlot1Menu3 = h.ui.analysisPlot1Menu3.Value; % (sel), (result type)
     analysisPlot1Menu4 = h.ui.analysisPlot1Menu4.Value; % (sel), swp, grp
-    analysisPlot2Menu1 = h.ui.analysisPlot2Menu1.Value; % (sel), v, dff
+    analysisPlot2Menu1 = h.ui.analysisPlot2Menu1.Value; % (sel), S1, S2
     analysisPlot2Menu2 = h.ui.analysisPlot2Menu2.Value; % (sel), win1, win2
     analysisPlot2Menu3 = h.ui.analysisPlot2Menu3.Value; % (sel), (result type)
     analysisPlot2Menu4 = h.ui.analysisPlot2Menu4.Value; % (sel), swp, grp
 catch ME
+end
+
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+    signal1Channel = h.params.actualParams.signal1Channel; % corresponding to data column, but mind timestamp availability
+    signal2Channel = h.params.actualParams.signal2Channel; % corresponding to data column, but mind timestamp availability
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+    end
 end
 
 %  plot 1
@@ -12145,12 +12457,36 @@ try
     switch analysisPlot1Menu1 % signal
         case 1 % unselected - do nothing
             return
-        case 2 % v/i
-            results1 = results.VRec;
-            color = [0, 0, 0];
-        case 3 % dff
-            results1 = results.dff;
-            color = [0, 0.5, 0];
+        case 2 % S1
+            switch signal1Type % i, V, F
+                case 1
+                    results1 = results.VRec;
+                    color = [0, 0, 0];
+                case 2
+                    results1 = results.VRec;
+                    color = [0, 0, 0];
+                case 3
+                    results1 = results.dff;
+                    color = [0, 0.5, 0];
+                otherwise
+                    results1 = {};
+                    color = [0, 0, 0];
+            end
+        case 3 % S2
+            switch signal2Type % i, V, F
+                case 1
+                    results1 = results.VRec2;
+                    color = [0, 0, 0];
+                case 2
+                    results1 = results.VRec2;
+                    color = [0, 0, 0];
+                case 3
+                    results1 = results.dff;
+                    color = [0, 0.5, 0];
+                otherwise
+                    results1 = {};
+                    color = [0, 0, 0];
+            end
     end
     winToPlot = analysisPlot1Menu2 - 1; % let the try block take care of winToPlot == 0
     switch analysisPlot1Menu4 % plot by...
@@ -12235,33 +12571,183 @@ try
     analysisPlot1 = displayResults(analysisPlot1, dataX, dataY, color);
     set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
     hold off;
+    inputIdx = analysisPlot1Menu3 - 1; % spaghetti
     switch analysisPlot1Menu1 % signal
         case 1 % unselected - do nothing
             return
-        case 2 % v/i
-            ylabel('PSP (mV)');
-            %{
-            if nanmax(dataY) > 40
-                ylim([0, 40.5]);
-                yticks(-1000:10:1000);
-            elseif nanmax(dataY) > 10
-                ylim([0, max(dataY) + 0.5]);
-                yticks(-1000:5:1000);
-            else
-                ylim([0, 10.5]);
-                yticks(-1000:2:1000);
+        case 2 % S1
+            ylabel('');
+            switch inputIdx
+                case 1
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('PSC (pA)');
+                        case 2
+                            ylabel('PSP (mV)');
+                        case 3
+                            ylabel('dF/F');
+                        otherwise
+                            ylabel('');
+                    end
+                case 2
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Area (pA*ms)');
+                        case 2
+                            ylabel('Area (mV*ms)');
+                        case 3
+                            ylabel('Area ((dF/F)*ms)');
+                        otherwise
+                            ylabel('');
+                    end
+                case 3
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Mean (pA)');
+                        case 2
+                            ylabel('Mean (mV)');
+                        case 3
+                            ylabel('Mean (dF/F)');
+                        otherwise
+                            ylabel('');
+                    end
+                case 4
+                    ylabel('t of peak (ms)')
+                case 5
+                    ylabel('rise (ms)')
+                case 6
+                    ylabel('decay (ms)')
+                case 7
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('rise (pA/ms)');
+                        case 2
+                            ylabel('rise (mV/ms)');
+                        case 3
+                            ylabel('rise ((dF/F)/ms)');
+                        otherwise
+                            ylabel('');
+                    end
+                case 8
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('decay (pA/ms)');
+                        case 2
+                            ylabel('decay (mV/ms)');
+                        case 3
+                            ylabel('decay ((dF/F)/ms)');
+                        otherwise
+                            ylabel('');
+                    end
             end
+            %{
+                if nanmax(abs(dataY)) > 150 % arbitrary but reasonable display range beyond AP
+                    ylim([min(0, nanmin(dataY) - 5), max(0, nanmax(dataY) + 5)]);
+                    yticks(-1000000:10*round(nanmax(abs(dataY))/50):1000000);
+            %{
+                elseif nanmax((dataY)) > 40 && inputIdx == 1 % arbitrary but reasonable display range for peak PSP
+                    ylim([0, 40.5]);
+                    yticks(-1000:10:1000);
             %}
-        case 3 % dff
-            ylabel('dF/F');
-            %{
-            if nanmax(dataY) > 4
-                ylim([-0.5, max(dataY) + 0.5]);
-                yticks(-10:1:100);
-            else
-                ylim([-0.5, 4.5]);
-                yticks(-10:1:100);
+                elseif nanmax(abs(dataY)) > 40
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-1000:10:1000);
+                elseif nanmax(abs(dataY)) > 10
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-1000:5:1000);
+                elseif nanmax(abs(dataY)) > 5
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-1000:1:1000);
+                elseif nanmax(abs(dataY)) < 1
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-100:0.1*max(abs(dataY)):100);
+                else
+                    ylim([0, 5.5]);
+                    yticks(-1000:2:1000);
+                end
+            %}
+        case 3 % S2
+            ylabel('');
+            switch inputIdx % although it doesn't make much sense here...
+                case 1
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('PSC (pA)');
+                        case 2
+                            ylabel('PSP (mV)');
+                        case 3
+                            ylabel('dF/F');
+                        otherwise
+                            ylabel('');
+                    end
+                case 2
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Area (pA*ms)');
+                        case 2
+                            ylabel('Area (mV*ms)');
+                        case 3
+                            ylabel('Area ((dF/F)*ms)');
+                        otherwise
+                            ylabel('');
+                    end
+                case 3
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Mean (pA)');
+                        case 2
+                            ylabel('Mean (mV)');
+                        case 3
+                            ylabel('Mean (dF/F)');
+                        otherwise
+                            ylabel('');
+                    end
+                case 4
+                    ylabel('t of peak (ms)')
+                case 5
+                    ylabel('rise (ms)')
+                case 6
+                    ylabel('decay (ms)')
+                case 7
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('rise (pA/ms)');
+                        case 2
+                            ylabel('rise (mV/ms)');
+                        case 3
+                            ylabel('rise ((dF/F)/ms)');
+                        otherwise
+                            ylabel('');
+                    end
+                case 8
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('decay (pA/ms)');
+                        case 2
+                            ylabel('decay (mV/ms)');
+                        case 3
+                            ylabel('decay ((dF/F)/ms)');
+                        otherwise
+                            ylabel('');
+                    end
             end
+            %{
+                if nanmax(abs(dataY)) > 100
+                    ylim([[min(0, nanmin(dataY) - 5), max(0, nanmax(dataY) + 5)]]);
+                    yticks(-1000000:10*round(nanmax(abs(dataY))/50):1000000);
+                elseif nanmax(abs(dataY)) > 50
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-1000:10:1000);
+                elseif nanmax(abs(dataY)) > 10
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-100:5:100);
+                elseif nanmax(abs(dataY)) > 4
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-10:1:10);
+                else
+                    ylim([min(-4.5, nanmin(dataY) - 0.5), max(4.5, nanmax(dataY) + 0.5)]);
+                    yticks(-10:1:100);
+                end
             %}
     end
     %xticks(0:5:10000);
@@ -12288,12 +12774,36 @@ try
     switch analysisPlot2Menu1 % signal
         case 1 % unselected - do nothing
             return
-        case 2 % v/i
-            results2 = results.VRec;
-            color = [0, 0, 0];
-        case 3 % dff
-            results2 = results.dff;
-            color = [0, 0.5, 0];
+        case 2 % S1
+            switch signal1Type % i, V, F
+                case 1
+                    results2 = results.VRec;
+                    color = [0, 0, 0];
+                case 2
+                    results2 = results.VRec;
+                    color = [0, 0, 0];
+                case 3
+                    results2 = results.dff;
+                    color = [0, 0.5, 0];
+                otherwise
+                    results2 = {};
+                    color = [0, 0, 0];
+            end
+        case 3 % S2
+            switch signal2Type % i, V, F
+                case 1
+                    results2 = results.VRec2;
+                    color = [0, 0, 0];
+                case 2
+                    results2 = results.VRec2;
+                    color = [0, 0, 0];
+                case 3
+                    results2 = results.dff;
+                    color = [0, 0.5, 0];
+                otherwise
+                    results2 = {};
+                    color = [0, 0, 0];
+            end
     end
     winToPlot = analysisPlot2Menu2 - 1; % let the try block take care of winToPlot == 0
     switch analysisPlot2Menu4 % plot by...
@@ -12378,33 +12888,183 @@ try
     analysisPlot2 = displayResults(analysisPlot2, dataX, dataY, color);
     set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
     hold off;
+    inputIdx = analysisPlot2Menu3 - 1; % spaghetti
     switch analysisPlot2Menu1 % signal
         case 1 % unselected - do nothing
             return
-        case 2 % v/i
-            ylabel('PSP (mV)');
-            %{
-            if nanmax(dataY) > 40
-                ylim([0, 40.5]);
-                yticks(-1000:10:1000);
-            elseif nanmax(dataY) > 10
-                ylim([0, max(dataY) + 0.5]);
-                yticks(-1000:5:1000);
-            else
-                ylim([0, 10.5]);
-                yticks(-1000:2:1000);
+        case 2 % S1
+            ylabel('');
+            switch inputIdx
+                case 1
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('PSC (pA)');
+                        case 2
+                            ylabel('PSP (mV)');
+                        case 3
+                            ylabel('dF/F');
+                        otherwise
+                            ylabel('');
+                    end
+                case 2
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Area (pA*ms)');
+                        case 2
+                            ylabel('Area (mV*ms)');
+                        case 3
+                            ylabel('Area ((dF/F)*ms)');
+                        otherwise
+                            ylabel('');
+                    end
+                case 3
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Mean (pA)');
+                        case 2
+                            ylabel('Mean (mV)');
+                        case 3
+                            ylabel('Mean (dF/F)');
+                        otherwise
+                            ylabel('');
+                    end
+                case 4
+                    ylabel('t of peak (ms)')
+                case 5
+                    ylabel('rise (ms)')
+                case 6
+                    ylabel('decay (ms)')
+                case 7
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('rise (pA/ms)');
+                        case 2
+                            ylabel('rise (mV/ms)');
+                        case 3
+                            ylabel('rise ((dF/F)/ms)');
+                        otherwise
+                            ylabel('');
+                    end
+                case 8
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('decay (pA/ms)');
+                        case 2
+                            ylabel('decay (mV/ms)');
+                        case 3
+                            ylabel('decay ((dF/F)/ms)');
+                        otherwise
+                            ylabel('');
+                    end
             end
+            %{
+                if nanmax(abs(dataY)) > 150 % arbitrary but reasonable display range beyond AP
+                    ylim([min(0, nanmin(dataY) - 5), max(0, nanmax(dataY) + 5)]);
+                    yticks(-1000000:10*round(nanmax(abs(dataY))/50):1000000);
+            %{
+                elseif nanmax((dataY)) > 40 && inputIdx == 1 % arbitrary but reasonable display range for peak PSP
+                    ylim([0, 40.5]);
+                    yticks(-1000:10:1000);
             %}
-        case 3 % dff
-            ylabel('dF/F');
-            %{
-            if nanmax(dataY) > 4
-                ylim([-0.5, max(dataY) + 0.5]);
-                yticks(-10:1:100);
-            else
-                ylim([-0.5, 4.5]);
-                yticks(-10:1:100);
+                elseif nanmax(abs(dataY)) > 40
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-1000:10:1000);
+                elseif nanmax(abs(dataY)) > 10
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-1000:5:1000);
+                elseif nanmax(abs(dataY)) > 5
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-1000:1:1000);
+                elseif nanmax(abs(dataY)) < 1
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-100:0.1*max(abs(dataY)):100);
+                else
+                    ylim([0, 5.5]);
+                    yticks(-1000:2:1000);
+                end
+            %}
+        case 3 % S2
+            ylabel('');
+            switch inputIdx % although it doesn't make much sense here...
+                case 1
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('PSC (pA)');
+                        case 2
+                            ylabel('PSP (mV)');
+                        case 3
+                            ylabel('dF/F');
+                        otherwise
+                            ylabel('');
+                    end
+                case 2
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Area (pA*ms)');
+                        case 2
+                            ylabel('Area (mV*ms)');
+                        case 3
+                            ylabel('Area ((dF/F)*ms)');
+                        otherwise
+                            ylabel('');
+                    end
+                case 3
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Mean (pA)');
+                        case 2
+                            ylabel('Mean (mV)');
+                        case 3
+                            ylabel('Mean (dF/F)');
+                        otherwise
+                            ylabel('');
+                    end
+                case 4
+                    ylabel('t of peak (ms)')
+                case 5
+                    ylabel('rise (ms)')
+                case 6
+                    ylabel('decay (ms)')
+                case 7
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('rise (pA/ms)');
+                        case 2
+                            ylabel('rise (mV/ms)');
+                        case 3
+                            ylabel('rise ((dF/F)/ms)');
+                        otherwise
+                            ylabel('');
+                    end
+                case 8
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('decay (pA/ms)');
+                        case 2
+                            ylabel('decay (mV/ms)');
+                        case 3
+                            ylabel('decay ((dF/F)/ms)');
+                        otherwise
+                            ylabel('');
+                    end
             end
+            %{
+                if nanmax(abs(dataY)) > 100
+                    ylim([[min(0, nanmin(dataY) - 5), max(0, nanmax(dataY) + 5)]]);
+                    yticks(-1000000:10*round(nanmax(abs(dataY))/50):1000000);
+                elseif nanmax(abs(dataY)) > 50
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-1000:10:1000);
+                elseif nanmax(abs(dataY)) > 10
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-100:5:100);
+                elseif nanmax(abs(dataY)) > 4
+                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
+                    yticks(-10:1:10);
+                else
+                    ylim([min(-4.5, nanmin(dataY) - 0.5), max(4.5, nanmax(dataY) + 0.5)]);
+                    yticks(-10:1:100);
+                end
             %}
     end
     %xticks(0:5:10000);
@@ -12445,15 +13105,32 @@ results = h.results{expIdx};
 
 % fetch plot info
 try
-    analysisPlot1Menu1 = h.ui.analysisPlot1Menu1.Value; % (sel), v, dff
+    analysisPlot1Menu1 = h.ui.analysisPlot1Menu1.Value; % (sel), S1, S2
     analysisPlot1Menu2 = h.ui.analysisPlot1Menu2.Value; % (sel), win1, win2
     analysisPlot1Menu3 = h.ui.analysisPlot1Menu3.Value; % (sel), (result type)
     analysisPlot1Menu4 = h.ui.analysisPlot1Menu4.Value; % (sel), swp, grp
-    analysisPlot2Menu1 = h.ui.analysisPlot2Menu1.Value; % (sel), v, dff
+    analysisPlot2Menu1 = h.ui.analysisPlot2Menu1.Value; % (sel), S1, S2
     analysisPlot2Menu2 = h.ui.analysisPlot2Menu2.Value; % (sel), win1, win2
     analysisPlot2Menu3 = h.ui.analysisPlot2Menu3.Value; % (sel), (result type)
     analysisPlot2Menu4 = h.ui.analysisPlot2Menu4.Value; % (sel), swp, grp
 catch ME
+end
+
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+    signal1Channel = h.params.actualParams.signal1Channel; % corresponding to data column, but mind timestamp availability
+    signal2Channel = h.params.actualParams.signal2Channel; % corresponding to data column, but mind timestamp availability
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+    end
 end
 
 %  plot 1
@@ -12466,12 +13143,36 @@ if plotIdx == 1
         switch analysisPlot1Menu1 % signal
             case 1 % unselected - do nothing
                 return
-            case 2 % v/i
-                results1 = results.VRec;
-                color = [0, 0, 0];
-            case 3 % dff
-                results1 = results.dff;
-                color = [0, 0.5, 0];
+            case 2 % S1
+                switch signal1Type % i, V, F
+                    case 1
+                        results1 = results.VRec;
+                        color = [0, 0, 0];
+                    case 2
+                        results1 = results.VRec;
+                        color = [0, 0, 0];
+                    case 3
+                        results1 = results.dff;
+                        color = [0, 0.5, 0];
+                    otherwise
+                        results1 = {};
+                        color = [0, 0, 0];
+                end
+            case 3 % S2
+                switch signal2Type % i, V, F
+                    case 1
+                        results1 = results.VRec2;
+                        color = [0, 0, 0];
+                    case 2
+                        results1 = results.VRec2;
+                        color = [0, 0, 0];
+                    case 3
+                        results1 = results.dff;
+                        color = [0, 0.5, 0];
+                    otherwise
+                        results1 = {};
+                        color = [0, 0, 0];
+                end
         end
         winToPlot = analysisPlot1Menu2 - 1; % let the try block take care of winToPlot == 0
         switch analysisPlot1Menu4 % plot by...
@@ -12537,15 +13238,42 @@ if plotIdx == 1
         switch analysisPlot1Menu1 % signal
             case 1 % unselected - do nothing
                 return
-            case 2 % v/i
-                ylabel('PSP (mV)');
+            case 2 % S1
+                ylabel('');
                 switch inputIdx
                     case 1
-                        ylabel('PSP (mV)')
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('PSC (pA)');
+                            case 2
+                                ylabel('PSP (mV)');
+                            case 3
+                                ylabel('dF/F');
+                            otherwise
+                                ylabel('');
+                        end
                     case 2
-                        ylabel('Area (mV*ms)')
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Area (pA*ms)');
+                            case 2
+                                ylabel('Area (mV*ms)');
+                            case 3
+                                ylabel('Area ((dF/F)*ms)');
+                            otherwise
+                                ylabel('');
+                        end
                     case 3
-                        ylabel('Mean (mV)')
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Mean (pA)');
+                            case 2
+                                ylabel('Mean (mV)');
+                            case 3
+                                ylabel('Mean (dF/F)');
+                            otherwise
+                                ylabel('');
+                        end
                     case 4
                         ylabel('t of peak (ms)')
                     case 5
@@ -12553,9 +13281,27 @@ if plotIdx == 1
                     case 6
                         ylabel('decay (ms)')
                     case 7
-                        ylabel('rise (mV/ms)')
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('rise (pA/ms)');
+                            case 2
+                                ylabel('rise (mV/ms)');
+                            case 3
+                                ylabel('rise ((dF/F)/ms)');
+                            otherwise
+                                ylabel('');
+                        end
                     case 8
-                        ylabel('decay (mV/ms)')
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('decay (pA/ms)');
+                            case 2
+                                ylabel('decay (mV/ms)');
+                            case 3
+                                ylabel('decay ((dF/F)/ms)');
+                            otherwise
+                                ylabel('');
+                        end
                     otherwise
                         ylabel('')
                 end
@@ -12585,15 +13331,42 @@ if plotIdx == 1
                     yticks(-1000:2:1000);
                 end
                 %}
-            case 3 % dff
-                ylabel('dF/F');
+            case 3 % S2
+                ylabel('');
                 switch inputIdx % although it doesn't make much sense here...
                     case 1
-                        ylabel('dF/F')
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('PSC (pA)');
+                            case 2
+                                ylabel('PSP (mV)');
+                            case 3
+                                ylabel('dF/F');
+                            otherwise
+                                ylabel('');
+                        end
                     case 2
-                        ylabel('dF/F area')
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Area (pA*ms)');
+                            case 2
+                                ylabel('Area (mV*ms)');
+                            case 3
+                                ylabel('Area ((dF/F)*ms)');
+                            otherwise
+                                ylabel('');
+                        end
                     case 3
-                        ylabel('dF/F mean')
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Mean (pA)');
+                            case 2
+                                ylabel('Mean (mV)');
+                            case 3
+                                ylabel('Mean (dF/F)');
+                            otherwise
+                                ylabel('');
+                        end
                     case 4
                         ylabel('t of peak (ms)')
                     case 5
@@ -12601,9 +13374,27 @@ if plotIdx == 1
                     case 6
                         ylabel('decay (ms)')
                     case 7
-                        ylabel('rise (mV/ms)')
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('rise (pA/ms)');
+                            case 2
+                                ylabel('rise (mV/ms)');
+                            case 3
+                                ylabel('rise ((dF/F)/ms)');
+                            otherwise
+                                ylabel('');
+                        end
                     case 8
-                        ylabel('decay (mV/ms)')
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('decay (pA/ms)');
+                            case 2
+                                ylabel('decay (mV/ms)');
+                            case 3
+                                ylabel('decay ((dF/F)/ms)');
+                            otherwise
+                                ylabel('');
+                        end
                     otherwise
                         ylabel('')
                 end
@@ -12652,12 +13443,36 @@ if plotIdx == 2
         switch analysisPlot2Menu1 % signal
             case 1 % unselected - do nothing
                 return
-            case 2 % v/i
-                results2 = results.VRec;
-                color = [0, 0, 0];
-            case 3 % dff
-                results2 = results.dff;
-                color = [0, 0.5, 0];
+            case 2 % S1
+                switch signal1Type % i, V, F
+                    case 1
+                        results2 = results.VRec;
+                        color = [0, 0, 0];
+                    case 2
+                        results2 = results.VRec;
+                        color = [0, 0, 0];
+                    case 3
+                        results2 = results.dff;
+                        color = [0, 0.5, 0];
+                    otherwise
+                        results2 = {};
+                        color = [0, 0, 0];
+                end
+            case 3 % S2
+                switch signal2Type % i, V, F
+                    case 1
+                        results2 = results.VRec2;
+                        color = [0, 0, 0];
+                    case 2
+                        results2 = results.VRec2;
+                        color = [0, 0, 0];
+                    case 3
+                        results2 = results.dff;
+                        color = [0, 0.5, 0];
+                    otherwise
+                        results2 = {};
+                        color = [0, 0, 0];
+                end
         end
         winToPlot = analysisPlot2Menu2 - 1; % let the try block take care of winToPlot == 0
         switch analysisPlot2Menu4 % plot by...
@@ -12723,15 +13538,42 @@ if plotIdx == 2
         switch analysisPlot2Menu1 % signal
             case 1 % unselected - do nothing
                 return
-            case 2 % v/i
-                ylabel('PSP (mV)');
+            case 2 % S1
+                ylabel('');
                 switch inputIdx
                     case 1
-                        ylabel('PSP (mV)')
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('PSC (pA)');
+                            case 2
+                                ylabel('PSP (mV)');
+                            case 3
+                                ylabel('dF/F');
+                            otherwise
+                                ylabel('');
+                        end
                     case 2
-                        ylabel('Area (mV*ms)')
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Area (pA*ms)');
+                            case 2
+                                ylabel('Area (mV*ms)');
+                            case 3
+                                ylabel('Area ((dF/F)*ms)');
+                            otherwise
+                                ylabel('');
+                        end
                     case 3
-                        ylabel('Mean (mV)')
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Mean (pA)');
+                            case 2
+                                ylabel('Mean (mV)');
+                            case 3
+                                ylabel('Mean (dF/F)');
+                            otherwise
+                                ylabel('');
+                        end
                     case 4
                         ylabel('t of peak (ms)')
                     case 5
@@ -12739,11 +13581,27 @@ if plotIdx == 2
                     case 6
                         ylabel('decay (ms)')
                     case 7
-                        ylabel('rise (mV/ms)')
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('rise (pA/ms)');
+                            case 2
+                                ylabel('rise (mV/ms)');
+                            case 3
+                                ylabel('rise ((dF/F)/ms)');
+                            otherwise
+                                ylabel('');
+                        end
                     case 8
-                        ylabel('decay (mV/ms)')
-                    otherwise
-                        ylabel('')
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('decay (pA/ms)');
+                            case 2
+                                ylabel('decay (mV/ms)');
+                            case 3
+                                ylabel('decay ((dF/F)/ms)');
+                            otherwise
+                                ylabel('');
+                        end
                 end
                 %{
                 if nanmax(abs(dataY)) > 150 % arbitrary but reasonable display range beyond AP
@@ -12771,15 +13629,42 @@ if plotIdx == 2
                     yticks(-1000:2:1000);
                 end
                 %}
-            case 3 % dff
-                ylabel('dF/F');
+            case 3 % S2
+                ylabel('');
                 switch inputIdx % although it doesn't make much sense here...
                     case 1
-                        ylabel('dF/F')
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('PSC (pA)');
+                            case 2
+                                ylabel('PSP (mV)');
+                            case 3
+                                ylabel('dF/F');
+                            otherwise
+                                ylabel('');
+                        end
                     case 2
-                        ylabel('dF/F area')
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Area (pA*ms)');
+                            case 2
+                                ylabel('Area (mV*ms)');
+                            case 3
+                                ylabel('Area ((dF/F)*ms)');
+                            otherwise
+                                ylabel('');
+                        end
                     case 3
-                        ylabel('dF/F mean')
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Mean (pA)');
+                            case 2
+                                ylabel('Mean (mV)');
+                            case 3
+                                ylabel('Mean (dF/F)');
+                            otherwise
+                                ylabel('');
+                        end
                     case 4
                         ylabel('t of peak (ms)')
                     case 5
@@ -12787,11 +13672,27 @@ if plotIdx == 2
                     case 6
                         ylabel('decay (ms)')
                     case 7
-                        ylabel('rise (mV/ms)')
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('rise (pA/ms)');
+                            case 2
+                                ylabel('rise (mV/ms)');
+                            case 3
+                                ylabel('rise ((dF/F)/ms)');
+                            otherwise
+                                ylabel('');
+                        end
                     case 8
-                        ylabel('decay (mV/ms)')
-                    otherwise
-                        ylabel('')
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('decay (pA/ms)');
+                            case 2
+                                ylabel('decay (mV/ms)');
+                            case 3
+                                ylabel('decay ((dF/F)/ms)');
+                            otherwise
+                                ylabel('');
+                        end
                 end
                 %{
                 if nanmax(abs(dataY)) > 100
@@ -15913,8 +16814,27 @@ params = h.params;
 traceDisplay = h.ui.traceDisplay;
 traceDisplayYRange = h.ui.traceDisplayYRange; % y range; to be shared across experiments
 
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
+switch signal1Type % i, V, F
+    case 1
+        zoom = params.y3RangeZoom; % zooming factor
+    case 2
+        zoom = params.yRangeZoom; % zooming factor
+    case 3
+        zoom = params.y2RangeZoom; % zooming factor
+    otherwise % nonexistent
+        return
+end
+        
 % zoom
-zoom = params.yRangeZoom; % zooming factor
+%zoom = params.yRangeZoom; % zooming factor
 traceDisplayYRangeLow = traceDisplayYRange(1);
 traceDisplayYRangeHigh = traceDisplayYRange(2);
 traceDisplayYRangeMid = (traceDisplayYRange(2) + traceDisplayYRange(1))/2;
@@ -15944,8 +16864,27 @@ params = h.params;
 traceDisplay = h.ui.traceDisplay;
 traceDisplayYRange = h.ui.traceDisplayYRange; % y range; to be shared across experiments
 
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
+switch signal1Type % i, V, F
+    case 1
+        zoom = params.y3RangeZoom; % zooming factor
+    case 2
+        zoom = params.yRangeZoom; % zooming factor
+    case 3
+        zoom = params.y2RangeZoom; % zooming factor
+    otherwise % nonexistent
+        return
+end
+
 % zoom
-zoom = params.yRangeZoom; % zooming factor
+%zoom = params.yRangeZoom; % zooming factor
 traceDisplayYRangeLow = traceDisplayYRange(1);
 traceDisplayYRangeHigh = traceDisplayYRange(2);
 traceDisplayYRangeMid = (traceDisplayYRange(2) + traceDisplayYRange(1))/2;
@@ -15975,8 +16914,27 @@ params = h.params;
 traceDisplay = h.ui.traceDisplay;
 traceDisplayYRange = h.ui.traceDisplayYRange; % y range; to be shared across experiments
 
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
+switch signal1Type % i, V, F
+    case 1
+        move = params.y3RangeMove; % moving factor
+    case 2
+        move = params.yRangeMove; % moving factor
+    case 3
+        move = params.y2RangeMove; % zooming factor
+    otherwise % nonexistent
+        return
+end
+
 % move
-move = params.yRangeMove; % moving factor
+%move = params.yRangeMove; % moving factor
 traceDisplayYRangeLow = traceDisplayYRange(1);
 traceDisplayYRangeHigh = traceDisplayYRange(2);
 traceDisplayYRangeSpan = traceDisplayYRange(2) - traceDisplayYRange(1);
@@ -16007,8 +16965,27 @@ params = h.params;
 traceDisplay = h.ui.traceDisplay;
 traceDisplayYRange = h.ui.traceDisplayYRange; % y range; to be shared across experiments
 
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
+switch signal1Type % i, V, F
+    case 1
+        move = params.y3RangeMove; % moving factor
+    case 2
+        move = params.yRangeMove; % moving factor
+    case 3
+        move = params.y2RangeMove; % zooming factor
+    otherwise % nonexistent
+        return
+end
+
 % move
-move = params.yRangeMove; % moving factor
+%move = params.yRangeMove; % moving factor
 traceDisplayYRangeLow = traceDisplayYRange(1);
 traceDisplayYRangeHigh = traceDisplayYRange(2);
 traceDisplayYRangeSpan = traceDisplayYRange(2) - traceDisplayYRange(1);
@@ -16039,8 +17016,27 @@ params = h.params;
 traceDisplay = h.ui.traceDisplay;
 traceDisplayYRange = h.ui.traceDisplayY2Range; % y range; to be shared across experiments
 
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
+switch signal1Type % i, V, F
+    case 1
+        zoom = params.y3RangeZoom; % zooming factor
+    case 2
+        zoom = params.yRangeZoom; % zooming factor
+    case 3
+        zoom = params.y2RangeZoom; % zooming factor
+    otherwise % nonexistent
+        return
+end
+
 % zoom
-zoom = params.y2RangeZoom; % zooming factor
+%zoom = params.y2RangeZoom; % zooming factor
 traceDisplayYRangeLow = traceDisplayYRange(1);
 traceDisplayYRangeHigh = traceDisplayYRange(2);
 traceDisplayYRangeMid = (traceDisplayYRange(2) + traceDisplayYRange(1))/2;
@@ -16073,8 +17069,27 @@ params = h.params;
 traceDisplay = h.ui.traceDisplay;
 traceDisplayYRange = h.ui.traceDisplayY2Range; % y range; to be shared across experiments
 
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
+switch signal1Type % i, V, F
+    case 1
+        zoom = params.y3RangeZoom; % zooming factor
+    case 2
+        zoom = params.yRangeZoom; % zooming factor
+    case 3
+        zoom = params.y2RangeZoom; % zooming factor
+    otherwise % nonexistent
+        return
+end
+
 % zoom
-zoom = params.y2RangeZoom; % zooming factor
+%zoom = params.y2RangeZoom; % zooming factor
 traceDisplayYRangeLow = traceDisplayYRange(1);
 traceDisplayYRangeHigh = traceDisplayYRange(2);
 traceDisplayYRangeMid = (traceDisplayYRange(2) + traceDisplayYRange(1))/2;
@@ -16111,8 +17126,27 @@ params = h.params;
 traceDisplay = h.ui.traceDisplay;
 traceDisplayYRange = h.ui.traceDisplayY2Range; % y range; to be shared across experiments
 
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
+switch signal1Type % i, V, F
+    case 1
+        move = params.y3RangeMove; % moving factor
+    case 2
+        move = params.yRangeMove; % moving factor
+    case 3
+        move = params.y2RangeMove; % moving factor
+    otherwise % nonexistent
+        return
+end
+
 % move
-move = params.y2RangeMove; % moving factor
+%move = params.y2RangeMove; % moving factor
 traceDisplayYRangeLow = traceDisplayYRange(1);
 traceDisplayYRangeHigh = traceDisplayYRange(2);
 traceDisplayYRangeSpan = traceDisplayYRange(2) - traceDisplayYRange(1);
@@ -16146,8 +17180,27 @@ params = h.params;
 traceDisplay = h.ui.traceDisplay;
 traceDisplayYRange = h.ui.traceDisplayY2Range; % y range; to be shared across experiments
 
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
+switch signal1Type % i, V, F
+    case 1
+        move = params.y3RangeMove; % moving factor
+    case 2
+        move = params.yRangeMove; % moving factor
+    case 3
+        move = params.y2RangeMove; % moving factor
+    otherwise % nonexistent
+        return
+end
+
 % move
-move = params.y2RangeMove; % moving factor
+%move = params.y2RangeMove; % moving factor
 traceDisplayYRangeLow = traceDisplayYRange(1);
 traceDisplayYRangeHigh = traceDisplayYRange(2);
 traceDisplayYRangeSpan = traceDisplayYRange(2) - traceDisplayYRange(1);
@@ -16184,8 +17237,41 @@ function traceDisplayReset(src, ~)
 h = guidata(src);
 params = h.params;
 traceDisplay = h.ui.traceDisplay;
+%{
 traceDisplayYRange = params.yRangeDefault;
 traceDisplayY2Range = params.y2RangeDefault;
+%}
+
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
+switch signal1Type % i, V, F
+    case 1
+        traceDisplayYRange = params.y3RangeDefault;
+    case 2
+        traceDisplayYRange = params.yRangeDefault;
+    case 3
+        traceDisplayYRange = params.y2RangeDefault;
+    otherwise % nonexistent
+        return
+end
+
+switch signal2Type % i, V, F
+    case 1
+        traceDisplayY2Range = params.y3RangeDefault;
+    case 2
+        traceDisplayY2Range = params.yRangeDefault;
+    case 3
+        traceDisplayY2Range = params.y2RangeDefault;
+    otherwise % nonexistent
+        return
+end
+
 %  experiment selected
 itemSelected = h.ui.cellListDisplay.Value;
 itemSelected = itemSelected(1); % force single selection
@@ -16258,6 +17344,120 @@ guidata(src, h);
 end
 
 
+function h = traceDisplayResetCalled(h)
+% reset main trace window range
+
+% load
+%h = guidata(src);
+params = h.params;
+traceDisplay = h.ui.traceDisplay;
+%{
+traceDisplayYRange = params.yRangeDefault;
+traceDisplayY2Range = params.y2RangeDefault;
+%}
+
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
+switch signal1Type % i, V, F
+    case 1
+        traceDisplayYRange = params.y3RangeDefault;
+    case 2
+        traceDisplayYRange = params.yRangeDefault;
+    case 3
+        traceDisplayYRange = params.y2RangeDefault;
+    otherwise % nonexistent
+        return
+end
+
+switch signal2Type % i, V, F
+    case 1
+        traceDisplayY2Range = params.y3RangeDefault;
+    case 2
+        traceDisplayY2Range = params.yRangeDefault;
+    case 3
+        traceDisplayY2Range = params.y2RangeDefault;
+    otherwise % nonexistent
+        return
+end
+
+%  experiment selected
+itemSelected = h.ui.cellListDisplay.Value;
+itemSelected = itemSelected(1); % force single selection
+h.ui.cellListDisplay.Value = itemSelected;
+itemToDisplay = itemSelected(1); % display only the first one if multiple items are selected - obsolete
+VRec = h.exp.data.VRec;
+if isempty(VRec)
+    return
+elseif iscell(VRec{itemToDisplay}) == 1
+    VRecToDisplay = VRec{itemToDisplay};
+    sweepCount = length(VRecToDisplay);
+else
+    VRecToDisplay = VRec{itemToDisplay};
+    sweepCount = 1;
+end
+
+% zoom
+%pvbsTimeColumn = 1; % column for timestamp in .csv - this should not be a problem, so can be written here
+pvbsTimeColumn = h.params.actualParams.timeColumn;
+dataLimit = [];
+if sweepCount == 1
+    if iscell(VRecToDisplay)
+        currentSweep = VRecToDisplay{1};
+    else
+        currentSweep = VRecToDisplay;
+    end
+    timeStampEnd = currentSweep(end, pvbsTimeColumn);
+    dataLimit(end + 1) = timeStampEnd;
+else
+    for i = 1:sweepCount
+        currentSweep = VRecToDisplay{i};
+        timeStampEnd = currentSweep(end, pvbsTimeColumn);
+        dataLimit(end + 1) = timeStampEnd;
+    end
+end
+dataLimit = max(dataLimit); % max number of data points, i.e. recording length
+dataLimit = ceil(dataLimit); % for aesthetic reasons - to display last tick
+traceDisplayXRange = [0, dataLimit];
+
+% re-enable move and zoom buttons in case they had been disabled
+set(h.ui.traceDisplayY2MoveDown, 'enable', 'on');
+set(h.ui.traceDisplayY2ZoomOut, 'enable', 'on');
+
+% but disenable these
+set(h.ui.traceDisplayXZoomOut, 'enable', 'off');
+set(h.ui.traceDisplayXMoveLeft, 'enable', 'off');
+set(h.ui.traceDisplayXMoveRight, 'enable', 'off');
+set(h.ui.traceDisplayXMoveToStart, 'enable', 'off');
+set(h.ui.traceDisplayXMoveToEnd, 'enable', 'off');
+
+% do display
+axes(traceDisplay);
+xlim(traceDisplayXRange);
+ylim(traceDisplayYRange);
+yyaxis right; ylim(traceDisplayY2Range); yyaxis left;
+%  do not display tick labels as multiples of powers of 10 
+ax = gca;
+ax.XRuler.Exponent = 0;
+ax.YRuler.Exponent = 0;
+yyaxis right; ax.YRuler.Exponent = 0; yyaxis left;
+
+% save
+h.params = params;
+h.ui.traceDisplay = traceDisplay;
+h.ui.traceDisplayXRange = traceDisplayXRange;
+h.ui.traceDisplayYRange = traceDisplayYRange;
+h.ui.traceDisplayY2Range = traceDisplayY2Range;
+%guidata(src, h);
+
+end
+
+
 function traceDisplayReset2(src, ~)
 % reset main trace window range
 
@@ -16265,7 +17465,41 @@ function traceDisplayReset2(src, ~)
 h = guidata(src);
 params = h.params;
 traceDisplay = h.ui.traceDisplay;
+%{
+traceDisplayYRange = params.yRangeDefault;
 traceDisplayY2Range = params.y2RangeDefault;
+%}
+
+try % try-catch for reverse compatibility
+    signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
+switch signal1Type % i, V, F
+    case 1
+        traceDisplayYRange = params.y3RangeDefault;
+    case 2
+        traceDisplayYRange = params.yRangeDefault;
+    case 3
+        traceDisplayYRange = params.y2RangeDefault;
+    otherwise % nonexistent
+        return
+end
+
+switch signal2Type % i, V, F
+    case 1
+        traceDisplayY2Range = params.y3RangeDefault;
+    case 2
+        traceDisplayY2Range = params.yRangeDefault;
+    case 3
+        traceDisplayY2Range = params.y2RangeDefault;
+    otherwise % nonexistent
+        return
+end
+
 %  experiment selected
 itemSelected = h.ui.cellListDisplay.Value;
 itemSelected = itemSelected(1); % force single selection
