@@ -1084,7 +1084,10 @@ todayYY = num2str(year(datetime));
 todayYY = todayYY(end-1:end);
 todayMM = sprintf('%02.0f', month(datetime));
 todayDD = sprintf('%02.0f', day(datetime));
-saveNameDate = [defaultSaveFilePrefix, todayYY, todayMM, todayDD];
+todayhh = sprintf('%02.0f', hour(datetime));
+todaymm = sprintf('%02.0f', minute(datetime));
+todayss = sprintf('%02.0f', second(datetime));
+saveNameDate = [todayYY, todayMM, todayDD ,'_', todayhh, todaymm, todayss];
 saveNameCell = h.exp.fileName{1}(1:end-4);
 saveNameCell = [defaultSaveFilePrefix, saveNameCell];
 if length(h.exp.fileName) > 1 % more than 1 experiments in dataset
@@ -1139,7 +1142,10 @@ todayYY = num2str(year(datetime));
 todayYY = todayYY(end-1:end);
 todayMM = sprintf('%02.0f', month(datetime));
 todayDD = sprintf('%02.0f', day(datetime));
-saveNameDate = [defaultSaveFilePrefix, todayYY, todayMM, todayDD];
+todayhh = sprintf('%02.0f', hour(datetime));
+todaymm = sprintf('%02.0f', minute(datetime));
+todayss = sprintf('%02.0f', second(datetime));
+saveNameDate = [todayYY, todayMM, todayDD ,'_', todayhh, todaymm, todayss];
 saveNameCell = h.exp.fileName{1}(1:end-4);
 saveNameCell = [defaultSaveFilePrefix, saveNameCell];
 if length(h.exp.fileName) > 1 % more than 1 experiments in dataset
@@ -2758,6 +2764,7 @@ end
                 ylabel('dF/F', 'color', 'k'); % keep the color convention from older version where left axis was Vm, right axis was dF/F
                 set(gca, 'ycolor', 'k', 'yminortick', 'on');
                 h.ui.trace = trace;
+                ylim(traceDisplayYRange);
             else % default to axis 2
                 columnToDisplay2 = signal2Channel;
                 trace2Color = params.trace2ColorInactive;
@@ -2779,8 +2786,8 @@ end
                 ylabel('dF/F', 'color', [0, 0.5, 0]);
                 set(gca, 'ycolor', [0, 0.5, 0], 'yminortick', 'on');
                 h.ui.trace2 = trace2;
+                ylim(traceDisplayY2Range);
             end
-            %ylim(traceDisplayY2Range);
             hold off;
             yyaxis left; % return to y axis (left), just to be safe
             
@@ -2815,14 +2822,13 @@ end
             end
             if signal2Type == 1 % i, V, F
                 ylabel('i (pA)', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
-                %ylim(traceDisplayYRange);
             else % default to V; cannot be F from how this function is called
                 ylabel('V_m (mV)', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
-                %ylim(traceDisplayYRange);
             end
             set(gca, 'ycolor', [0, 0.5, 0], 'yminortick', 'on');
             %yticks(-2000:10:1000); yticklabels(-2000:10:1000); % y ticks in 10 mV from -200 mV to +100 mV
             h.ui.trace2 = trace2;
+            ylim(traceDisplayY2Range);
         else % default to axis 1
             columnToDisplay = signal1Channel;
             traceColor = params.traceColorInactive;
@@ -2848,14 +2854,13 @@ end
             end
             if signal1Type == 1 % i, V, F
                 ylabel('i (pA)', 'color', 'k');
-                %ylim(traceDisplayYRange);
             else % default to V; cannot be F from how this function is called
                 ylabel('V_m (mV)', 'color', 'k');
-                %ylim(traceDisplayYRange);
             end
             set(gca, 'ycolor', 'k', 'yminortick', 'on');
             %yticks(-2000:10:1000); yticklabels(-2000:10:1000); % y ticks in 10 mV from -200 mV to +100 mV
             h.ui.trace = trace;
+            ylim(traceDisplayYRange);
         end
 
         xlabel('t (ms)');
@@ -2936,6 +2941,10 @@ set(traceDisplay, 'xminortick', 'on', 'yminortick', 'on', 'box', 'on'); % for so
 
 % bring voltage traces to top - %%%%%%%
 set(traceDisplay, 'SortMethod', 'depth');
+
+h.ui.traceDisplayYRange = traceDisplayYRange; % y range; to be shared across experiments
+h.ui.traceDisplayY2Range = traceDisplayY2Range; % y range; to be shared across experiments
+h.ui.traceDisplayXRange = traceDisplayXRange; % x range; to be shared across experiments
 
 end
 
@@ -3082,6 +3091,7 @@ end
                 end
                 ylabel('dF/F', 'color', 'k'); % keep the color convention from older version where left axis was Vm, right axis was dF/F
                 set(gca, 'ycolor', 'k', 'yminortick', 'on');
+                ylim(traceDisplayYRange);
             else % default to axis 2
                 columnToDisplay2 = signal2Channel;
                 trace2Color = params.trace2ColorInactive;
@@ -3102,8 +3112,8 @@ end
                 end
                 ylabel('dF/F', 'color', [0, 0.5, 0]);
                 set(gca, 'ycolor', [0, 0.5, 0], 'yminortick', 'on');
+                ylim(traceDisplayY2Range);
             end
-            %ylim(traceDisplayY2Range);
             hold off;
             yyaxis left; % return to y axis (left), just to be safe
 
@@ -3135,13 +3145,12 @@ end
             end
             if signal2Type == 1 % i, V, F
                 ylabel('i (pA)', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
-                %ylim(traceDisplayYRange);
             else % default to V; cannot be F from how this function is called
                 ylabel('V_m (mV)', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
-                %ylim(traceDisplayYRange);
             end
             set(gca, 'ycolor', [0, 0.5, 0], 'yminortick', 'on');
             %yticks(-2000:10:1000); yticklabels(-2000:10:1000); % y ticks in 10 mV from -200 mV to +100 mV
+            ylim(traceDisplayY2Range);
         else % default to axis 1
             columnToDisplay = signal1Channel;
             traceColor = params.traceColorInactive;
@@ -3165,13 +3174,12 @@ end
             end
             if signal1Type == 1 % i, V, F
                 ylabel('i (pA)', 'color', 'k');
-                %ylim(traceDisplayYRange);
             else % default to V; cannot be F from how this function is called
                 ylabel('V_m (mV)', 'color', 'k');
-                %ylim(traceDisplayYRange);
             end
             set(gca, 'ycolor', 'k', 'yminortick', 'on');
             %yticks(-2000:10:1000); yticklabels(-2000:10:1000); % y ticks in 10 mV from -200 mV to +100 mV
+            ylim(traceDisplayYRange);
         end
 
         xlabel('t (ms)');
@@ -3688,8 +3696,39 @@ ui2.saveButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Upd
 
     function updateDisplay()
         if isempty(h.ui.cellListDisplay.String) || isempty(h.ui.sweepListDisplay.String)
-            return
-        else
+            traceDisplay = h.ui.traceDisplay;
+            axes(traceDisplay);
+            yyaxis left;
+            switch signal1Type % i, V, F
+                case 1
+                    ylabel('i (pA)', 'color', 'k');
+                    ylim(h.params.y3RangeDefault);
+                case 2
+                    ylabel('V_m (mV)', 'color', 'k');
+                    ylim(h.params.yRangeDefault);
+                case 3
+                    ylabel('dF/F', 'color', 'k');
+                    ylim(h.params.y2RangeDefault);
+                otherwise % nonexistent
+                    return
+            end
+            yyaxis right;
+            switch signal2Type % i, V, F
+                case 1
+                    ylabel('i (pA)', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
+                    ylim(h.params.y3RangeDefault);
+                case 2
+                    ylabel('V_m (mV)', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
+                    ylim(h.params.yRangeDefault);
+                case 3
+                    ylabel('dF/F', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
+                    ylim(h.params.y2RangeDefault);
+                otherwise % nonexistent
+                    return
+            end
+            h.ui.traceDisplay = traceDisplay;
+            guidata(win1, h);
+        else % above are taken care within the called functions
             expIdx = h.ui.cellListDisplay.Value;
             expIdx = expIdx(1); % force single selection
             swpIdx = h.ui.sweepListDisplay.Value;
@@ -15994,11 +16033,37 @@ end
         resultsToExport = h.results{currentExperiment};
         swpIdx = h.exp.data.sweepIdx{currentExperiment};
         
+        try % try-catch for reverse compatibility
+            signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+            signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+        catch ME
+            signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+            signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+        end
+
         switch targetSignal % signal
-            case 1 % v/i
-                resultsToExport = resultsToExport.VRec;
-            case 2 % dff
-                resultsToExport = resultsToExport.dff;
+            case 1 % S1
+                switch signal1Type % i, V, F
+                    case 1
+                        resultsToExport = resultsToExport.VRec;
+                    case 2
+                        resultsToExport = resultsToExport.VRec;
+                    case 3
+                        resultsToExport = resultsToExport.dff;
+                    otherwise
+                        return
+                end
+            case 2 % S2
+                switch signal2Type % i, V, F
+                    case 1
+                        resultsToExport = resultsToExport.VRec2;
+                    case 2
+                        resultsToExport = resultsToExport.VRec2;
+                    case 3
+                        resultsToExport = resultsToExport.dff;
+                    otherwise
+                        return
+                end
         end
         
         switch targetSort % plot by...
@@ -16110,7 +16175,10 @@ end
         todayYY = todayYY(end-1:end);
         todayMM = sprintf('%02.0f', month(datetime));
         todayDD = sprintf('%02.0f', day(datetime));
-        saveNameDate = [todayYY, todayMM, todayDD];
+        todayhh = sprintf('%02.0f', hour(datetime));
+        todaymm = sprintf('%02.0f', minute(datetime));
+        todayss = sprintf('%02.0f', second(datetime));
+        saveNameDate = [todayYY, todayMM, todayDD ,'_', todayhh, todaymm, todayss];
         saveNameCell = h.exp.fileName{1}(1:end-4);
         saveNameCell = [defaultSaveFilePrefix, saveNameCell];
         if length(h.exp.fileName) > 1 % more than 1 experiments in dataset
@@ -16196,7 +16264,10 @@ fprintf('Exporting results... (for ALL experiments)');
         todayYY = todayYY(end-1:end);
         todayMM = sprintf('%02.0f', month(datetime));
         todayDD = sprintf('%02.0f', day(datetime));
-        saveNameDate = [todayYY, todayMM, todayDD];
+        todayhh = sprintf('%02.0f', hour(datetime));
+        todaymm = sprintf('%02.0f', minute(datetime));
+        todayss = sprintf('%02.0f', second(datetime));
+        saveNameDate = [todayYY, todayMM, todayDD ,'_', todayhh, todaymm, todayss];
         saveNameCell = h.exp.fileName{1}(1:end-4);
         saveNameCell = [defaultSaveFilePrefix, saveNameCell];
         if length(h.exp.fileName) > 1 % more than 1 experiments in dataset
@@ -16356,7 +16427,10 @@ end
         todayYY = todayYY(end-1:end);
         todayMM = sprintf('%02.0f', month(datetime));
         todayDD = sprintf('%02.0f', day(datetime));
-        saveNameDate = [todayYY, todayMM, todayDD];
+        todayhh = sprintf('%02.0f', hour(datetime));
+        todaymm = sprintf('%02.0f', minute(datetime));
+        todayss = sprintf('%02.0f', second(datetime));
+        saveNameDate = [todayYY, todayMM, todayDD ,'_', todayhh, todaymm, todayss];
         saveNameCell = h.exp.fileName{currentExperiment}(1:end-4);
         saveNameCell = [defaultSaveFilePrefix, saveNameCell];
         %{
