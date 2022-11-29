@@ -1,6 +1,7 @@
-PVBS: "Prairie View Browsing Solution"
+Prairie View Browsing Solution (PVBS)
+(https://github.com/flosfor/pvbs)
 
-(yoonjy@mit.edu, yjy@snu.ac.kr)
+Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 
 
 * MATLAB-based GUI for browsing and analyzing electrophysiology (patch clamp) and imaging data acquired with Prairie View (Bruker)
