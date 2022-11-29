@@ -47,17 +47,17 @@
 %
 %
 % * NB.
-%   Electrophysiology-related labels and parameters assume by default 
-%   current-clamp experiments and positive direction for peak detection 
-%   (e.g. EPSP), but are fully compatible with either current-clamp or
-%   voltage-clamp, or peaks in any direction.
+%   Default settings are designed for current-clamp experiments and 
+%   positive direction for peak detection (e.g. EPSP), but the code is 
+%   fully compatible with either current-clamp or voltage-clamp, or 
+%   peaks in any direction.
 %   "If you only knew the power of the dark side... [of patch clamp]"
 %
 %
 % * Features underway for future versions:
+%   - Threshold detection
 %   - Artifact removal
 %   - Manual linescan ROI selection
-%   - Threshold detection
 %   - Waveform analysis
 %   - .abf & .atf import
 %
@@ -8819,7 +8819,7 @@ end
                         uncSpineCountMeasured{i} = cumsum(uncUnitSize2{i}); % so many redundant variables, so confusingly named
                         uncUnitSize{i} = uncUnitSize2{i}; % needed way later during plotting
                         expName = expList{uncExpIdx2(i)};
-                        warningString = sprintf('<!> Warning: MarkPoints metadata unavailable for Measured experiment, assuming increments consistent with units in Unit experiment (Experiment: %s)\n\n', expName);
+                        warningString = sprintf('<!> Warning: MarkPoints metadata unavailable for Measured experiment, assuming increments consistent with units in Unit experiment (Experiment: %s)\n\n', expName); %%% fixlater - seems to happen in irrelevant situations as well???
                         fprintf(warningString);
                         
                     end
