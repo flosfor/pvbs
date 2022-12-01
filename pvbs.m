@@ -1,4 +1,4 @@
-%% PVBS (Prairie View Browsing Solution)
+%% Prairie View Browsing Solution (PVBS)
 % (https://github.com/flosfor/pvbs)
 %
 % Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
@@ -88,7 +88,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.11.29';
+pvbsLastMod = '2022.11.30';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -1096,7 +1096,7 @@ if length(h.exp.fileName) > 1 % more than 1 experiments in dataset
     saveNameCellSuffix = ['_N', expCount];
     saveNameCell = [saveNameCell, saveNameCellSuffix];
 end
-saveName = [saveNameCell, '.mat'];
+saveName = [saveNameCell, '_', saveNameDate, '.mat'];
 savePath = [defaultSavePath, '\']; % appending backslash for proper formatting
 
 
@@ -1154,7 +1154,7 @@ if length(h.exp.fileName) > 1 % more than 1 experiments in dataset
     saveNameCellSuffix = ['_N', expCount];
     saveNameCell = [saveNameCell, saveNameCellSuffix];
 end
-saveName = [saveNameCell, '.mat'];
+saveName = [saveNameCell, '_', saveNameDate, '.mat'];
 savePath = [defaultSavePath, '\']; % appending backslash for proper formatting
 
 
