@@ -395,8 +395,8 @@ ui.exportTargetText = uicontrol('Style', 'text', 'string', 'Source (Plot / Axis)
 %ui.exportTarget = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList1, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.042, 0.09, 0.093, 0.025]);
 ui.exportTarget1 = uicontrol('Style', 'checkbox', 'min', 0, 'max', 1, 'value', 1, 'string', '1', 'Units', 'normalized', 'Position', [0.09, 0.09, 0.025, 0.025], 'callback', @exportTarget1, 'interruptible', 'off');
 ui.exportTarget2 = uicontrol('Style', 'checkbox', 'min', 0, 'max', 1, 'value', 1, 'string', '2', 'Units', 'normalized', 'Position', [0.11, 0.09, 0.025, 0.025], 'callback', @exportTarget2, 'interruptible', 'off');
-ui.exportTraceButton1 = uicontrol('Style', 'pushbutton', 'String', 'Traces (.csv)', 'backgroundcolor', [0.85, 0.85, 0.85],  'Units', 'normalized', 'Position', [0.015, 0.06, 0.06, 0.03], 'Callback', @exportTraces1, 'interruptible', 'off');
-ui.exportTraceButton2 = uicontrol('Style', 'pushbutton', 'String', 'Trace Display', 'backgroundcolor', [0.85, 0.85, 0.85], 'Units', 'normalized', 'Position', [0.015, 0.03, 0.06, 0.03], 'Callback', @exportTraces2, 'interruptible', 'off');
+ui.exportTraceButton1 = uicontrol('Style', 'pushbutton', 'String', 'Traces (.csv)', 'backgroundcolor', [0.85, 0.85, 0.85],  'Units', 'normalized', 'Position', [0.015, 0.03, 0.06, 0.03], 'Callback', @exportTraces1, 'interruptible', 'off');
+ui.exportTraceButton2 = uicontrol('Style', 'pushbutton', 'String', 'Trace Display', 'backgroundcolor', [0.85, 0.85, 0.85], 'Units', 'normalized', 'Position', [0.015, 0.06, 0.06, 0.03], 'Callback', @exportTraces2, 'interruptible', 'off');
 ui.exportResultsButton1 = uicontrol('Style', 'pushbutton', 'String', 'Results (.csv)', 'backgroundcolor', [0.85, 0.85, 0.85],  'Units', 'normalized', 'Position', [0.076, 0.06, 0.06, 0.03], 'Callback', @exportResults1, 'interruptible', 'off');
 ui.exportResultsButton2 = uicontrol('Style', 'pushbutton', 'String', 'All Results (.mat)', 'backgroundcolor', [0.85, 0.85, 0.85],  'Units', 'normalized', 'Position', [0.076, 0.03, 0.06, 0.03], 'Callback', @exportResults2, 'interruptible', 'off');
 %  intrinsic properties
