@@ -64,12 +64,14 @@
 %
 %  This code was written since I was a complete beginner until eventually 
 %  becoming a novice; even the variable naming convention changed at some 
-%  point. Hence, it is inevitably very far from efficient at all, but it 
-%  will still provide at least some basic means to browse through and 
-%  analyze data acquired with PV, which are unfortunately absent from
-%  the original software despite the difficulties associated with 
-%  accessing those data in a comprehensible form. This code was 
-%  conceptually influenced by Axon pClamp.
+%  point. Hence, it is inevitably very far from efficient at all. Still, 
+%  it will provide at least some basic means to browse through and analyze 
+%  data acquired with Prairie View (PV), which are unfortunately absent 
+%  from the original PV software package despite the difficulties with 
+%  accessing those data in a comprehensible form, as well as PV's lack of 
+%  episodic recording concept (instead of gap-free) without introducing 
+%  further complications through its T-series format. This code was 
+%  conceptually influenced by Axon pClamp, particularly ClampFit.
 %
 %
 %
@@ -88,7 +90,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.11.30';
+pvbsLastMod = '2022.12.01';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -395,8 +397,8 @@ ui.exportTargetText = uicontrol('Style', 'text', 'string', 'Source (Plot / Axis)
 %ui.exportTarget = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList1, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.042, 0.09, 0.093, 0.025]);
 ui.exportTarget1 = uicontrol('Style', 'checkbox', 'min', 0, 'max', 1, 'value', 1, 'string', '1', 'Units', 'normalized', 'Position', [0.09, 0.09, 0.025, 0.025], 'callback', @exportTarget1, 'interruptible', 'off');
 ui.exportTarget2 = uicontrol('Style', 'checkbox', 'min', 0, 'max', 1, 'value', 1, 'string', '2', 'Units', 'normalized', 'Position', [0.11, 0.09, 0.025, 0.025], 'callback', @exportTarget2, 'interruptible', 'off');
-ui.exportTraceButton1 = uicontrol('Style', 'pushbutton', 'String', 'Traces (.csv)', 'backgroundcolor', [0.85, 0.85, 0.85],  'Units', 'normalized', 'Position', [0.015, 0.03, 0.06, 0.03], 'Callback', @exportTraces1, 'interruptible', 'off');
-ui.exportTraceButton2 = uicontrol('Style', 'pushbutton', 'String', 'Trace Display', 'backgroundcolor', [0.85, 0.85, 0.85], 'Units', 'normalized', 'Position', [0.015, 0.06, 0.06, 0.03], 'Callback', @exportTraces2, 'interruptible', 'off');
+ui.exportTraceButton1 = uicontrol('Style', 'pushbutton', 'String', 'Traces (.csv)', 'backgroundcolor', [0.85, 0.85, 0.85],  'Units', 'normalized', 'Position', [0.015, 0.06, 0.06, 0.03], 'Callback', @exportTraces1, 'interruptible', 'off');
+ui.exportTraceButton2 = uicontrol('Style', 'pushbutton', 'String', 'Trace Display', 'backgroundcolor', [0.85, 0.85, 0.85], 'Units', 'normalized', 'Position', [0.015, 0.03, 0.06, 0.03], 'Callback', @exportTraces2, 'interruptible', 'off');
 ui.exportResultsButton1 = uicontrol('Style', 'pushbutton', 'String', 'Results (.csv)', 'backgroundcolor', [0.85, 0.85, 0.85],  'Units', 'normalized', 'Position', [0.076, 0.06, 0.06, 0.03], 'Callback', @exportResults1, 'interruptible', 'off');
 ui.exportResultsButton2 = uicontrol('Style', 'pushbutton', 'String', 'All Results (.mat)', 'backgroundcolor', [0.85, 0.85, 0.85],  'Units', 'normalized', 'Position', [0.076, 0.03, 0.06, 0.03], 'Callback', @exportResults2, 'interruptible', 'off');
 %  intrinsic properties
@@ -566,8 +568,14 @@ artifactCount = 1;
 artifactFreq = 10; % (Hz)
 
 % sweep segmentation
+%  for convenience with single spines - none of which should be necessary were PV not gap-free all the time
+segmentationLength = 200; % segment length (ms)
+segmentationOffset = 150; % segmentation initial offset (ms)
+%  below was for convenience with 3 groups of spines
+%{
 segmentationLength = 400; % segment length (ms)
 segmentationOffset = 350; % segmentation initial offset (ms)
+%}
 segmentationTruncate = 1; % truncate remainder (0: no, 1: yes)
 segmentationCount = 0; % keep only this many segments and discard the rest (0 to disable)
 
