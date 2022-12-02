@@ -90,7 +90,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.12.01';
+pvbsLastMod = '2022.12.02';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -8470,6 +8470,7 @@ switch analysisPresetValue
     case 2 % uncaging w/ linescan (Apr 2022)
         % intended for pairwise arrangement of experiments (units, measured)
         % stupid ass way of coding but tired of thinking about this anymore
+        % this completely got out of control in terms of code structure... but meh
         
         % open new window
         win2 = figure('Name', analysisPresetString, 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.5, 0.5, 0.25, 0.4], 'resize', 'off');
@@ -9723,10 +9724,10 @@ end
         
         oWin.uo101 = uicontrol('Parent', win3, 'Style', 'text', 'fontweight', 'bold', 'string', 'Analysis window # (NB. Not signal channel #)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.85, 0.9, 0.08]);
         oWin.uo102 = uicontrol('Parent', win3, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.85, 0.6, 0.08]);
-        oWin.uo111 = uicontrol('Parent', win3, 'Style', 'text', 'string', 'Voltage', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.75, 0.4, 0.08]);
+        oWin.uo111 = uicontrol('Parent', win3, 'Style', 'text', 'string', 'Vm (Signal 1)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.75, 0.4, 0.08]);
         oWin.uo112 = uicontrol('Parent', win3, 'Style', 'edit', 'string', num2str(uncParams.winV), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.76, 0.125, 0.08], 'callback', @updateParams);
         oWin.uo113 = uicontrol('Parent', win3, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.75, 0.1, 0.08]);
-        oWin.uo121 = uicontrol('Parent', win3, 'Style', 'text', 'string', 'Fluorescence', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.75, 0.4, 0.08]);
+        oWin.uo121 = uicontrol('Parent', win3, 'Style', 'text', 'string', 'dF/F (Signal 2)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.75, 0.4, 0.08]);
         oWin.uo122 = uicontrol('Parent', win3, 'Style', 'edit', 'string', num2str(uncParams.winF), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.76, 0.125, 0.08], 'callback', @updateParams);
         oWin.uo123 = uicontrol('Parent', win3, 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.75, 0.1, 0.08]);
         
