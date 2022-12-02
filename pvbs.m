@@ -8802,8 +8802,29 @@ end
                     if isequal(uncUnitSize1Temp(1:length(uncUnitSize2Temp)), uncUnitSize2Temp) % or some units were simply not used during measured
                         uncExpected{i} = uncUnitSize1Temp(1:length(uncUnitSize2Temp)); % only use the relevant units
                         
-                    else
+                    else % e.g. when some groups are skipped
                         uncExpectedTemp = uncExpected{i};
+                        %uncExpectedTempTemp = uncUnitSize2Temp; % initializing to the shorter one
+                        uncSpineCountUnitsTemp = uncSpineCountUnits{i};
+                        uncSpineCountMeasuredTemp = uncSpineCountMeasured{i};
+                        uncSpineCountUnitsTemp = cumsum(uncSpineCountUnitsTemp);
+                        matchIdx = [];
+                        for j = 1:length(uncSpineCountMeasuredTemp)
+                            matchIdx(end + 1) = find(uncSpineCountUnitsTemp == uncSpineCountMeasuredTemp(j));
+                        end
+                        uncExpectedTempTemp = []; % great variable name as usual
+                        for j = matchIdx % length(matchIdx) should be the same as the length of Measureds
+                            uncExpectedTempCumsum = cumsum(uncExpectedTemp(1:j)); % great variable name again
+                            uncExpectedTempTemp(end + 1) = uncExpectedTempCumsum(end);
+                        end
+                        if length(uncExpectedTempTemp) == 1 % absurd
+                        else
+                            uncExpectedTempTemp = [uncExpectedTempTemp(1), diff(uncExpectedTempTemp)];
+                        end
+                        uncExpectedTempTemp = uncExpectedTempTemp'; % for consistency and convenience
+                        uncExpected{i} = uncExpectedTempTemp;
+                        % idk wtf was going on below
+                        %{
                         uncExpectedTempTemp = uncUnitSize2Temp; % initializing to the shorter one
                         uncUnitSize2Idx = [1, cumsum(uncUnitSize2Temp)]; % will be used below as index
                         for j = 1:length(uncExpectedTempTemp) %%%
@@ -8819,6 +8840,7 @@ end
                             %}
                         end
                         uncExpected{i} = uncExpectedTempTemp;
+                        %}
                     end
 
                 elseif any(~uncUnitSize2Temp) % measured experiment has sweeps with unit sizes defined as 0, likely from missing metadata (e.g. after segmentation, etc.)
