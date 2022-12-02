@@ -1325,7 +1325,7 @@ if fName ~= 0
         % h.results
         h.results{end + 1} = hNew.results{i};
         % h.analysis %%% fixlater and also see below
-        % h.params - leave as is
+        h.params = hNew.params; % leave as is %%% no
         % h.ui - leave as is, except...
         h.ui.cellList{end + 1} = hNew.ui.cellList{i};
     end
