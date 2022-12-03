@@ -34,13 +34,11 @@
 %      This is to avoid possible confusion caused by differences in .CSV 
 %      formatting conventions used by PV (scaled, gap-free) vs. others, 
 %      such as the .CSV exported from PVBS.m itself (unscaled, episodic). 
-%
-%      See function loadCSVMain() for settings, such as defaulting to 
-%      interpret values as current (pA) instead of voltage (mV). See also 
-%      variable "csvColumnsAsSweeps" in function setDefaultParams(). 
+%      See function loadCSVMain() for settings. See also variable 
+%      "csvColumnsAsSweeps" in function setDefaultParams(). 
 %
 %      Parameters in "Import Settings" represent those used for importing 
-%      .CSV files saved from PV itself (not PVBS.m) when loading them via 
+%      .CSV files saved from PV itself (not PVBS) when loading them via 
 %      their metadata .XML (wherein columns will not be considered as 
 %      sweeps regardless of csvColumnsAsSweeps, as a single data file from
 %      PV would always assume gap-free format))
@@ -62,22 +60,24 @@
 %   - .abf & .atf import
 %
 %
-%  This code was written since I was a complete beginner until eventually 
-%  becoming a novice; even the variable naming convention changed at some 
-%  point. Hence, it is inevitably very far from efficient at all. Still, 
-%  it will provide at least some basic means to browse through and analyze 
-%  data acquired with Prairie View (PV), which are unfortunately absent 
-%  from the original PV software package despite the difficulties with 
-%  accessing those data in a comprehensible form, as well as PV's lack of 
-%  episodic recording concept (instead of gap-free) without introducing 
-%  further complications through its T-series format. This code was 
-%  conceptually influenced by Axon pClamp, particularly ClampFit.
 %
 %
-%
-%
-%
-%
+%  A problem is only a problem when you have the ability to recognize it. 
+%  Prairie View (PV) is entirely ill-suited for the typical basic needs 
+%  of a patch clamp electrophysiologist: it has a most primitive browser, 
+%  provides no means for analysis, lacks the concept of episodic recording 
+%  and operates on gap-free mode by default (unless through introducing 
+%  further complications by using its T-Series format), all while saving 
+%  data and metadata in a very inefficient and incomprehensible format, 
+%  which aggravates all of its problems as well as prevent access from 
+%  other applications. PVBS ("Prairie View Browsing Solution") was 
+%  developed to provide a solution to this problem. This code was written 
+%  since I was a complete beginner until eventually becoming a novice, as 
+%  must be obvious from the way it is written; hence, it is inevitably far 
+%  from efficient at all. Still, it will provide at least some means for a 
+%  patch clamp electrophysiologist to do proper work, for those who 
+%  recognize the needs for it. This code was conceptually influenced by 
+%  Axon pClamp, particularly ClampFit.
 %
 %
 %
@@ -90,7 +90,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.12.02';
+pvbsLastMod = '2022.12.03';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
