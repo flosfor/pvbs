@@ -6,11 +6,11 @@ Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 
 
 
-* MATLAB-based GUI for browsing and analyzing electrophysiology (patch clamp) and imaging data acquired with Prairie View (Bruker)
+- MATLAB-based GUI for browsing and analyzing electrophysiology (patch clamp) and imaging data acquired with Prairie View (Bruker)
 
-* Please mention this code in your methods section.
+- Please mention this code in your methods section.
 
-* Supported experiment types: 
+- Supported experiment types: 
 1) PV VoltageRecording
 2) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
 3) PV T-Series (of VoltageRecording experiments)
@@ -19,13 +19,13 @@ Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 
 
 
-* Instructions: 
+- Instructions: 
 
 1) Run PVBS (pvbs.m)
 (designed for Prairie View 5.5; developed with Matlab 2020b, requires statistics & machine learning toolbox, signal processing toolbox)
 
 
-* For a usage example: 
+- For a usage example: 
 
 1) Unzip sampledata.zip (, .z01, .z02)
 (Download from Github by left-clicking on each file name and then clicking "download", instead of right-clicking on the file names and choosing "save link as" - file sizes should be 14.2 MB (.zip) or 24.0 MB (.z01 & .z02))
@@ -34,7 +34,7 @@ Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 (NOT "Load PV Experiment (.xml, .csv)" - this function is for loading experiments saved from Prairie View (VoltageRecording, LineScan, TSeries; via respective metadata), or .csv exported from PVBS)
 
 
-* See also (https://github.com/flosfor/pvbs_auxiliary) for auxiliary scripts that can be used with PVBS.
+- See also (https://github.com/flosfor/pvbs_auxiliary) for auxiliary scripts that can be used with PVBS.
 
 
 
