@@ -4,6 +4,8 @@ PVBS (Prairie View Browsing Solution)
 Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 
 
+
+
 * MATLAB-based GUI for browsing and analyzing electrophysiology (patch clamp) and imaging data acquired with Prairie View (Bruker)
 
 * Please mention this code in your methods section.
@@ -20,6 +22,7 @@ Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 1) Run PVBS (pvbs.m)
 (designed for Prairie View 5.5; developed with Matlab 2020b, requires statistics & machine learning toolbox, signal processing toolbox)
 
+
 * For a usage example: 
 
 1) Unzip sampledata.zip (, .z01, .z02)
@@ -30,3 +33,11 @@ Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 
 
 * See also (https://github.com/flosfor/pvbs_auxiliary) for auxiliary scripts that can be used with PVBS.
+
+
+
+
+A problem is a problem only when you have the ability to recognize it. Prairie View (PV) is entirely ill-suited for the typical basic needs of a patch clamp electrophysiologist: it has a most primitive browser, provides no means for analysis, lacks the concept of episodic recording and operates on gap-free mode by default (unless through introducing further complications by using its T-Series format), all while saving data and metadata in a very inefficient and incomprehensible format, which aggravates all of its problems as well as prevent access from other applications. PVBS ("Prairie View Browsing Solution") was developed to provide a solution to this problem. This code was written since I was a complete beginner until eventually becoming a novice, as must be obvious from the way it is written; hence, it is inevitably far from efficient at all. Still, it will provide at least some means for a patch clamp electrophysiologist to do proper work, for those who recognize the needs for it. This code was conceptually influenced by Axon pClamp, particularly ClampFit.
+
+
+
