@@ -70,10 +70,10 @@
 % and operates on gap-free mode by default (unless through introducing 
 % further complications by using its T-Series format), all while saving 
 % data and metadata in a very inefficient and incomprehensible format, 
-% which aggravates all of its defects as well as prevent access from other 
-% applications. The fundamental problem of PV can therefore be summarized 
-% as the following: it deprives the experimenter of their ability to 
-% perform and assess work in good quality.
+% which aggravates all of its defects as well as prevents access attempts 
+% using other softwares. The fundamental problem of PV can therefore be 
+% summarized as the following: it deprives the experimenter of their 
+% ability to perform and assess work in good quality.
 % 
 % PVBS ("Prairie View Browsing Solution") was developed to provide a 
 % solution to this problem. The code was written since I was a complete 
