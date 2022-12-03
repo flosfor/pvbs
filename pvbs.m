@@ -62,7 +62,7 @@
 %
 %
 %
-%  A problem is only a problem when you have the ability to recognize it. 
+%  A problem is a problem only when you have the ability to recognize it. 
 %  Prairie View (PV) is entirely ill-suited for the typical basic needs 
 %  of a patch clamp electrophysiologist: it has a most primitive browser, 
 %  provides no means for analysis, lacks the concept of episodic recording 
