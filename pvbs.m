@@ -81,8 +81,8 @@
 % way it is written; hence, it is inevitably far from efficient at all. 
 % Still, it will provide at least some means instead of nothing, for a 
 % patch clamp electrophysiologist to do proper work - for those who 
-% recognize the needs for it. This code was conceptually influenced by 
-% Axon pClamp, particularly ClampFit.
+% recognize the needs for it. PVBS was conceptually influenced by Axon 
+% pClamp, particularly ClampFit.
 %
 %
 %
