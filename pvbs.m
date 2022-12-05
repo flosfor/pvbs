@@ -9315,8 +9315,8 @@ end
                 expected = dataSrc3.expected{i};
                 plot(expected, measured, 'color', colorV2);
             end
-            xlim([0, pspMax - 15]);
-            ylim([0, pspMax - 15]);
+            xlim([0, pspMax - 10]);
+            ylim([0, pspMax - 10]);
             
             % gain
             axes(ui3.plot7);
