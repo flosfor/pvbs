@@ -6,9 +6,12 @@ Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 
 
 
-- MATLAB-based general-purpose GUI for browsing and analyzing electrophysiology (patch clamp) and calcium imaging data acquired with Prairie View (Bruker)
+- MATLAB-based general-purpose GUI for browsing and analyzing electrophysiology (patch clamp) and calcium imaging data
+
+- Intended for interpreting data acquired with Prairie View (Bruker)
 
 - Please mention this code in your methods section.
+
 
 - Supported experiment types:
 1) Any data in .CSV format (does not have to be from PV) 
