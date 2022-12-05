@@ -95,7 +95,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.12.03';
+pvbsLastMod = '2022.12.04';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -8550,42 +8550,57 @@ end
     function uncAnalysisRun(src, ~)
         
         % parameters - link these up with default parameters later
-        uncParams = h.params.actualParams.uncagingAnalysis;
-        %uncParams = guidata(win2);
-        winV = uncParams.winV; % analysis window for V
-        winF = uncParams.winF; % analysis window for dF/F
-        pspMax = uncParams.pspMax; % max PSP (mV) for threshold detection
-        uncUnitSizeDefault = uncParams.uncUnitSizeDefault; % default assumption for unit size (in number of spines), only used when markpoints metadata is not available
-        %{
-        winV = 1; % analysis window for V
-        winF = 2; % analysis window for dF/F
-        pspMax = 35; % max PSP (mV) for threshold detection
-        uncUnitSizeDefault = 1; % default assumption for unit size (in number of spines), only used when markpoints metadata is not available
-        %}
-        %peakDir = 3; % peak direction: neg, abs, pos %%% fixlater
-        
-        peakDir = h.params.actualParams.peakDirection1;
-        switch peakDir % converting to column indices for old code
-            case -1 % negative
-                peakDir = 1;
-            case 0 % absolute
-                peakDir = 2;
-            case 1 % positive
-                peakDir = 3;
-            otherwise
-                peakDir = 2; % default to absolute if not available
-        end
-        
-        peakDirF = h.params.actualParams.peakDirection2;
-        switch peakDirF % converting to column indices for old code
-            case -1 % negative
-                peakDirF = 1;
-            case 0 % absolute
-                peakDirF = 2;
-            case 1 % positive
-                peakDirF = 3;
-            otherwise
-                peakDirF = 2; % default to absolute if not available
+        try
+            uncParams = h.params.actualParams.uncagingAnalysis;
+            %uncParams = guidata(win2);
+            winV = uncParams.winV; % analysis window for V
+            winF = uncParams.winF; % analysis window for dF/F
+            pspMax = uncParams.pspMax; % max PSP (mV) for threshold detection
+            uncUnitSizeDefault = uncParams.uncUnitSizeDefault; % default assumption for unit size (in number of spines), only used when markpoints metadata is not available
+            
+            peakDir = h.params.actualParams.peakDirection1;
+            switch peakDir % converting to column indices for old code
+                case -1 % negative
+                    peakDir = 1;
+                case 0 % absolute
+                    peakDir = 2;
+                case 1 % positive
+                    peakDir = 3;
+                otherwise
+                    peakDir = 3; % default to positive if not available
+            end
+            
+            peakDirF = h.params.actualParams.peakDirection2;
+            switch peakDirF % converting to column indices for old code
+                case -1 % negative
+                    peakDirF = 1;
+                case 0 % absolute
+                    peakDirF = 2;
+                case 1 % positive
+                    peakDirF = 3;
+                otherwise
+                    peakDirF = 3; % default to positive if not available
+            end
+            
+        catch ME
+            try
+                uncParams = h.params.defaultParams.uncagingAnalysis;
+                h.params.actualParams.uncagingAnalysis = uncParams;
+            catch ME
+                winV = 1; % analysis window for V
+                winF = 2; % analysis window for dF/F
+                pspMax = 35; % max PSP (mV) for threshold detection
+                uncUnitSizeDefault = 1; % default assumption for unit size (in number of spines), only used when markpoints metadata is not available
+                peakDir = 3; % peak direction: neg, abs, pos
+                peakDirF = 3; % peak direction: neg, abs, pos
+                uncParams = struct();
+                uncParams.winV = winV;
+                uncParams.winF = winF;
+                uncParams.pspMax = pspMax;
+                uncParams.uncUnitSizeDefault = uncUnitSizeDefault;
+                h.params.actualParams.uncagingAnalysis = uncParams;
+                h.params.defaultParams.uncagingAnalysis = uncParams;
+            end
         end
         
         % display parameters
@@ -9518,6 +9533,18 @@ end
             if ~exist('exportPath', 'var')
                 exportPath = cd;
                 exportPath = [exportPath, '\'];
+                todayYY = num2str(year(datetime));
+                todayYY = todayYY(end-1:end);
+                todayMM = sprintf('%02.0f', month(datetime));
+                todayDD = sprintf('%02.0f', day(datetime));
+                todayhh = sprintf('%02.0f', hour(datetime));
+                todaymm = sprintf('%02.0f', minute(datetime));
+                todayss = sprintf('%02.0f', second(datetime));
+                timeStamp = [todayYY, todayMM, todayDD ,'_', todayhh, todaymm, todayss];
+                warning('off'); % in case directory exists for mkdir below - shouldn't be relevant for now
+                mkdir(timeStamp);
+                warning('on');
+                exportPath = [exportPath, timeStamp, '\'];
             end
             exportExt = '.mat';
             
@@ -9611,6 +9638,18 @@ end
             if ~exist('exportPath', 'var')
                 exportPath = cd;
                 exportPath = [exportPath, '\'];
+                todayYY = num2str(year(datetime));
+                todayYY = todayYY(end-1:end);
+                todayMM = sprintf('%02.0f', month(datetime));
+                todayDD = sprintf('%02.0f', day(datetime));
+                todayhh = sprintf('%02.0f', hour(datetime));
+                todaymm = sprintf('%02.0f', minute(datetime));
+                todayss = sprintf('%02.0f', second(datetime));
+                timeStamp = [todayYY, todayMM, todayDD ,'_', todayhh, todaymm, todayss];
+                warning('off'); % in case directory exists for mkdir below - shouldn't be relevant for now
+                mkdir(timeStamp);
+                warning('on');
+                exportPath = [exportPath, timeStamp, '\'];
             end
             exportExt = '.png';
             
@@ -9681,6 +9720,18 @@ end
                 beer = 'good'
                 exportPath = cd;
                 exportPath = [exportPath, '\'];
+                todayYY = num2str(year(datetime));
+                todayYY = todayYY(end-1:end);
+                todayMM = sprintf('%02.0f', month(datetime));
+                todayDD = sprintf('%02.0f', day(datetime));
+                todayhh = sprintf('%02.0f', hour(datetime));
+                todaymm = sprintf('%02.0f', minute(datetime));
+                todayss = sprintf('%02.0f', second(datetime));
+                timeStamp = [todayYY, todayMM, todayDD ,'_', todayhh, todaymm, todayss];
+                warning('off'); % in case directory exists for mkdir below - shouldn't be relevant for now
+                mkdir(timeStamp);
+                warning('on');
+                exportPath = [exportPath, timeStamp, '\'];
             end
             win4 = figure('Name', 'Set Export Directory', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'normalized', 'Position', [0.4, 0.4, 0.3, 0.03], 'resize', 'off');
             ui4.savePathInput = uicontrol('parent', win4, 'style', 'edit', 'string', exportPath, 'units', 'normalized', 'position', [0.01, 0.05, 0.75, 0.9], 'horizontalalignment', 'left');
@@ -9972,8 +10023,8 @@ end
 end
 
 
-function runAutoAnalysisDBSL(src, ~)
-% this was added ad hoc for DBSL experiments; now obsolete, but maybe can be used as a reference for setting up the preset in the future
+function runAutoAnalysisDLES(src, ~)
+% this was added ad hoc for DLES experiments; now obsolete, but maybe can be used as a reference for setting up the preset in the future
 
 % 1) i-o from single-stim sweeps; intensity = [50, 100, ...];
 % 2) area after stim, by freq. at given intensity
@@ -16229,6 +16280,11 @@ end
         %saveName = [saveNameCell, '.mat'];
         saveName = [saveNameCell, '.csv'];
         savePath = [defaultSavePath, '\']; % appending backslash for proper formatting
+        cd(savePath);
+        warning('off'); % in case directory exists for mkdir below - shouldn't be relevant for now
+        mkdir(saveNameDate);
+        warning('on');
+        savePath = [savePath, saveNameDate, '\'];
         
         %{
         % prompt, since it could take some time
@@ -16317,20 +16373,29 @@ fprintf('Exporting results... (for ALL experiments)');
         end
         saveName = [saveNameCell, '.mat'];
         savePath = [defaultSavePath, '\']; % appending backslash for proper formatting
+        cd(savePath);
+        warning('off'); % in case directory exists for mkdir below - shouldn't be relevant for now
+        mkdir(saveNameDate);
+        warning('on');
+        savePath = [savePath, saveNameDate, '\'];
         
         % save
         try
             [actualName, actualPath, isSaved] = uisaveX(structName, [savePath, saveName]);
             
-            % print results
-            %elapsedTime = toc;
-            %fprintf('\nSaved as: %s%s (%.1f s) \n\n', actualPath, actualName, elapsedTime);
-            %fprintf('\nSaved as: %s%s (%.1f s) \n\n', savePath, saveName, elapsedTime);
-            fprintf('\nSaved as: %s%s', savePath, saveName);
+            if isSaved
+                % print results
+                %elapsedTime = toc;
+                %fprintf('\nSaved as: %s%s (%.1f s) \n\n', actualPath, actualName, elapsedTime);
+                %fprintf('\nSaved as: %s%s (%.1f s) \n\n', savePath, saveName, elapsedTime);
+                fprintf('\nSaved as: %s%s', savePath, saveName);
+            else
+                fprintf('\nAborted.\n', savePath, saveName);
+            end
             
         catch ME
-            elapsedTime = toc;
-            fprintf('\nAborted or interrupted.\n');
+            %elapsedTime = toc;
+            fprintf('\nAborted.\n');
             return
         end
         
