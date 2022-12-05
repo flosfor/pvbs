@@ -10,11 +10,11 @@ Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 
 - Please mention this code in your methods section.
 
-- Supported experiment types: 
-1) PV VoltageRecording
-2) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
-3) PV T-Series (of VoltageRecording experiments)
-4) Any data in .CSV format
+- Supported experiment types:
+1) Any data in .CSV format (does not have to be from PV) 
+2) PV VoltageRecording
+3) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
+4) PV T-Series (of VoltageRecording experiments)
 
 
 
