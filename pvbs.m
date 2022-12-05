@@ -2691,6 +2691,10 @@ catch ME
     catch ME
         signal1Channel = 2;
         signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
     end
 end
 
@@ -3015,6 +3019,10 @@ catch ME
     catch ME
         signal1Channel = 2;
         signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
     end
 end
 
@@ -7811,6 +7819,10 @@ catch ME
     catch ME
         signal1Channel = 2;
         signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
     end
 end
 if signal2Type == 3 % fluorescence disabled for signal 1, so only consider signal 2
@@ -12585,6 +12597,10 @@ catch ME
     catch ME
         signal1Channel = 2;
         signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
     end
 end
 
@@ -13270,6 +13286,10 @@ catch ME
     catch ME
         signal1Channel = 2;
         signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
     end
 end
 
