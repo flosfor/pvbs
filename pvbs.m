@@ -4,9 +4,9 @@
 % Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 %
 %
-% * Please mention this code in your methods section.
+% - Please mention this code in your methods section.
 %
-% * Required Matlab Toolboxes: 
+% - Required Matlab Toolboxes: 
 %   1) Statistics & Machine Learning
 %   2) Signal Processing
 %
@@ -18,13 +18,13 @@
 % ------------------------------------------------------------------------
 %
 %
-% * Supported experiment types: 
-%   1) PV VoltageRecording
-%   2) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
-%   3) PV T-Series (of VoltageRecording experiments)
-%   4) Any data in .CSV format
+% - Supported experiment types: 
+%   1) Any data in .CSV format (does not have to be from PV)*
+%   2) PV VoltageRecording
+%   3) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
+%   4) PV T-Series (of VoltageRecording experiments)
 %
-%     (When importing .CSV directly and not through PV metadata .XML, 
+%    * When importing .CSV directly and not through PV metadata .XML, 
 %      PVBS.m will tacitly assume the following:
 %      - column 1 represents timestamp,
 %      - columns represent sweeps (except for column 1),
@@ -44,7 +44,7 @@
 %      PV would always assume gap-free format))
 %
 %
-% * NB.
+% - NB.
 %   Default settings are designed for current-clamp experiments and 
 %   positive direction for peak detection (e.g. EPSP), but the code is 
 %   fully compatible with either current-clamp or voltage-clamp, or 
@@ -52,7 +52,7 @@
 %   "If you only knew the power of the dark side... [of patch clamp]"
 %
 %
-% * Features underway for future versions:
+% - Features underway for future versions:
 %   - Threshold detection
 %   - Artifact removal
 %   - Manual linescan ROI selection
