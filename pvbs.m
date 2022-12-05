@@ -33,7 +33,7 @@
 %
 %      This is to avoid possible confusion caused by differences in .CSV 
 %      formatting conventions used by PV (scaled, gap-free) vs. others, 
-%      such as the .CSV exported from PVBS.m itself (unscaled, episodic). 
+%      such as the .CSV exported from PVBS itself (unscaled, episodic). 
 %      See function loadCSVMain() for settings. See also variable 
 %      "csvColumnsAsSweeps" in function setDefaultParams(). 
 %
