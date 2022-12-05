@@ -8856,8 +8856,13 @@ end
                         uncSpineCountMeasuredTemp = uncSpineCountMeasured{i};
                         uncSpineCountUnitsTemp = cumsum(uncSpineCountUnitsTemp);
                         matchIdx = [];
-                        for j = 1:length(uncSpineCountMeasuredTemp)
-                            matchIdx(end + 1) = find(uncSpineCountUnitsTemp == uncSpineCountMeasuredTemp(j));
+                        try
+                            for j = 1:length(uncSpineCountMeasuredTemp)
+                                matchIdx(end + 1) = find(uncSpineCountUnitsTemp == uncSpineCountMeasuredTemp(j));
+                            end
+                        catch ME
+                            errorString = sprintf('Error: group count in measured experiment exceeds unit count \n - check experiment pairs for group definitions, and/or unit size assumption\n - NB. groups can only be skipped when metadata are available for the measured experiment');
+                            error(errorString);
                         end
                         uncExpectedTempTemp = []; % great variable name as usual
                         for j = matchIdx % length(matchIdx) should be the same as the length of Measureds
