@@ -95,7 +95,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.12.04';
+pvbsLastMod = '2022.12.05';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -9336,6 +9336,11 @@ end
                         %}
                     else
                         numSpinesPerUnitX = cumsum(numSpinesPerUnitTemp);
+                        if length(numSpinesPerUnitX) > length(gain)
+                            numSpinesPerUnitX = numSpinesPerUnitX(1:length(gain));
+                        elseif length(numSpinesPerUnitX) < length(gain) % shouldn't happen
+                            %%% fixlater
+                        end
                         plot(numSpinesPerUnitX, gain, 'color', colorV2);
                         %{
                     xlabel('#','FontName','Arial','FontSize',12);
