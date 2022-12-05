@@ -3485,6 +3485,10 @@ catch ME
     catch ME
         signal1Channel = 2;
         signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
     end
 end
 
@@ -3637,14 +3641,24 @@ ui2.saveButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Upd
     end
 
     function resetCallback(src, ~)
-        signal1Channel = h.params.defaultParams.signal1Channel;
-        signal2Channel = h.params.defaultParams.signal2Channel;
-        signal1Channel = signal1Channel - signal1ChannelOffset; % signal1ChannelOffset defined at the beginning
-        signal2Channel = signal2Channel - signal2ChannelOffset; % signal2ChannelOffset defined at the beginning
+        try
+            signal1Channel = h.params.defaultParams.signal1Channel;
+            signal2Channel = h.params.defaultParams.signal2Channel;
+            signal1Channel = signal1Channel - signal1ChannelOffset; % signal1ChannelOffset defined at the beginning
+            signal2Channel = signal2Channel - signal2ChannelOffset; % signal2ChannelOffset defined at the beginning
+        catch ME
+            signal1Channel = 1;
+            signal2Channel = 1;
+        end
         ui2.e112.String = num2str(signal1Channel);
         ui2.e115.String = num2str(signal2Channel);
-        signal1Type = h.params.defaultParams.signal1Type;
-        signal2Type = h.params.defaultParams.signal2Type;
+        try
+            signal1Type = h.params.defaultParams.signal1Type;
+            signal2Type = h.params.defaultParams.signal2Type;
+        catch ME
+            signal1Type = 2;
+            signal2Type = 3;
+        end
         switch signal1Type
             case 1
                 axis1i = 1;
@@ -17537,6 +17551,25 @@ try % try-catch for reverse compatibility
 catch ME
     signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
     signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+end
+
+try
+    yRangeDefault = params.yRangeDefault;
+catch ME
+    yRangeDefault = [-140, 20]; % y axis range for main trace display, for V
+    params.yRangeDefault = yRangeDefault;
+end
+try
+    y2RangeDefault = params.y2RangeDefault;
+catch ME
+    y2RangeDefault = [-1, 4]; % y axis range for main trace display, for F
+    params.y2RangeDefault = y2RangeDefault;
+end
+try
+    y3RangeDefault = params.y3RangeDefault;
+catch ME
+    y3RangeDefault = [-1000, 2000]; % y axis range for main trace display, for i
+    params.y3RangeDefault = y3RangeDefault;
 end
 
 switch signal1Type % i, V, F
