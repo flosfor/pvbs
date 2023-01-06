@@ -95,7 +95,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2022.12.05';
+pvbsLastMod = '2023.01.05';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -2326,13 +2326,30 @@ else
         case 2 % VRec
         case 3 % LScn
             try % group according to markpoints indices for uncaging experiments
+                %%{
+                firstSwpGrp = [];
+                for i = 1:length(markPointsIdx)
+                    %firstSwpGrp(end + 1) = ~iscell(markPointsIdx{i});
+                    firstSwpGrp(end + 1) = isstr(markPointsIdx{i});
+                end
+                firstSwpGrp = find(firstSwpGrp);
+                firstSwpGrp = firstSwpGrp(1);
+                firstSwpGrp = max(2, firstSwpGrp);
+                %}
+                %for i = firstSwpGrp:length(markPointsIdx)
                 for i = 2:length(markPointsIdx)
+                    %groupIdx2
                     for j = 1:max(groupIdx2)
                         searchIdx = find(groupIdx2 == j, 1);
-                        if strcmp(markPointsIdx{i}, markPointsIdx{searchIdx})
-                            groupIdx2(i) = groupIdx2(searchIdx);
-                            break
-                        else
+                        try
+                            if strcmp(markPointsIdx{i}, markPointsIdx{searchIdx})
+                                groupIdx2(i) = groupIdx2(searchIdx);
+                                break
+                            else
+                                groupIdx2(i) = groupIdx2(searchIdx) + 1;
+                                searchIdx = searchIdx + 1;
+                            end
+                        catch ME
                             groupIdx2(i) = groupIdx2(searchIdx) + 1;
                             searchIdx = searchIdx + 1;
                         end
@@ -2347,9 +2364,13 @@ else
                             groupStrNew = [groupStrNew, ',', num2str(groupIdxNew(i))];
                         end
                     end
-                    markPointsStr = markPointsIdx{groupIdxNew(1)}; % point indices, should be same for all elements of groupIdxNew at this point
-                    groupStrNew = ['(# ', markPointsStr, ')  ', groupStrNew]; % append point indices to be clear
-                    groupStr{end + 1} = groupStrNew;
+                    try
+                        markPointsStr = markPointsIdx{groupIdxNew(1)}; % point indices, should be same for all elements of groupIdxNew at this point
+                        groupStrNew = ['(# ', markPointsStr, ')  ', groupStrNew]; % append point indices to be clear
+                        groupStr{end + 1} = groupStrNew;
+                    catch ME
+                        groupStr{end + 1} = groupStrNew;
+                    end
                 end
             catch ME
             end
@@ -10047,7 +10068,7 @@ end
         winHelpText1 = uicontrol('Parent', winHelp, 'Style', 'text', 'string', sprintf('"%s" assumes pairwise arrangement of experiments. Signals 1 & 2 must be Vm & dF/F, respectively. Place experiments into each list (aligned with its matching pair):', analysisPresetString), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.75, 0.8, 0.2]);
         winHelpText2 = uicontrol('Parent', winHelp, 'Style', 'text', 'string', sprintf('Left: Units (Single, or group of, spine(s))  /  Right: Measured'), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.675, 0.8, 0.1]);
         winHelpText3 = uicontrol('Parent', winHelp, 'Style', 'text', 'string', sprintf('Code will automatically detect unit size and spine increment (for Measured experiments) from metadata. Results from Measured experiments must be ordered in increasing number of spines, recruited in the same order as in the associated Units experiment. Increment in spine count does not have to match each unit size, i.e. units can be added together.'), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.35, 0.8, 0.35]);
-        winHelpText4 = uicontrol('Parent', winHelp, 'Style', 'text', 'string', sprintf('When metadata are not available for each sweep (e.g. when units were recorded in a single sweep, and segmented afterwards), unit size of 1 spine will be assumed by default, which can be changed in Options. Use caution when working without metadata. Variable unit sizes are only supported when metadata are available.'), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.15, 0.8, 0.275]);
+        winHelpText4 = uicontrol('Parent', winHelp, 'Style', 'text', 'string', sprintf('When metadata are not available for each sweep (e.g. when units were recorded in a single sweep, and truncated afterwards), unit size of 1 spine will be assumed by default, which can be changed in Options. Use caution when working without metadata.'), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.15, 0.8, 0.25]);
         winHelpClose = uicontrol('Parent', winHelp, 'Style', 'pushbutton', 'string', 'Close', 'horizontalalignment', 'center', 'backgroundcolor', [0.9, 0.9, 0.9], 'Units', 'normalized', 'Position', [0.4, 0.02, 0.2, 0.08], 'Callback', @closeWinHelp, 'interruptible', 'off');
         function closeWinHelp(src, ~)
             delete(winHelp);
