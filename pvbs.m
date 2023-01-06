@@ -2369,6 +2369,7 @@ else
                         groupStrNew = ['(# ', markPointsStr, ')  ', groupStrNew]; % append point indices to be clear
                         groupStr{end + 1} = groupStrNew;
                     catch ME
+                        groupStrNew = ['(# ', '', ')  ', groupStrNew]; % append point indices to be clear
                         groupStr{end + 1} = groupStrNew;
                     end
                 end
