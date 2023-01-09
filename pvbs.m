@@ -95,7 +95,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.01.05';
+pvbsLastMod = '2023.01.09';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -539,7 +539,7 @@ lineScanBackgroundThreshold = -0; % (s.d.); z-score for 2nd quartile
 %lineScanBackgroundThreshold = -0.67449; % (s.d.); z-score for 3rd quartile
 %lineScanBackgroundThreshold = -1.28125; % (s.d.); z-score for 90th percentile
 %lineScanBackgroundThreshold = -2.05375; % (s.d.); z-score for 98th percentile
-lineScanColorMapRange = 1; % saturate displayed intensity for signals above this percentage of maximum
+lineScanColorMapRange = 0.5; % saturate displayed intensity for signals above this percentage of maximum
 offloadMarkPointsMetadata = 0; % delete markpoints metadata after retrieving point indices to save space (0: no, 1: yes)
 
 % signals to display
@@ -2240,6 +2240,7 @@ else
             markPointsIdx{i} = markPointsMetadata{i}.PVMarkPointSeriesElements.PVMarkPointElement.PVGalvoPointElement.Attributes.Indices;
         catch ME
             markPointsMetadata{i} = struct();
+            markPointsIdx{i} = [];
         end
         %groupIdx{i} = {}; %groupIdx{i} = 0; % default to this, but do implement autodetect function
         %groupStr{i} = {};
@@ -7391,7 +7392,7 @@ cWin.buttonNo = uicontrol('Parent', confirmWin, 'Style', 'pushbutton', 'string',
             h.params.lastSweepDeleted = 1;
         end
         
-        % check if first sweep on display is included %%% obsolete
+        % check if first sweep on display is included %%% obsolete %%% not %%% is
         %{
         if swpIdx(1) == 1
             firstSweepDeleted = 1;
@@ -7443,16 +7444,21 @@ cWin.buttonNo = uicontrol('Parent', confirmWin, 'Style', 'pushbutton', 'string',
             markPointsMetadataNew(:, swpIdx) = [];
         catch ME
         end
-        if swpIdx ~= length(sweepIdx)
+        if swpIdx(end) ~= length(sweepIdx)
             for i = swpIdx
+                sweepIdx(i + 1 : end) = sweepIdx(i + 1 : end) - 1; % pushing up
+            end
+        else
+            for i = swpIdx(1 : end - 1)
                 sweepIdx(i + 1 : end) = sweepIdx(i + 1 : end) - 1; % pushing up
             end
         end
         sweepIdx(swpIdx) = [];
         sweepStr(swpIdx) = [];
+        
         %{
         if firstSweepDeleted
-            sweepIdx = sweepIdx - 1;
+            sweepIdx = sweepIdx - (sweepIdx(1) - 1);
         end
         %}
         
@@ -7503,6 +7509,7 @@ cWin.buttonNo = uicontrol('Parent', confirmWin, 'Style', 'pushbutton', 'string',
         else
             swpIdxTemp = swpIdx(1) - 1;
         end
+        %h.ui.groupListDisplay.Value = 0; % blanking selection because i'm lazy
         
         %{
 swpIdxTemp = 1:swpIdx(end);
