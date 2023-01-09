@@ -539,7 +539,7 @@ lineScanBackgroundThreshold = -0; % (s.d.); z-score for 2nd quartile
 %lineScanBackgroundThreshold = -0.67449; % (s.d.); z-score for 3rd quartile
 %lineScanBackgroundThreshold = -1.28125; % (s.d.); z-score for 90th percentile
 %lineScanBackgroundThreshold = -2.05375; % (s.d.); z-score for 98th percentile
-lineScanColorMapRange = 0.5; % saturate displayed intensity for signals above this percentage of maximum
+lineScanColorMapRange = 0.8; % saturate displayed intensity for signals above this percentage of maximum
 offloadMarkPointsMetadata = 0; % delete markpoints metadata after retrieving point indices to save space (0: no, 1: yes)
 
 % signals to display
