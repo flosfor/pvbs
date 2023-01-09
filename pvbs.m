@@ -95,7 +95,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.01.09';
+pvbsLastMod = '2023.01.05';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -7391,8 +7391,8 @@ cWin.buttonNo = uicontrol('Parent', confirmWin, 'Style', 'pushbutton', 'string',
             h.params.lastSweepDeleted = 1;
         end
         
-        % check if first sweep on display is included %%% obsolete %%% not
-        %%{
+        % check if first sweep on display is included %%% obsolete
+        %{
         if swpIdx(1) == 1
             firstSweepDeleted = 1;
         else
@@ -7450,10 +7450,9 @@ cWin.buttonNo = uicontrol('Parent', confirmWin, 'Style', 'pushbutton', 'string',
         end
         sweepIdx(swpIdx) = [];
         sweepStr(swpIdx) = [];
-        
-        %%{
+        %{
         if firstSweepDeleted
-            sweepIdx = sweepIdx - (sweepIdx(1) - 1);
+            sweepIdx = sweepIdx - 1;
         end
         %}
         
