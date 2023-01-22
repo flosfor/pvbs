@@ -8,16 +8,19 @@ Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr)
 
 - MATLAB-based general-purpose GUI for browsing and analyzing electrophysiology (patch clamp) and calcium imaging data
 
-- Intended for interpreting data acquired with Prairie View (Bruker)
+- Developed for interpreting data acquired with Prairie View (Bruker)
+
+- Compatible with any data in .CSV format (which may or may not be associated with Prairie View)
 
 - Please mention this code in your methods section.
 
 
 - Supported experiment types:
-1) Any data in .CSV format (does not have to be from PV) 
+1) Any data in .CSV format
 2) PV VoltageRecording
 3) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
 4) PV T-Series (of VoltageRecording experiments)
+5) Specific applications of the above, such as 2-p glutamate uncaging or sCRACM
 
 
 
