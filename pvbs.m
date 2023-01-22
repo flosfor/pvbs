@@ -6,6 +6,7 @@
 %
 % - Please mention this code in your methods section.
 %
+%
 % - Required Matlab Toolboxes: 
 %   1) Statistics & Machine Learning
 %   2) Signal Processing
@@ -19,10 +20,12 @@
 %
 %
 % - Supported experiment types: 
-%   1) Any data in .CSV format (does not have to be from PV)*
+%   1) Any data in .CSV format
 %   2) PV VoltageRecording
 %   3) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
 %   4) PV T-Series (of VoltageRecording experiments)
+%   5) Specific applications of the above, such as 2-p glutamate uncaging 
+%      or sCRACM
 %
 %    * When importing .CSV directly and not through PV metadata .XML, 
 %      PVBS.m will tacitly assume the following:
@@ -66,14 +69,14 @@
 % 
 % Prairie View (PV) is entirely ill-suited for the typical basic needs of 
 % a patch clamp electrophysiologist: it has a most primitive browser, 
-% provides no means for analysis, lacks the concept of episodic recording 
-% and operates on gap-free mode by default (unless through introducing 
-% further complications by using its T-Series format), all while saving 
-% data and metadata in a very inefficient and incomprehensible format, 
-% which aggravates all of its defects as well as prevents access attempts 
-% using other softwares. The fundamental problem of PV can therefore be 
-% summarized as the following: it deprives the experimenter of their 
-% ability to perform and assess work in good quality.
+% provides no means for analysis (online or offline), lacks the concept of 
+% episodic recording and operates on gap-free mode by default (unless 
+% through introducing further complications by using its T-Series format), 
+% all while saving data and metadata in a very inefficient and 
+% incomprehensible format, which aggravates all of its defects as well as 
+% prevents access attempts using other softwares. The fundamental problem 
+% of PV can therefore be summarized as the following: it deprives the 
+% experimenter of their ability to perform and assess work in good quality.
 % 
 % PVBS ("Prairie View Browsing Solution") was developed to provide a 
 % solution to this problem. The code was written since I was a complete 
