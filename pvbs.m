@@ -8270,7 +8270,7 @@ for i = 1:length(groups)
         resultsTempGrp.mean{k, i} = zeros(size(resultsTemp.mean{1}));
         for j = sweepsInGroup
             nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
-            if ~isempty(isnan(resultsTemp3.peak{k, j}))
+            if all(isnan(resultsTemp.peak{k, j}))
                 nanSweepCount = nanSweepCount + 1;
             end
             %%{
@@ -8335,7 +8335,7 @@ try
             resultsTemp2Grp.mean{k, i} = zeros(size(resultsTemp2.mean{1}));
             for j = sweepsInGroup
                 nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
-                if ~isempty(isnan(resultsTemp3.peak{k, j}))
+                if all(isnan(resultsTemp2.peak{k, j}))
                     nanSweepCount = nanSweepCount + 1;
                 end
                 %%{
@@ -8402,7 +8402,7 @@ try
             resultsTemp3Grp.mean{k, i} = zeros(size(resultsTemp3.mean{1}));
             for j = sweepsInGroup
                 nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
-                if ~isempty(isnan(resultsTemp3.peak{k, j}))
+                if all(isnan(resultsTemp3.peak{k, j}))
                     nanSweepCount = nanSweepCount + 1;
                 end
                 %%{
