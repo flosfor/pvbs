@@ -6,7 +6,6 @@
 %
 % - Please mention this code in your methods section.
 %
-%
 % - Required Matlab Toolboxes: 
 %   1) Statistics & Machine Learning
 %   2) Signal Processing
@@ -20,12 +19,10 @@
 %
 %
 % - Supported experiment types: 
-%   1) Any data in .CSV format
+%   1) Any data in .CSV format (does not have to be from PV)*
 %   2) PV VoltageRecording
 %   3) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
 %   4) PV T-Series (of VoltageRecording experiments)
-%   5) Specific applications of the above, such as 2-p glutamate uncaging 
-%      or sCRACM
 %
 %    * When importing .CSV directly and not through PV metadata .XML, 
 %      PVBS.m will tacitly assume the following:
@@ -69,14 +66,14 @@
 % 
 % Prairie View (PV) is entirely ill-suited for the typical basic needs of 
 % a patch clamp electrophysiologist: it has a most primitive browser, 
-% provides no means for analysis (online or offline), lacks the concept of 
-% episodic recording and operates on gap-free mode by default (unless 
-% through introducing further complications by using its T-Series format), 
-% all while saving data and metadata in a very inefficient and 
-% incomprehensible format, which aggravates all of its defects as well as 
-% prevents access attempts using other softwares. The fundamental problem 
-% of PV can therefore be summarized as the following: it deprives the 
-% experimenter of their ability to perform and assess work in good quality.
+% provides no means for analysis, lacks the concept of episodic recording 
+% and operates on gap-free mode by default (unless through introducing 
+% further complications by using its T-Series format), all while saving 
+% data and metadata in a very inefficient and incomprehensible format, 
+% which aggravates all of its defects as well as prevents access attempts 
+% using other softwares. The fundamental problem of PV can therefore be 
+% summarized as the following: it deprives the experimenter of their 
+% ability to perform and assess work in good quality.
 % 
 % PVBS ("Prairie View Browsing Solution") was developed to provide a 
 % solution to this problem. The code was written since I was a complete 
@@ -98,7 +95,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.01.09';
+pvbsLastMod = '2023.02.02';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -291,7 +288,7 @@ ui.sweepSelectText = uicontrol('Style', 'text', 'string', 'Select Swps: ', 'hori
 ui.sweepSelectMod = uicontrol('Style', 'pushbutton', 'string', 'Interval:', 'Units', 'normalized', 'Position', [0.936, 0.9, 0.032, 0.03], 'Callback', @sweepSelectMod, 'interruptible', 'off');
 ui.sweepSelectModValue = uicontrol('Style', 'edit', 'string', num2str(params.selectionInterval), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.9685, 0.901, 0.015, 0.028], 'Callback', @sweepSelectModValue, 'interruptible', 'off');
 ui.sweepSelectOdd = uicontrol('Style', 'pushbutton', 'string', 'Odd', 'Units', 'normalized', 'Position', [0.936, 0.87, 0.0165, 0.03], 'Callback', @sweepSelectOdd, 'interruptible', 'off');
-ui.sweepSelectEven = uicontrol('Style', 'pushbutton', 'string', 'Even', 'Units', 'normalized', 'Position', [0.952, 0.87, 0.0165, 0.03], 'Callback', @sweepSelectEven, 'interruptible', 'off');
+ui.sweepSelectEven = uicontrol('Style', 'pushbutton', 'string', 'Evn', 'Units', 'normalized', 'Position', [0.952, 0.87, 0.0165, 0.03], 'Callback', @sweepSelectEven, 'interruptible', 'off');
 ui.sweepSelectInvert = uicontrol('Style', 'pushbutton', 'string', 'Inv', 'Units', 'normalized', 'Position', [0.968, 0.87, 0.0165, 0.03], 'Callback', @sweepSelectInvert, 'interruptible', 'off');
 ui.sweepGroupText = uicontrol('Style', 'text', 'string', 'Grp. by: ', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.936, 0.71, 0.045, 0.02]);
 ui.groupSelected = uicontrol('Style', 'pushbutton', 'String', 'Sel.', 'Units', 'normalized', 'Position', [0.96, 0.71, 0.024, 0.03], 'Callback', @groupSelected, 'interruptible', 'off');
@@ -312,10 +309,12 @@ ui.sweepConcatenate = uicontrol('Style', 'pushbutton', 'String', 'Concat.', 'Uni
 ui.sweepDel = uicontrol('Style', 'pushbutton', 'String', 'X', 'Units', 'normalized', 'Position', [0.96, 0.75, 0.024, 0.03], 'Callback', @sweepsDelete, 'interruptible', 'off');
 %ui.groupText = uicontrol('Style', 'text', 'String', '(Groups)', 'fontweight', 'bold', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.936, 0.68, 0.03, 0.02], 'interruptible', 'off');
 ui.groupText = uicontrol('Style', 'text', 'String', 'Selected Grps:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.936, 0.65, 0.09, 0.02], 'interruptible', 'off');
-ui.groupListUp = uicontrol('Style', 'pushbutton', 'String', '^', 'Units', 'normalized', 'Position', [0.936, 0.62, 0.024, 0.03], 'Callback', @groupListUp, 'interruptible', 'off');
-ui.groupListDown = uicontrol('Style', 'pushbutton', 'String', 'v', 'Units', 'normalized', 'Position', [0.936, 0.59, 0.024, 0.03], 'Callback', @groupListDown, 'interruptible', 'off');
-ui.groupListMerge = uicontrol('Style', 'pushbutton', 'String', 'Merge', 'Units', 'normalized', 'Position', [0.96, 0.62, 0.024, 0.03], 'Callback', @groupListMerge, 'interruptible', 'off');
-ui.groupListDel = uicontrol('Style', 'pushbutton', 'String', 'X', 'Units', 'normalized', 'Position', [0.96, 0.59, 0.024, 0.03], 'Callback', @groupListDel, 'interruptible', 'off');
+ui.groupListUp = uicontrol('Style', 'pushbutton', 'String', '^', 'Units', 'normalized', 'Position', [0.936, 0.62, 0.0165, 0.03], 'Callback', @groupListUp, 'interruptible', 'off');
+ui.groupListDown = uicontrol('Style', 'pushbutton', 'String', 'v', 'Units', 'normalized', 'Position', [0.936, 0.59, 0.0165, 0.03], 'Callback', @groupListDown, 'interruptible', 'off');
+ui.groupListInvert = uicontrol('Style', 'pushbutton', 'String', 'Inv', 'Units', 'normalized', 'Position', [0.952, 0.62, 0.0165, 0.03], 'Callback', @groupListInvert, 'interruptible', 'off');
+ui.groupListReverse = uicontrol('Style', 'pushbutton', 'String', 'Rev', 'Units', 'normalized', 'Position', [0.968, 0.62, 0.0165, 0.03], 'Callback', @groupListReverse, 'interruptible', 'off');
+ui.groupListMerge = uicontrol('Style', 'pushbutton', 'String', 'Mrg', 'Units', 'normalized', 'Position', [0.952, 0.59, 0.0165, 0.03], 'Callback', @groupListMerge, 'interruptible', 'off');
+ui.groupListDel = uicontrol('Style', 'pushbutton', 'String', 'X', 'Units', 'normalized', 'Position', [0.968, 0.59, 0.0165, 0.03], 'Callback', @groupListDel, 'interruptible', 'off');
 ui.groupSweepText = uicontrol('Style', 'text', 'string', 'Sweep #', 'horizontalalignment', 'center', 'Units', 'normalized', 'Position', [0.871, 0.592, 0.05, 0.02]);
 ui.groupSweepPrev = uicontrol('Style', 'pushbutton', 'String', '<', 'Units', 'normalized', 'Position', [0.86, 0.59, 0.015, 0.03], 'Callback', @groupSweepPrev, 'interruptible', 'off');
 ui.groupSweepNext = uicontrol('Style', 'pushbutton', 'String', '>', 'Units', 'normalized', 'Position', [0.917, 0.59, 0.015, 0.03], 'Callback', @groupSweepNext, 'interruptible', 'off');
@@ -5335,6 +5334,107 @@ guidata(src, h);
 end
 
 
+function groupListInvert(src, ~)
+% invert group selection
+
+% load
+h = guidata(src);
+if isempty(h.ui.cellListDisplay.String)
+    return
+end
+groupListDisplay = h.ui.groupListDisplay;
+cellListIdx = h.ui.cellListDisplay.Value;
+cellListIdx = cellListIdx(1); % force single selection
+h.ui.cellListDisplay.Value = cellListIdx;
+groupListSelected = h.ui.groupListDisplay.Value;
+sweepListSelected = h.ui.sweepListDisplay.Value;
+sweepIdx = h.exp.data.sweepIdx{cellListIdx};
+sweepStr = h.exp.data.sweepStr{cellListIdx};
+groupIdx = h.exp.data.groupIdx{cellListIdx};
+groupStr = h.exp.data.groupStr{cellListIdx};
+
+% invert group selection
+groupListAll = 1:length(groupListDisplay.String);
+groupListSelected = groupListAll(setdiff(groupListAll, groupListSelected));
+h.ui.groupListDisplay.Value = groupListSelected;
+
+% re-select all sweeps in group, in case some sweeps were manually de-selected from the sweep list
+sweepsSelected = [];
+for i = 1:length(groupListSelected)
+    sweepsSelected = [sweepsSelected, groupIdx{groupListSelected(i)}];
+end
+%  converting to absolute indices from ordinal indices on sweep list
+sweepsSelected = ismember(sweepIdx, sweepsSelected); % find elements of sweepIdx that match sweepsSelected
+sweepsSelected = find(sweepsSelected == 1); % find their indices
+h.ui.sweepListDisplay.Value = sweepsSelected; % update sweep list selection
+
+% do display
+h = highlightSweep(h, sweepsSelected);
+
+% reset index for sweep to display within group
+h.params.groupSweepIdx = 0;
+if length(groupListSelected) == 1
+    set(h.ui.groupSweepText, 'string', sprintf(['(Group ', num2str(length(h.ui.groupListDisplay.String)), ')']));
+else
+    set(h.ui.groupSweepText, 'string', sprintf(['(', num2str(length(groupListSelected)), ' Grps)']));
+end
+
+% save
+h.ui.groupListDisplay = groupListDisplay;
+guidata(src, h);
+
+end
+
+
+function groupListReverse(src, ~)
+% reverse the order of selected groups
+
+% load
+h = guidata(src);
+if isempty(h.ui.cellListDisplay.String)
+    return
+end
+groupListDisplay = h.ui.groupListDisplay;
+cellListIdx = h.ui.cellListDisplay.Value;
+cellListIdx = cellListIdx(1); % force single selection
+h.ui.cellListDisplay.Value = cellListIdx;
+groupListSelected = h.ui.groupListDisplay.Value;
+sweepListSelected = h.ui.sweepListDisplay.Value;
+sweepIdx = h.exp.data.sweepIdx{cellListIdx};
+sweepStr = h.exp.data.sweepStr{cellListIdx};
+groupIdx = h.exp.data.groupIdx{cellListIdx};
+groupStr = h.exp.data.groupStr{cellListIdx};
+
+% do nothing if no item or only one item was selected
+if isempty(groupListSelected)
+    return
+elseif length(groupListSelected) == 1 
+    return
+end
+
+% convert from ordinal index from sweep list to absolute index %%% obsolete? see below
+groupListSelectedIdx = groupIdx(groupListSelected); % will be a cell of arrays
+groupListSelectedIdx = cell2mat(groupListSelectedIdx);
+sweepListSelectedIdx = groupListSelectedIdx;
+
+% flip and display
+groupIdxTemp = groupIdx(groupListSelected);
+groupStrTemp = groupStr(groupListSelected);
+groupIdxTemp = flip(groupIdxTemp);
+groupStrTemp = flip(groupStrTemp);
+groupIdx(groupListSelected) = groupIdxTemp;
+groupStr(groupListSelected) = groupStrTemp;
+set(groupListDisplay, 'string', groupStr);
+
+% save
+h.exp.data.groupIdx{cellListIdx} = groupIdx;
+h.exp.data.groupStr{cellListIdx} = groupStr;
+h.ui.groupListDisplay = groupListDisplay;
+guidata(src, h);
+
+end
+
+
 function groupListMerge(src, ~)
 % merge selected groups
 
@@ -8783,7 +8883,7 @@ end
                     %}
                 catch ME
                     expName = expList{i};
-                    warningString = sprintf('<!> Warning: MarkPoints metadata unavailable, assuming unit size of %s spine(s) (Experiment: %s)\n\n', num2str(uncUnitSizeDefault), expName);
+                    warningString = sprintf('<!> Warning: MarkPoints metadata unavailable, assuming unit size of %s spine(s) (Experiment: %s)\n', num2str(uncUnitSizeDefault), expName);
                     fprintf(warningString);
                     uncUnitSizeTemp = uncUnitSizeDefault * ones(1, length(resultsTemp)); % will assume some default value defined above if metadata is unavailable
                     %uncUnitSizeTemp = uncUnitSizeDefault * ones(1, length(markPointsMetadata)); % will assume some default value defined above if metadata is unavailable
@@ -8933,7 +9033,7 @@ end
                         uncSpineCountMeasured{i} = cumsum(uncUnitSize2{i}); % so many redundant variables, so confusingly named
                         uncUnitSize{i} = uncUnitSize2{i}; % needed way later during plotting
                         expName = expList{uncExpIdx2(i)};
-                        warningString = sprintf('<!> Warning: MarkPoints metadata unavailable for Measured experiment, assuming increments consistent with units in Unit experiment (Experiment: %s)\n\n', expName); %%% fixlater - seems to happen in irrelevant situations as well???
+                        warningString = sprintf('<!> Warning: MarkPoints metadata unavailable for Measured experiment, assuming increments consistent with units in Unit experiment (Experiment: %s)\n', expName); %%% fixlater - seems to happen in irrelevant situations as well???
                         fprintf(warningString);
                         
                     end
@@ -9013,7 +9113,7 @@ end
                         uncLaserDurationTemp1 = [];
                         expName = expList{i};
                         %warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', num2str(uncUnitSizeDefault), expName, num2str(j)); %%% ???
-                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', expName, num2str(j));
+                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n', expName, num2str(j));
                         fprintf(warningString);
                     end
                 end
@@ -9055,7 +9155,7 @@ end
                         uncLaserDurationTemp2 = [];
                         expName = expList{i};
                         %warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', num2str(uncUnitSizeDefault), expName, num2str(j)); %%% ???
-                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', expName, num2str(j));
+                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n', expName, num2str(j));
                         fprintf(warningString);
                     end
                 end
@@ -9073,7 +9173,7 @@ end
                 expIdx2 = uncExpIdx2;
                 expName1 = expList{expIdx1(i)};
                 expName2 = expList{expIdx2(i)};
-                warningString = sprintf('<!> Warning: Missing MarkPoints metadata or inconsistent laser power and/or duration (Pair %s, Experiments: %s & %s))\n\n', num2str(i), expName1, expName2);
+                warningString = sprintf('<!> Warning: Missing MarkPoints metadata or inconsistent laser power and/or duration (Pair %s, Experiments: %s & %s))\n', num2str(i), expName1, expName2);
                 fprintf(warningString);
             end
         end
