@@ -7578,7 +7578,7 @@ cWin.buttonNo = uicontrol('Parent', confirmWin, 'Style', 'pushbutton', 'string',
             lineScanFNew(:, swpIdx) = [];
             lineScanFChannelNew(:, swpIdx) = [];
             lineScanROINew(:, swpIdx) = [];
-            lineScanBaselineNew(:, swpIdx) = [];
+            %lineScanBaselineNew(:, swpIdx) = []; % today i learned this is shared for all sweeps in an experiment
             lineScanCSVNew(:, swpIdx) = [];
         catch ME
         end
