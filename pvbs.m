@@ -2255,10 +2255,18 @@ else
 end
 
 % if ROI detection fails for linescans, inherit ROI from the previous sweep
+%{
 try
     if isempty(lineScanROI{1}) % if the first sweep is missing a ROI
         firstSweepWithROI = find(~cellfun(@isempty, lineScanROI), 1);
         lineScanROI{1} = lineScanROI{firstSweepWithROI};
+        % recalculate dF/F with inherited ROI
+        roiTemp = lineScanROI{1};
+        lineScanImage = lineScan{lineScanChannelUsed, 1}; % use only the relevant channel
+        [lineScanFTemp, lineScanDFFTemp] = lineScanImgToFManualROI(lineScanImage, lineScanTimestamp, lineScanBaseline, actualParams, roiTemp);
+        lineScanF{1} = lineScanFTemp;
+        lineScanDFF{1} = lineScanDFFTemp;
+        lineScanFChannel{1} = lineScanChannelUsed;
     end
     if length(lineScanROI) > 1
         for i = 2:length(lineScanROI)
@@ -2266,6 +2274,40 @@ try
                 lineScanROI{i} = lineScanROI{i - 1};
                 % recalculate dF/F with inherited ROI
                 roiTemp = lineScanROI{i};
+                lineScanImage = lineScan{lineScanChannelUsed, i}; % use only the relevant channel
+                [lineScanFTemp, lineScanDFFTemp] = lineScanImgToFManualROI(lineScanImage, lineScanTimestamp, lineScanBaseline, actualParams, roiTemp);
+                lineScanF{i} = lineScanFTemp;
+                lineScanDFF{i} = lineScanDFFTemp;
+                lineScanFChannel{i} = lineScanChannelUsed;
+            end
+        end
+    end
+catch ME
+end
+%}
+% ... or not; set ROI to the entire length of the line(scan)
+try
+    lineLength = size(lineScanImage, 2);
+    if isempty(lineScanROI{1}) % if the first sweep is missing a ROI
+        firstSweepWithROI = find(~cellfun(@isempty, lineScanROI), 1);
+        %lineScanROI{1} = lineScanROI{firstSweepWithROI};
+        lineScanROI{1} = [1, lineLength];
+        % recalculate dF/F with inherited ROI
+        roiTemp = lineScanROI{1};
+        lineScanImage = lineScan{lineScanChannelUsed, 1}; % use only the relevant channel
+        [lineScanFTemp, lineScanDFFTemp] = lineScanImgToFManualROI(lineScanImage, lineScanTimestamp, lineScanBaseline, actualParams, roiTemp);
+        lineScanF{1} = lineScanFTemp;
+        lineScanDFF{1} = lineScanDFFTemp;
+        lineScanFChannel{1} = lineScanChannelUsed;
+    end
+    if length(lineScanROI) > 1
+        for i = 2:length(lineScanROI)
+            if isempty(lineScanROI{i})
+                %lineScanROI{i} = lineScanROI{i - 1};
+                lineScanROI{i} = [1, lineLength];
+                % recalculate dF/F with inherited ROI
+                roiTemp = lineScanROI{i};
+                lineScanImage = lineScan{lineScanChannelUsed, i}; % use only the relevant channel
                 [lineScanFTemp, lineScanDFFTemp] = lineScanImgToFManualROI(lineScanImage, lineScanTimestamp, lineScanBaseline, actualParams, roiTemp);
                 lineScanF{i} = lineScanFTemp;
                 lineScanDFF{i} = lineScanDFFTemp;
@@ -11938,8 +11980,12 @@ roiDetectDuringBaseline = actualParams.lineScanROIDetectDuringBaseline;
 
 % Get interval and convert baseline to points
 interval = timestamp(2, 1) - timestamp(1, 1); % (ms)
-baselinePoints = baseline./interval;
-baselinePoints = round(baselinePoints); % needs to be done
+try
+    baselinePoints = baseline./interval;
+    baselinePoints = round(baselinePoints); % needs to be done
+catch ME
+    baselinePoints = [1, 1]; % use line 1
+end
 
 % Import data for current Cycle
 try
@@ -12021,7 +12067,11 @@ else % only 1 ROI, which would normally be the case
 end
 
 % Set background
-backgroundIdx = find(imgReduced(1, :) <= backgroundThreshold); % find indices for values below threshold for background
+try 
+    backgroundIdx = find(imgReduced(1, :) <= backgroundThreshold); % find indices for values below threshold for background
+catch ME
+    backgroundIdx = 1; % use point 1; NB. not 0 or [0, 1]
+end
 if any(ischange(backgroundIdx, 'linear')) % there should usually be one more break than the ROI indices
     backgroundBreakIdx = find(ischange(backgroundIdx, 'linear') == 1); % find indices where breaks occur
     background = [backgroundIdx(1), backgroundIdx(backgroundBreakIdx(1) - 1)]; % initializing with first segment
@@ -12119,8 +12169,12 @@ roiDetectDuringBaseline = actualParams.lineScanROIDetectDuringBaseline;
 
 % Get interval and convert baseline to points
 interval = timestamp(2, 1) - timestamp(1, 1); % (ms)
-baselinePoints = baseline./interval;
-baselinePoints = round(baselinePoints); % needs to be done
+try
+    baselinePoints = baseline./interval;
+    baselinePoints = round(baselinePoints); % needs to be done
+catch ME
+    baselinePoints = [1, 1]; % use line 1
+end
 
 % Import data for current Cycle
 try
@@ -12203,7 +12257,11 @@ end
 roi = [roiManual(1), roiManual(2)];
 
 % Set background
-backgroundIdx = find(imgReduced(1, :) <= (backgroundThreshold / ((roiSmoothing * 2) + 1))); % find indices for values below threshold for background
+try
+    backgroundIdx = find(imgReduced(1, :) <= (backgroundThreshold / ((roiSmoothing * 2) + 1))); % find indices for values below threshold for background
+catch ME
+    backgroundIdx = 1; % use point 1; NB. not 0 or [0, 1]
+end
 if any(ischange(backgroundIdx, 'linear')) % there should usually be one more break than the ROI indices
     backgroundBreakIdx = find(ischange(backgroundIdx, 'linear') == 1); % find indices where breaks occur
     background = [backgroundIdx(1), backgroundIdx(backgroundBreakIdx(1) - 1)]; % initializing with first segment
