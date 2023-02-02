@@ -8269,6 +8269,21 @@ for i = 1:length(groups)
         resultsTempGrp.area{k, i} = zeros(size(resultsTemp.area{1}));
         resultsTempGrp.mean{k, i} = zeros(size(resultsTemp.mean{1}));
         for j = sweepsInGroup
+            nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
+            if ~isempty(isnan(resultsTemp3.peak{k, j}))
+                nanSweepCount = nanSweepCount + 1;
+            end
+            %%{
+            resultsTempGrp.peak{k, i} = nansum([resultsTempGrp.peak{k, i}; resultsTemp.peak{k, j}]);
+            resultsTempGrp.timeOfPeak{k, i} = nansum([resultsTempGrp.timeOfPeak{k, i}; resultsTemp.timeOfPeak{k, j}]);
+            resultsTempGrp.riseTime{k, i} = nansum([resultsTempGrp.riseTime{k, i}; resultsTemp.riseTime{k, j}]);
+            resultsTempGrp.decayTime{k, i} = nansum([resultsTempGrp.decayTime{k, i}; resultsTemp.decayTime{k, j}]);
+            resultsTempGrp.riseSlope{k, i} = nansum([resultsTempGrp.riseSlope{k, i}; resultsTemp.riseSlope{k, j}]);
+            resultsTempGrp.decaySlope{k, i} = nansum([resultsTempGrp.decaySlope{k, i}; resultsTemp.decaySlope{k, j}]);
+            resultsTempGrp.area{k, i} = nansum([resultsTempGrp.area{k, i}; resultsTemp.area{k, j}]);
+            resultsTempGrp.mean{k, i} = nansum([resultsTempGrp.mean{k, i}; resultsTemp.mean{k, j}]);
+            %}
+            %{
             resultsTempGrp.peak{k, i} = resultsTempGrp.peak{k, i} + resultsTemp.peak{k, j};
             resultsTempGrp.timeOfPeak{k, i} = resultsTempGrp.timeOfPeak{k, i} + resultsTemp.timeOfPeak{k, j};
             resultsTempGrp.riseTime{k, i} = resultsTempGrp.riseTime{k, i} + resultsTemp.riseTime{k, j};
@@ -8277,15 +8292,16 @@ for i = 1:length(groups)
             resultsTempGrp.decaySlope{k, i} = resultsTempGrp.decaySlope{k, i} + resultsTemp.decaySlope{k, j};
             resultsTempGrp.area{k, i} = resultsTempGrp.area{k, i} + resultsTemp.area{k, j};
             resultsTempGrp.mean{k, i} = resultsTempGrp.mean{k, i} + resultsTemp.mean{k, j};
+            %}
         end
-        resultsTempGrp.peak{k, i} = resultsTempGrp.peak{k, i}./length(sweepsInGroup);
-        resultsTempGrp.timeOfPeak{k, i} = resultsTempGrp.timeOfPeak{k, i}./length(sweepsInGroup);
-        resultsTempGrp.riseTime{k, i} = resultsTempGrp.riseTime{k, i}./length(sweepsInGroup);
-        resultsTempGrp.decayTime{k, i} = resultsTempGrp.decayTime{k, i}./length(sweepsInGroup);
-        resultsTempGrp.riseSlope{k, i} = resultsTempGrp.riseSlope{k, i}./length(sweepsInGroup);
-        resultsTempGrp.decaySlope{k, i} = resultsTempGrp.decaySlope{k, i}./length(sweepsInGroup);
-        resultsTempGrp.area{k, i} = resultsTempGrp.area{k, i}./length(sweepsInGroup);
-        resultsTempGrp.mean{k, i} = resultsTempGrp.mean{k, i}./length(sweepsInGroup);
+        resultsTempGrp.peak{k, i} = resultsTempGrp.peak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+        resultsTempGrp.timeOfPeak{k, i} = resultsTempGrp.timeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+        resultsTempGrp.riseTime{k, i} = resultsTempGrp.riseTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
+        resultsTempGrp.decayTime{k, i} = resultsTempGrp.decayTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
+        resultsTempGrp.riseSlope{k, i} = resultsTempGrp.riseSlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
+        resultsTempGrp.decaySlope{k, i} = resultsTempGrp.decaySlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
+        resultsTempGrp.area{k, i} = resultsTempGrp.area{k, i}./(length(sweepsInGroup) - nanSweepCount);
+        resultsTempGrp.mean{k, i} = resultsTempGrp.mean{k, i}./(length(sweepsInGroup) - nanSweepCount);
     end
 end
 try
@@ -8318,6 +8334,21 @@ try
             resultsTemp2Grp.area{k, i} = zeros(size(resultsTemp2.area{1}));
             resultsTemp2Grp.mean{k, i} = zeros(size(resultsTemp2.mean{1}));
             for j = sweepsInGroup
+                nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
+                if ~isempty(isnan(resultsTemp3.peak{k, j}))
+                    nanSweepCount = nanSweepCount + 1;
+                end
+                %%{
+                resultsTemp2Grp.peak{k, i} = nansum([resultsTemp2Grp.peak{k, i}; resultsTemp2.peak{k, j}]);
+                resultsTemp2Grp.timeOfPeak{k, i} = nansum([resultsTemp2Grp.timeOfPeak{k, i}; resultsTemp2.timeOfPeak{k, j}]);
+                resultsTemp2Grp.riseTime{k, i} = nansum([resultsTemp2Grp.riseTime{k, i}; resultsTemp2.riseTime{k, j}]);
+                resultsTemp2Grp.decayTime{k, i} = nansum([resultsTemp2Grp.decayTime{k, i}; resultsTemp2.decayTime{k, j}]);
+                resultsTemp2Grp.riseSlope{k, i} = nansum([resultsTemp2Grp.riseSlope{k, i}; resultsTemp2.riseSlope{k, j}]);
+                resultsTemp2Grp.decaySlope{k, i} = nansum([resultsTemp2Grp.decaySlope{k, i}; resultsTemp2.decaySlope{k, j}]);
+                resultsTemp2Grp.area{k, i} = nansum([resultsTemp2Grp.area{k, i}; resultsTemp2.area{k, j}]);
+                resultsTemp2Grp.mean{k, i} = nansum([resultsTemp2Grp.mean{k, i}; resultsTemp2.mean{k, j}]);
+                %}
+                %{
                 resultsTemp2Grp.peak{k, i} = resultsTemp2Grp.peak{k, i} + resultsTemp2.peak{k, j};
                 resultsTemp2Grp.timeOfPeak{k, i} = resultsTemp2Grp.timeOfPeak{k, i} + resultsTemp2.timeOfPeak{k, j};
                 resultsTemp2Grp.riseTime{k, i} = resultsTemp2Grp.riseTime{k, i} + resultsTemp2.riseTime{k, j};
@@ -8326,15 +8357,16 @@ try
                 resultsTemp2Grp.decaySlope{k, i} = resultsTemp2Grp.decaySlope{k, i} + resultsTemp2.decaySlope{k, j};
                 resultsTemp2Grp.area{k, i} = resultsTemp2Grp.area{k, i} + resultsTemp2.area{k, j};
                 resultsTemp2Grp.mean{k, i} = resultsTemp2Grp.mean{k, i} + resultsTemp2.mean{k, j};
+                %}
             end
-            resultsTemp2Grp.peak{k, i} = resultsTemp2Grp.peak{k, i}./length(sweepsInGroup);
-            resultsTemp2Grp.timeOfPeak{k, i} = resultsTemp2Grp.timeOfPeak{k, i}./length(sweepsInGroup);
-            resultsTemp2Grp.riseTime{k, i} = resultsTemp2Grp.riseTime{k, i}./length(sweepsInGroup);
-            resultsTemp2Grp.decayTime{k, i} = resultsTemp2Grp.decayTime{k, i}./length(sweepsInGroup);
-            resultsTemp2Grp.riseSlope{k, i} = resultsTemp2Grp.riseSlope{k, i}./length(sweepsInGroup);
-            resultsTemp2Grp.decaySlope{k, i} = resultsTemp2Grp.decaySlope{k, i}./length(sweepsInGroup);
-            resultsTemp2Grp.area{k, i} = resultsTemp2Grp.area{k, i}./length(sweepsInGroup);
-            resultsTemp2Grp.mean{k, i} = resultsTemp2Grp.mean{k, i}./length(sweepsInGroup);
+            resultsTemp2Grp.peak{k, i} = resultsTemp2Grp.peak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp2Grp.timeOfPeak{k, i} = resultsTemp2Grp.timeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp2Grp.riseTime{k, i} = resultsTemp2Grp.riseTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp2Grp.decayTime{k, i} = resultsTemp2Grp.decayTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp2Grp.riseSlope{k, i} = resultsTemp2Grp.riseSlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp2Grp.decaySlope{k, i} = resultsTemp2Grp.decaySlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp2Grp.area{k, i} = resultsTemp2Grp.area{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp2Grp.mean{k, i} = resultsTemp2Grp.mean{k, i}./(length(sweepsInGroup) - nanSweepCount);
         end
     end
 catch ME
@@ -8369,6 +8401,21 @@ try
             resultsTemp3Grp.area{k, i} = zeros(size(resultsTemp3.area{1}));
             resultsTemp3Grp.mean{k, i} = zeros(size(resultsTemp3.mean{1}));
             for j = sweepsInGroup
+                nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
+                if ~isempty(isnan(resultsTemp3.peak{k, j}))
+                    nanSweepCount = nanSweepCount + 1;
+                end
+                %%{
+                resultsTemp3Grp.peak{k, i} = nansum([resultsTemp3Grp.peak{k, i}; resultsTemp3.peak{k, j}]);
+                resultsTemp3Grp.timeOfPeak{k, i} = nansum([resultsTemp3Grp.timeOfPeak{k, i}; resultsTemp3.timeOfPeak{k, j}]);
+                resultsTemp3Grp.riseTime{k, i} = nansum([resultsTemp3Grp.riseTime{k, i}; resultsTemp3.riseTime{k, j}]);
+                resultsTemp3Grp.decayTime{k, i} = nansum([resultsTemp3Grp.decayTime{k, i}; resultsTemp3.decayTime{k, j}]);
+                resultsTemp3Grp.riseSlope{k, i} = nansum([resultsTemp3Grp.riseSlope{k, i}; resultsTemp3.riseSlope{k, j}]);
+                resultsTemp3Grp.decaySlope{k, i} = nansum([resultsTemp3Grp.decaySlope{k, i}; resultsTemp3.decaySlope{k, j}]);
+                resultsTemp3Grp.area{k, i} = nansum([resultsTemp3Grp.area{k, i}; resultsTemp3.area{k, j}]);
+                resultsTemp3Grp.mean{k, i} = nansum([resultsTemp3Grp.mean{k, i}; resultsTemp3.mean{k, j}]);
+                %}
+                %{
                 resultsTemp3Grp.peak{k, i} = resultsTemp3Grp.peak{k, i} + resultsTemp3.peak{k, j};
                 resultsTemp3Grp.timeOfPeak{k, i} = resultsTemp3Grp.timeOfPeak{k, i} + resultsTemp3.timeOfPeak{k, j};
                 resultsTemp3Grp.riseTime{k, i} = resultsTemp3Grp.riseTime{k, i} + resultsTemp3.riseTime{k, j};
@@ -8377,15 +8424,16 @@ try
                 resultsTemp3Grp.decaySlope{k, i} = resultsTemp3Grp.decaySlope{k, i} + resultsTemp3.decaySlope{k, j};
                 resultsTemp3Grp.area{k, i} = resultsTemp3Grp.area{k, i} + resultsTemp3.area{k, j};
                 resultsTemp3Grp.mean{k, i} = resultsTemp3Grp.mean{k, i} + resultsTemp3.mean{k, j};
+                %}
             end
-            resultsTemp3Grp.peak{k, i} = resultsTemp3Grp.peak{k, i}./length(sweepsInGroup);
-            resultsTemp3Grp.timeOfPeak{k, i} = resultsTemp3Grp.timeOfPeak{k, i}./length(sweepsInGroup);
-            resultsTemp3Grp.riseTime{k, i} = resultsTemp3Grp.riseTime{k, i}./length(sweepsInGroup);
-            resultsTemp3Grp.decayTime{k, i} = resultsTemp3Grp.decayTime{k, i}./length(sweepsInGroup);
-            resultsTemp3Grp.riseSlope{k, i} = resultsTemp3Grp.riseSlope{k, i}./length(sweepsInGroup);
-            resultsTemp3Grp.decaySlope{k, i} = resultsTemp3Grp.decaySlope{k, i}./length(sweepsInGroup);
-            resultsTemp3Grp.area{k, i} = resultsTemp3Grp.area{k, i}./length(sweepsInGroup);
-            resultsTemp3Grp.mean{k, i} = resultsTemp3Grp.mean{k, i}./length(sweepsInGroup);
+            resultsTemp3Grp.peak{k, i} = resultsTemp3Grp.peak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp3Grp.timeOfPeak{k, i} = resultsTemp3Grp.timeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp3Grp.riseTime{k, i} = resultsTemp3Grp.riseTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp3Grp.decayTime{k, i} = resultsTemp3Grp.decayTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp3Grp.riseSlope{k, i} = resultsTemp3Grp.riseSlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp3Grp.decaySlope{k, i} = resultsTemp3Grp.decaySlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp3Grp.area{k, i} = resultsTemp3Grp.area{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTemp3Grp.mean{k, i} = resultsTemp3Grp.mean{k, i}./(length(sweepsInGroup) - nanSweepCount);
         end
     end
 catch ME
