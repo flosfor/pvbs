@@ -8883,8 +8883,11 @@ end
                     %}
                 catch ME
                     expName = expList{i};
-                    warningString = sprintf('<!> Warning: MarkPoints metadata unavailable, assuming unit size of %s spine(s) (Experiment: %s)\n', num2str(uncUnitSizeDefault), expName);
+                    % suppressing this because it can be misleading if you have to resort to post-hoc episodic transformation of stupid PV gap-free recordings (thereby generating new sweeps)
+                    %{
+                    warningString = sprintf('Warning: MarkPoints metadata unavailable, assuming unit size of %s spine(s) (Experiment: %s)\n', num2str(uncUnitSizeDefault), expName);
                     fprintf(warningString);
+                    %}
                     uncUnitSizeTemp = uncUnitSizeDefault * ones(1, length(resultsTemp)); % will assume some default value defined above if metadata is unavailable
                     %uncUnitSizeTemp = uncUnitSizeDefault * ones(1, length(markPointsMetadata)); % will assume some default value defined above if metadata is unavailable
                 end
@@ -9033,7 +9036,7 @@ end
                         uncSpineCountMeasured{i} = cumsum(uncUnitSize2{i}); % so many redundant variables, so confusingly named
                         uncUnitSize{i} = uncUnitSize2{i}; % needed way later during plotting
                         expName = expList{uncExpIdx2(i)};
-                        warningString = sprintf('<!> Warning: MarkPoints metadata unavailable for Measured experiment, assuming increments consistent with units in Unit experiment (Experiment: %s)\n', expName); %%% fixlater - seems to happen in irrelevant situations as well???
+                        warningString = sprintf('Warning: MarkPoints metadata unavailable for Measured experiment, assuming increments consistent with units in Unit experiment (Experiment: %s)\n', expName); %%% fixlater - seems to happen in irrelevant situations as well???
                         fprintf(warningString);
                         
                     end
@@ -9112,9 +9115,12 @@ end
                         uncLaserPowerTemp1 = [];
                         uncLaserDurationTemp1 = [];
                         expName = expList{i};
+                        % suppressing this because it can be misleading if you have to resort to post-hoc episodic transformation of stupid PV gap-free recordings (thereby generating new sweeps)
+                        %{
                         %warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', num2str(uncUnitSizeDefault), expName, num2str(j)); %%% ???
-                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n', expName, num2str(j));
+                        warningString = sprintf('Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n', expName, num2str(j));
                         fprintf(warningString);
+                        %}
                     end
                 end
             catch ME % blank out if for whatever reason they are not available, e.g. due to missing metadata
@@ -9154,9 +9160,12 @@ end
                         uncLaserPowerTemp2 = [];
                         uncLaserDurationTemp2 = [];
                         expName = expList{i};
+                        % NOT suppressing this because it won't be too difficult not to do Measured experiments in the stupid PV gap-free way
+                        %%{
                         %warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n\n', num2str(uncUnitSizeDefault), expName, num2str(j)); %%% ???
-                        warningString = sprintf('<!> Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n', expName, num2str(j));
+                        warningString = sprintf('Warning: Inconsistent laser power and/or duration - correction needed (Experiment: %s (Group %s))\n', expName, num2str(j));
                         fprintf(warningString);
+                        %}
                     end
                 end
             catch ME % also blank out if for whatever reason they are not available, e.g. due to missing metadata
@@ -9173,8 +9182,11 @@ end
                 expIdx2 = uncExpIdx2;
                 expName1 = expList{expIdx1(i)};
                 expName2 = expList{expIdx2(i)};
+                % suppressing this because it can be misleading if you have to resort to post-hoc episodic transformation of stupid PV gap-free recordings (thereby generating new sweeps)
+                %{
                 warningString = sprintf('<!> Warning: Missing MarkPoints metadata or inconsistent laser power and/or duration (Pair %s, Experiments: %s & %s))\n', num2str(i), expName1, expName2);
                 fprintf(warningString);
+                %}
             end
         end
         uncLaserPower = [uncLaserPower1; uncLaserPower2]; % 1st row for units, 2nd for measured; dimensions should match
