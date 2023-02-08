@@ -95,7 +95,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.02.02';
+pvbsLastMod = '2023.02.08';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -8250,6 +8250,7 @@ resultsTempGrp.riseSlope = cell(size(resultsTemp.riseSlope, 1), length(groups));
 resultsTempGrp.decaySlope = cell(size(resultsTemp.decaySlope, 1), length(groups));
 resultsTempGrp.area = cell(size(resultsTemp.area, 1), length(groups));
 resultsTempGrp.mean = cell(size(resultsTemp.mean, 1), length(groups));
+nanSweepCount = 0; % only a failsafe, shouldn't be necessary
 for i = 1:length(groups)
     sweepsInGroup = groups{i};
     %  converting to absolute indices from ordinal indices on sweep list
@@ -8315,6 +8316,7 @@ try
     resultsTemp2Grp.decaySlope = cell(size(resultsTemp2.decaySlope, 1), length(groups));
     resultsTemp2Grp.area = cell(size(resultsTemp2.area, 1), length(groups));
     resultsTemp2Grp.mean = cell(size(resultsTemp2.mean, 1), length(groups));
+    nanSweepCount = 0; % only a failsafe, shouldn't be necessary
     for i = 1:length(groups)
         sweepsInGroup = groups{i};
         %  converting to absolute indices from ordinal indices on sweep list
@@ -8382,6 +8384,7 @@ try
     resultsTemp3Grp.decaySlope = cell(size(resultsTemp3.decaySlope, 1), length(groups));
     resultsTemp3Grp.area = cell(size(resultsTemp3.area, 1), length(groups));
     resultsTemp3Grp.mean = cell(size(resultsTemp3.mean, 1), length(groups));
+    nanSweepCount = 0; % only a failsafe, shouldn't be necessary
     for i = 1:length(groups)
         sweepsInGroup = groups{i};
         %  converting to absolute indices from ordinal indices on sweep list
