@@ -95,7 +95,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.02.08';
+pvbsLastMod = '2023.02.10';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -3878,7 +3878,7 @@ if isempty(itemSelected)
 else
     fName = h.exp.fileName{itemSelected};
     fPath = h.exp.filePath{itemSelected};
-    clipboard('copy', [fPath, fName]); % for convenience - but will only work for single selection
+    %clipboard('copy', [fPath, fName]); % for convenience - but will only work for single selection %%% not convenient
     src.Value = itemSelected; % this is redundant but put here nonetheless to recover selection because cellListClickActual() now forces single experiment selection through subfunctions %%% reverted
 end
 
