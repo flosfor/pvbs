@@ -95,7 +95,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.02.10';
+pvbsLastMod = '2023.03.01';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -1774,30 +1774,34 @@ if iscell(filesToImport)
         return
     else
         for i = 1:length(filesToImport)
-            isCSV = 0;
-            [fPath, fName, fExt] = fileparts(filesToImport{i});
-            if isempty(fExt) % if directory is selected
-                fExt = '.xml';
-                fPath = [fPath, '\', fName, '\'];
-                fName = [fName, fExt];
-            elseif strcmp(fExt, '.xml'); % if .xml file is selected
-                fPath = [fPath, '\'];
-                fName = [fName, fExt];
-            elseif strcmp(fExt, '.csv'); % if .csv file is selected
-                fPath = [fPath, '\'];
-                fName = [fName, fExt];
-                isCSV = 1;
-            else
-                error('Error: Invalid file type');
-            end
-            fprintf('\n(%d/%d) ', i, length(filesToImport));
-            %actualParams = setDefaultParams(src); % load parameters
-            %h.params.actualParams = actualParams; % save parameters
-            actualParams = h.params.actualParams;
-            if isCSV
-                h = loadCSV(h, fPath, fName, actualParams);
-            else
-                h = loadExpMain(h, fPath, fName, actualParams);
+            try % sometimes files are corrupt because stupid PV crashes all the time
+                isCSV = 0;
+                [fPath, fName, fExt] = fileparts(filesToImport{i});
+                if isempty(fExt) % if directory is selected
+                    fExt = '.xml';
+                    fPath = [fPath, '\', fName, '\'];
+                    fName = [fName, fExt];
+                elseif strcmp(fExt, '.xml'); % if .xml file is selected
+                    fPath = [fPath, '\'];
+                    fName = [fName, fExt];
+                elseif strcmp(fExt, '.csv'); % if .csv file is selected
+                    fPath = [fPath, '\'];
+                    fName = [fName, fExt];
+                    isCSV = 1;
+                else
+                    %error('Error: Invalid file type');
+                end
+                fprintf('\n(%d/%d) ', i, length(filesToImport));
+                %actualParams = setDefaultParams(src); % load parameters
+                %h.params.actualParams = actualParams; % save parameters
+                actualParams = h.params.actualParams;
+                if isCSV
+                    h = loadCSV(h, fPath, fName, actualParams);
+                else
+                    h = loadExpMain(h, fPath, fName, actualParams);
+                end
+            catch ME
+                fprintf('- aborted');
             end
         end
     end
