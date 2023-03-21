@@ -95,7 +95,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.03.01';
+pvbsLastMod = '2023.03.21';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -4650,8 +4650,8 @@ if isempty(itemSelected) % if no experiment is selected, do nothing
 end
 
 % are you sure?
-confirmWin = figure('Name', 'Delete experiment?', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.2, 0.65, 0.125, 0.1], 'resize', 'off', 'DeleteFcn', @winClosed); % use CloseRequestFcn?
-cWin.text = uicontrol('Parent', confirmWin, 'Style', 'text', 'string', sprintf('Delete selected experiment?\nThis cannot be undone.'), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.6, 0.9, 0.3]);
+confirmWin = figure('Name', 'Delete experiments?', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.2, 0.65, 0.125, 0.1], 'resize', 'off', 'DeleteFcn', @winClosed); % use CloseRequestFcn?
+cWin.text = uicontrol('Parent', confirmWin, 'Style', 'text', 'string', sprintf('Delete selected experiments?\nThis cannot be undone.'), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.6, 0.9, 0.3]);
 cWin.buttonYes = uicontrol('Parent', confirmWin, 'Style', 'pushbutton', 'string', 'Yes, Delete', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.1, 0.1, 0.35, 0.25], 'callback', @doKillExpt, 'interruptible', 'off');
 cWin.buttonNo = uicontrol('Parent', confirmWin, 'Style', 'pushbutton', 'string', 'Cancel', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.1, 0.35, 0.25], 'callback', @dontKillExpt, 'interruptible', 'off');
 
@@ -15807,7 +15807,7 @@ end
 function h = displayZStack(h)
 % display z-stack associtated with current experiment
 
-tiffColorMapRange = 0.25; % colormap will be scaled up for values below this, and saturated to 1 at this level and above
+tiffColorMapRange = 0.2; % colormap will be scaled up for values below this, and saturated to 1 at this level and above
 
 % load
 displayWindow = h.ui.zStackDisplay;
