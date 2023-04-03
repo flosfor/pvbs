@@ -5,8 +5,8 @@
 % 
 % The use or modification of this software (PVBS) is consented only 
 % under agreement to cite the developer and the original source code 
-% (https://github.com/flosfor/pvbs) within the body of the published work
-% or presentation, wherein PVBS was used.
+% (https://github.com/flosfor/pvbs) within the body of the published
+% work or presentation, wherein PVBS was used.
 %
 %
 %
