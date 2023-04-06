@@ -3,7 +3,7 @@ PVBS: Prairie View Browsing Solution
 
 Copyright 2022-2023, Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr).
 
-The use or modification of this software (PVBS) is consented only under agreement to cite the developer and the original source code (https://github.com/flosfor/pvbs) within the body of the published work or presentation, wherein PVBS was used.
+The use or modification of this software (PVBS) is consented only under agreement to cite the developer and/or the original source code (https://github.com/flosfor/pvbs) within the body of the published work or presentation, wherein PVBS was used.
 
 
 
