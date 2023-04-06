@@ -9,9 +9,10 @@ The use or modification of this software (PVBS) is consented only under agreemen
 
 - MATLAB-based general-purpose GUI for browsing and analyzing electrophysiology (patch clamp) and calcium imaging data
 - Developed for interpreting data acquired with Prairie View (Bruker)
+- Compatible with any data in .CSV format (does not have to be from Prairie View)
 
 - Supported experiment types:
-1) Any data in .CSV format (may or may not be associated with Prairie View)
+1) Any data in .CSV format
 2) PV VoltageRecording
 3) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
 4) PV T-Series (of VoltageRecording experiments)
