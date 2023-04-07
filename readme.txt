@@ -6,7 +6,6 @@ Copyright 2022-2023, Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr).
 The use or modification of this software (PVBS) is consented only under agreement to cite the developer and/or the original source code (https://github.com/flosfor/pvbs) within the body of the published work or presentation, wherein PVBS was used.
 
 
-
 - MATLAB-based general-purpose GUI for browsing and analyzing electrophysiology (patch clamp) and calcium imaging data
 - Developed for interpreting data acquired with Prairie View (Bruker)
 - Compatible with any data in .CSV format (does not have to be from Prairie View)
@@ -17,8 +16,6 @@ The use or modification of this software (PVBS) is consented only under agreemen
 3) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
 4) PV T-Series (of VoltageRecording experiments)
 5) Specific applications of the above, such as 2-p glutamate uncaging or sCRACM
-
-
 
 
 - Instructions: 
@@ -34,9 +31,6 @@ The use or modification of this software (PVBS) is consented only under agreemen
 
 2) Load sampledata.mat from PVBS using "Load Dataset (.mat)" 
 (NOT "Load PV Experiment (.xml, .csv)" - this function is for loading experiments saved from Prairie View (VoltageRecording, LineScan, TSeries; via respective metadata), or .csv exported from PVBS)
-
-
-- See also (https://github.com/flosfor/pvbs_auxiliary) for auxiliary scripts that can be used with PVBS.
 
 
 
