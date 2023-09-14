@@ -7,6 +7,8 @@ The use or modification of this software (PVBS) is consented only under agreemen
 
 
 - MATLAB-based general-purpose GUI for browsing and analyzing electrophysiology (patch clamp) and calcium imaging data
+  (Requires Statistics & Machine Learning Toolbox, Signal Processing Toolbox)
+
 - Developed for interpreting data acquired with Prairie View (Bruker)
 - Compatible with any data in .CSV format (does not have to be from Prairie View)
 
