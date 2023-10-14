@@ -63,7 +63,7 @@
 %   - Artifact removal
 %   - Manual linescan ROI selection
 %   - Waveform analysis
-%   - .abf & .atf import
+%   - .atf import
 %
 %
 %
@@ -101,7 +101,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.04.01';
+pvbsLastMod = '2023.10.13';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -202,6 +202,7 @@ exp.fileName = {}; % file name
 exp.filePath = {}; % file path
 exp.sweeps = {}; % total sweep count for each tSeries
 %  actual data
+data.fileType = {}; % cell for file type identifier (PV? CSV? ABF?)
 data.VRec = {}; % VRec (.csv)
 data.VRecOriginal = {}; % VRec (.csv), to preserve original in case of postprocessing - again real lack of foresight
 data.VRecMetadata = {}; % metadata for each VRec (.xml)
@@ -249,7 +250,7 @@ ui.loadMatButton = uicontrol('Style', 'pushbutton', 'String', 'Load Dataset (.ma
 ui.saveMatButton = uicontrol('Style', 'pushbutton', 'String', 'Save Dataset (.mat)', 'backgroundcolor', [0.875, 0.875, 0.9], 'Units', 'normalized', 'Position', [0.015, 0.89, 0.121, 0.03], 'Callback', @saveMat, 'interruptible', 'off');
 ui.saveGUIButton = uicontrol('Style', 'pushbutton', 'enable', 'off', 'String', 'Save GUI for Debugging (.mat)', 'backgroundcolor', [0.875, 0.875, 0.9], 'Units', 'normalized', 'Position', [0, 0, 0.0025, 0.005], 'Callback', @saveGUI, 'interruptible', 'off');
 ui.defaultSettingsButton = uicontrol('Style', 'pushbutton', 'String', 'Import Settings', 'backgroundcolor', [0.875, 0.875, 0.9], 'Units', 'normalized', 'Position', [0.015, 0.84, 0.121, 0.03], 'Callback', @defaultSettingsCallback, 'interruptible', 'off');
-ui.loadExpButton = uicontrol('Style', 'pushbutton', 'String', 'Load Experiment (.xml, .csv)', 'backgroundcolor', [0.85, 0.85, 0.95], 'Units', 'normalized', 'Position', [0.015, 0.81, 0.121, 0.03], 'Callback', @loadExp, 'interruptible', 'off'); % will be used for both vRec or tSer
+ui.loadExpButton = uicontrol('Style', 'pushbutton', 'String', 'Load Experiment (.abf, .xml, .csv)', 'backgroundcolor', [0.85, 0.85, 0.95], 'Units', 'normalized', 'Position', [0.015, 0.81, 0.121, 0.03], 'Callback', @loadExp, 'interruptible', 'off'); % will be used for both vRec or tSer
 ui.cellListDisplay = uicontrol('Style', 'listbox', 'Visible', 'on', 'Min', 0, 'Max', 1000, 'Units', 'normalized', 'Position', [0.015, 0.55, 0.12, 0.25], 'Callback', @cellListClick, 'interruptible', 'off'); % not cellist
 ui.cellList = {}; % experiment list items - in hindsight, this was very poorly named
 ui.cellListUp = uicontrol('Style', 'pushbutton', 'String', '^', 'Units', 'normalized', 'Position', [0.015, 0.51, 0.02, 0.03], 'Callback', @cellListUp, 'interruptible', 'off');
@@ -376,7 +377,7 @@ ui.analysisPlot2ZoomOut = uicontrol('Style', 'pushbutton', 'String', '-', 'Units
 ui.analysisPlot2ZoomReset = uicontrol('Style', 'pushbutton', 'String', 'O', 'Units', 'normalized', 'Position', [0.972, 0.1025, 0.0125, 0.024], 'Callback', @resultsPlot2YReset, 'interruptible', 'off');
 %  cell info
 ui.cellInfoTitle = uicontrol('Style', 'text', 'string', 'Cell Info', 'fontweight', 'bold', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.015, 0.48, 0.09, 0.02]);
-ui.cellInfoIntrinsic = uicontrol('Style', 'pushbutton', 'String', 'Intrinsic Properties (.xml, .csv)', 'backgroundcolor', [0.9, 0.9, 0.9], 'Units', 'normalized', 'Position', [0.015, 0.45, 0.095, 0.03], 'Callback', @loadIntrinsic, 'interruptible', 'off');
+ui.cellInfoIntrinsic = uicontrol('Style', 'pushbutton', 'String', 'Intrinsic Properties (.abf, ...)', 'backgroundcolor', [0.9, 0.9, 0.9], 'Units', 'normalized', 'Position', [0.015, 0.45, 0.095, 0.03], 'Callback', @loadIntrinsic, 'interruptible', 'off');
 ui.cellInfoIntrinsicOptions = uicontrol('Style', 'pushbutton', 'string', 'Options', 'backgroundcolor', [0.9, 0.9, 0.9], 'Units', 'normalized', 'Position', [0.11075, 0.45, 0.025, 0.03], 'Callback', @loadIntrinsicOptions, 'interruptible', 'off');
 ui.cellInfoZStack = uicontrol('Style', 'pushbutton', 'String', 'Z-Stack (.tif, ...)', 'backgroundcolor', [0.9, 0.9, 0.9], 'Units', 'normalized', 'Position', [0.015, 0.42, 0.06, 0.03], 'Callback', @loadZStack, 'interruptible', 'off');
 ui.cellInfoSingleScan = uicontrol('Style', 'pushbutton', 'String', 'Single-Scan (.tif, ...)', 'backgroundcolor', [0.9, 0.9, 0.9], 'Units', 'normalized', 'Position', [0.076, 0.42, 0.06, 0.03], 'Callback', @loadSingleScan, 'interruptible', 'off');
@@ -687,21 +688,21 @@ intrinsicPropertiesAnalysis.i_bsln_correction_window = 10; % GPIO error correcti
 %%{
 %  segmentation (episodic transformation)
 intrinsicPropertiesAnalysis.data_segmentation_cutoff_first = 0; % (ms); discard this length of data at the beginning
-intrinsicPropertiesAnalysis.data_segment_length = 5000; % Sweep duration (ms), synonymous with inter-sweep interval because of absolutely stupid gap-free PV
+intrinsicPropertiesAnalysis.data_segment_length = 1000; % Sweep duration (ms), synonymous with inter-sweep interval because of absolutely stupid gap-free PV
 %  detection window; for more than 2 windows, manually set them as n*3 arrays (start, end, direction) and pass them onto functions
 intrinsicPropertiesAnalysis.window_baseline_start = 0; % (ms); baseline start - this is not for main analysis window, but for intrinsic properties!
-intrinsicPropertiesAnalysis.window_baseline_end = 2000; % (ms); baseline end
+intrinsicPropertiesAnalysis.window_baseline_end = 100; % (ms); baseline end
 intrinsicPropertiesAnalysis.window_n = 1; % number of detection windows (1 or 2)
-intrinsicPropertiesAnalysis.window_start = 2000; % (ms); detection window start
-intrinsicPropertiesAnalysis.window_end = 3000; % (ms); detection window end
+intrinsicPropertiesAnalysis.window_start = 100; % (ms); detection window start
+intrinsicPropertiesAnalysis.window_end = 600; % (ms); detection window end
 intrinsicPropertiesAnalysis.window_direction = 0; % (ms); detection window 1 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
 %{
 intrinsicPropertiesAnalysis.window_n = 2; % number of detection windows (1 or 2)
-intrinsicPropertiesAnalysis.window_1_start = 2000; % (ms); detection window 1 start
-intrinsicPropertiesAnalysis.window_1_end = 2250; % (ms); detection window 1 end
+intrinsicPropertiesAnalysis.window_1_start = 100; % (ms); detection window 1 start
+intrinsicPropertiesAnalysis.window_1_end = 200; % (ms); detection window 1 end
 intrinsicPropertiesAnalysis.window_1_direction = 0; % (ms); detection window 1 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
-intrinsicPropertiesAnalysis.window_2_start = 2750; % (ms); analysis window 2 start
-intrinsicPropertiesAnalysis.window_2_end = 3000; % (ms); analysis window 2 end
+intrinsicPropertiesAnalysis.window_2_start = 500; % (ms); analysis window 2 start
+intrinsicPropertiesAnalysis.window_2_end = 600; % (ms); analysis window 2 end
 intrinsicPropertiesAnalysis.window_2_direction = 0; % (ms); analysis window 2 direction (-1: negative, 0: either, 1: positive; e.g. for peak detection)
 %}
 %  short protocol
@@ -736,12 +737,18 @@ intrinsicPropertiesAnalysis.displayStart = intrinsicPropertiesAnalysis.stepStart
 intrinsicPropertiesAnalysis.displayEnd = intrinsicPropertiesAnalysis.stepEnd + intrinsicPropertiesAnalysis.displayMargin * intrinsicPropertiesAnalysis.stepLength;
 %}
 %  R_in calculation
-intrinsicPropertiesAnalysis.RinAtSteadyState = 1; % don't like this, but everything seems backwards here
+intrinsicPropertiesAnalysis.iStepSize = 50; % (pA); default i_cmd step size to override where i_cmd data is unavailable
+intrinsicPropertiesAnalysis.iStepFirst = -250; % (pA); default i_cmd first step to override where i_cmd data is unavailable
+intrinsicPropertiesAnalysis.iStepLast = 500; % (pA); default i_cmd last step to override where i_cmd data is unavailable
+intrinsicPropertiesAnalysis.iStepOverride = 1; % override i_step definition with values above where i_cmd data is unavailable
+intrinsicPropertiesAnalysis.RinAtSteadyState = 0; % no more of those idiotic practice at 46
 intrinsicPropertiesAnalysis.RinByLinearFit = 1; % don't like this either
 intrinsicPropertiesAnalysis.RinSweep = 1; %
 %  Spike threshold
-intrinsicPropertiesAnalysis.spikeThreshold = 10; % (mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
-intrinsicPropertiesAnalysis.spikeDetectionRearm = 0; % (mV)
+%intrinsicPropertiesAnalysis.spikeThreshold = 10; % (mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
+%intrinsicPropertiesAnalysis.spikeThreshold = 0; % (mV); a compromise
+intrinsicPropertiesAnalysis.spikeThreshold = -10; % (mV); a big compromise
+intrinsicPropertiesAnalysis.spikeDetectionRearm = -30; % (mV); very arbitrary
 
 end
 
@@ -1289,6 +1296,12 @@ if fName ~= 0
         h.exp.filePath{end + 1} = hNew.exp.filePath{i};
         h.exp.sweeps{end + 1} = hNew.exp.sweeps{i};
         % h.exp.data
+        try 
+            h.exp.data.fileType{end + 1} = hNew.exp.data.fileType{i};
+        catch ME
+            fileTypeNew = '';
+            h.exp.data.fileType{end + 1} = fileTypeNew;
+        end
         h.exp.data.VRec{end + 1} = hNew.exp.data.VRec{i};
         h.exp.data.VRecOriginal{end + 1} = hNew.exp.data.VRecOriginal{i};
         h.exp.data.VRecMetadata{end + 1} = hNew.exp.data.VRecMetadata{i};
@@ -1772,7 +1785,7 @@ cellListDisplay = h.ui.cellListDisplay;
 fprintf('Loading experiment(s)...');
 
 % select experiment metadata .xml (or directory of the same name containing it)
-filesToImport = uipickfiles('type', {'*.xml', 'VRec/LScn/tSer directory or metadata (.xml)'; '*.csv' 'VRec data (.csv)'});
+filesToImport = uipickfiles_pvbs('type', {'*.abf', 'Axon binary file (.abf)'; '*.xml', 'VRec/LScn/tSer directory or metadata (.xml)'; '*.csv', 'VRec data (.csv)'});
 tic; % start stopwatch
 if iscell(filesToImport)
     if isempty(filesToImport)
@@ -1782,6 +1795,7 @@ if iscell(filesToImport)
         for i = 1:length(filesToImport)
             try % sometimes files are corrupt because stupid PV crashes all the time
                 isCSV = 0;
+                isABF = 0;
                 [fPath, fName, fExt] = fileparts(filesToImport{i});
                 if isempty(fExt) % if directory is selected
                     fExt = '.xml';
@@ -1794,6 +1808,10 @@ if iscell(filesToImport)
                     fPath = [fPath, '\'];
                     fName = [fName, fExt];
                     isCSV = 1;
+                elseif strcmp(fExt, '.abf'); % if .abf file is selected
+                    fPath = [fPath, '\'];
+                    fName = [fName, fExt];
+                    isABF = 1;
                 else
                     %error('Error: Invalid file type');
                 end
@@ -1803,6 +1821,8 @@ if iscell(filesToImport)
                 actualParams = h.params.actualParams;
                 if isCSV
                     h = loadCSV(h, fPath, fName, actualParams);
+                elseif isABF
+                    h = loadABF(h, fPath, fName, actualParams);
                 else
                     h = loadExpMain(h, fPath, fName, actualParams);
                 end
@@ -2454,6 +2474,7 @@ elseif logical(h.params.actualParams.boxcarLength2) || logical(h.params.actualPa
 end
 
 % save
+data.fileType{end + 1} = 'PV';
 data.VRecMetadata{end + 1} = VRecMetadata;
 data.VRec{end + 1} = VRec;
 data.VRecOriginal{end + 1} = VRecOriginal;
@@ -2675,6 +2696,267 @@ cellList{end + 1} = fName(1:end-4); % getting rid of the extension
 set(cellListDisplay, 'string', cellList);
 
 % save
+data.fileType{end + 1} = 'CSV';
+data.VRecMetadata{end + 1} = VRecMetadata;
+data.VRec{end + 1} = VRec;
+data.VRecOriginal{end + 1} = VRecOriginal;
+data.VOutName{end + 1} = VOutName;
+data.VOut{end + 1} = VOut;
+data.lineScan{end + 1} = lineScan;
+data.lineScanF{end + 1} = lineScanF;
+data.lineScanDFF{end + 1} = lineScanDFF;
+data.lineScanDFFOriginal{end + 1} = lineScanDFFOriginal;
+data.lineScanCSV{end + 1} = lineScanCSV;
+data.lineScanFChannel{end + 1} = lineScanFChannel;
+data.lineScanROI{end + 1} = lineScanROI;
+data.lineScanBaseline{end + 1} = lineScanBaseline;
+data.postprocessing{end + 1} = postprocessing;
+data.artifactRemoval{end + 1} = artifactRemoval;
+data.markPointsMetadata{end + 1} = markPointsMetadata;
+data.markPointsIdx{end + 1} = markPointsIdx;
+data.intrinsicProperties{end + 1} = intrinsicProperties;
+data.intrinsicPropertiesVRec{end + 1} = intrinsicPropertiesVRec;
+data.intrinsicPropertiesVRecMetadata{end + 1} = intrinsicPropertiesVRecMetadata;
+data.intrinsicPropertiesFileName{end + 1} = intrinsicPropertiesFileName;
+data.zStack{end + 1} = zStack;
+data.zStackFileName{end + 1} = zStackFileName;
+data.singleScan{end + 1} = singleScan;
+data.singleScanFileName{end + 1} = singleScanFileName;
+data.sweepIdx{end + 1} = sweepIdx;
+data.sweepStr{end + 1} = sweepStr;
+data.groupIdx{end + 1} = groupIdx;
+data.groupStr{end + 1} = groupStr;
+data.notes{end + 1} = notes;
+experiment.data = data;
+h.exp = experiment;
+h.results = results;
+h.ui.cellList = cellList;
+h.ui.cellListDisplay = cellListDisplay;
+
+end
+
+function h = loadABF(h, fPath, fName, actualParams)
+% modified loadExpMain() for .ABF
+% what an irony writing this after returning to pClamp...
+
+%  because PV records data in its own units, data must be scaled appropriately
+%  hard-coding here, instead of digging again into insane PV metadata
+%  below are set for MC700B with Rf = 500 MO and usual gain settings for whole-cell recordings
+pvbsVoltageScalingFactor = actualParams.pvbsVoltageScalingFactor; % "100 mV" to mV
+pvbsCurrentScalingFactor = actualParams.pvbsCurrentScalingFactor; % "0.1 nA" to pA
+timeColumn = actualParams.timeColumn; % csv column for timestamp
+pvbsVoltageColumn = actualParams.pvbsVoltageColumn; % csv column to apply voltage scaling (column 1 is timestamp, followed by channels)
+pvbsCurrentColumn = actualParams.pvbsCurrentColumn; % csv column to apply current scaling
+csvOffsetRow = actualParams.csvOffsetRow; % row offset while reading csv with csvread() (default: 1)
+csvOffsetColumn = actualParams.csvOffsetColumn; % column offset while reading csv with csvread() (default: 0)
+csvColumnsAsSweeps = actualParams.csvColumnsAsSweeps; % interpret columns as sweeps (default: 0)
+lineScanChannel = actualParams.lineScanChannel; % primary channel for calcium imaging signal; e.g. for P4, 1: red, 2: green (primary)
+lineScanBaseline = actualParams.lineScanBaseline; % (ms), baseline for F_0 in linescans, avoid starting from 0 to prevent possible contamination from shutter artifact
+lineScanROIDetectDuringBaseline = actualParams.lineScanROIDetectDuringBaseline; % detect linescan ROI only during baseline window specified above (0: no, 1: yes), in order to prevent possible errors from uncaging artifact
+lineScanDownsamplingFactor = actualParams.lineScanDownsamplingFactor; % downsampling factor for fluorescence signals, for the dF/F to be robust to noise
+lineScanROISmoothing = actualParams.lineScanDownsamplingFactor; % will average over this many points (before and after) while detecting ROI to be robust from noise - obsolete with single ROI
+lineScanROIThreshold = actualParams.lineScanROIThreshold; % (s.d.); z-score for 1st quartile
+lineScanBackgroundThreshold = actualParams.lineScanBackgroundThreshold; % (s.d.); z-score for 67th percentile
+offloadMarkPointsMetadata = actualParams.offloadMarkPointsMetadata; % delete markpoints metadata after retrieving point indices to save space (0: no, 1: yes)
+% PV GPIO box can quite unbelievably also introduce current measurement error
+%  via bleedthrough across channels, which has to be corrected if present
+%  otherwise, there will be "phantom" DC injection present in data
+%  DO NOT use if recordings DO have intentional baseline DC injection at the beginning!
+%  DO NOT be confused with having incorrect bias current settings from amplifier!
+pvbsCurrentCorrectionFlag = actualParams.pvbsCurrentCorrectionFlag; % set to 1 to correct, 0 to leave as is
+pvbsCurrentCorrectionDataPoints = actualParams.pvbsCurrentCorrectionDataPoints; % this many points at the beginning will be used for baseline correction
+
+% load
+experiment = h.exp;
+data = experiment.data;
+results = h.results;
+cellList = h.ui.cellList;
+cellListDisplay = h.ui.cellListDisplay;
+
+% prompt
+fprintf(' %s%s ', fPath, fName);
+
+% load file
+%%% fixlater: csvColumnsAsSweeps assumes "correct" values, i.e. not scaled - this will create confusion when reading .csv saved from PV
+VRecFile = [fPath, fName];
+%VRecTemp = csvread([fPath, fName], csvOffsetRow, csvOffsetColumn); % offset row by 1 ("time(ms), input 0, input 1"), and column by 0
+[abfTemp, abfSamplingInterval, abfMetadata] = abfload_pvbs(VRecFile); % abfMetadata is not very informative, can disregard
+abfSamplingInterval = abfSamplingInterval/1000; % converting from us to ms
+
+csvColumnsAsSweeps = 0; % override this for .abf; NB. see start of function for definition intended for the original function loadCSV()
+if csvColumnsAsSweeps
+    
+    %%% look here!
+    % force scaling factor = 1
+    pvbsVoltageScalingFactor = 1;
+    pvbsCurrentScalingFactor = 1;
+    % force reading data as voltage
+    pvbsCurrentColumn = 0;
+    % force no column/row offset
+    csvOffsetRow = 0;
+    csvOffsetColumn = 0;
+    
+    timeColumn = 0; % override this for .abf; NB. see start of function for definition intended for the original function loadCSV()
+    %{
+    if timeColumn % timestamp column is present
+        sweeps = size(VRecTemp, 2); % each column represents a sweep
+        nonTimeColumn = 1:sweeps; % do this first
+        nonTimeColumn = nonTimeColumn(nonTimeColumn ~= timeColumn);
+        sweeps = sweeps - 1; % since one column is for timestamp and not an actual sweep
+    else
+        sweeps = size(VRecTemp, 2); % each column represents a sweep
+        nonTimeColumn = 1:sweeps;
+        nonTimeColumn = nonTimeColumn(nonTimeColumn ~= timeColumn);
+    end
+    %}
+    sweeps = size(abfTemp, 3); % could also be fetched from metadata: sweeps = abfMetadata.lActualEpisodes;
+    nonTimeColumn = 1:sweeps;
+    nonTimeColumn = nonTimeColumn(nonTimeColumn ~= timeColumn);
+
+    %  pv bleedthrough correction
+    %{
+    if pvbsVoltageColumn ~= 0
+        if pvbsCurrentColumn == 0 % just adding for possible future use of the next else block
+            VRecTemp(:, nonTimeColumn) = VRecTemp(:, nonTimeColumn)*pvbsVoltageScalingFactor;
+        else % if both are nonzero, default to interpret as voltage
+            VRecTemp(:, nonTimeColumn) = VRecTemp(:, nonTimeColumn)*pvbsVoltageScalingFactor;
+        end
+    elseif pvbsCurrentColumn == 0 % if both are 0, again default to interpret as voltage; this could be used later to interpret as F instead %%% fixlater
+        VRecTemp(:, nonTimeColumn) = VRecTemp(:, nonTimeColumn)*pvbsVoltageScalingFactor;
+    else % now interpret as current
+        VRecTemp(:, nonTimeColumn) = VRecTemp(:, nonTimeColumn)*pvbsCurrentScalingFactor;
+        pvbsCurrentCorrectionAmount = nanmean(VRecTemp(1:pvbsCurrentCorrectionDataPoints, pvbsCurrentColumn));
+        VRecTemp(:, pvbsCurrentColumn) = VRecTemp(:, pvbsCurrentColumn) - pvbsCurrentCorrectionFlag * pvbsCurrentCorrectionAmount;
+    end
+    %}
+else
+    %sweeps = 1; % gap-free
+    sweeps = size(abfTemp, 3); % could also be fetched from metadata: sweeps = abfMetadata.lActualEpisodes;
+
+    %  pv bleedthrough correction
+    %{
+    VRecTemp(:, pvbsVoltageColumn) = VRecTemp(:, pvbsVoltageColumn)*pvbsVoltageScalingFactor;
+    VRecTemp(:, pvbsCurrentColumn) = VRecTemp(:, pvbsCurrentColumn)*pvbsCurrentScalingFactor;
+    pvbsCurrentCorrectionAmount = nanmean(VRecTemp(1:pvbsCurrentCorrectionDataPoints, pvbsCurrentColumn));
+    VRecTemp(:, pvbsCurrentColumn) = VRecTemp(:, pvbsCurrentColumn) - pvbsCurrentCorrectionFlag * pvbsCurrentCorrectionAmount;
+    %}
+end
+
+% fill cells
+experiment.metadata{end + 1} = [];
+experiment.fileName{end + 1} = fName; % just to make file name and path readily accessible
+experiment.filePath{end + 1} = fPath;
+experiment.sweeps{end + 1} = sweeps;
+results{end + 1} = struct;
+
+% fill cells within cells (... interlinked)
+VOutName = {cell(sweeps, 1)};
+VOut = {cell(sweeps, 1)};
+VRecMetadata = {cell(sweeps, 1)};
+VRec = {cell(sweeps, 1)};
+VRecOriginal = {cell(sweeps, 1)};
+%lineScanMetadata = {cell(sweeps, 1)};
+lineScanFile = {cell(sweeps, 1)};
+lineScan = {cell(sweeps, 1)};
+lineScanF = {cell(sweeps, 1)};
+lineScanDFF = {cell(sweeps, 1)};
+lineScanDFFOriginal = {cell(sweeps, 1)};
+lineScanCSVFile = {cell(sweeps, 1)};
+lineScanCSV = {cell(sweeps, 1)};
+lineScanFChannel = {cell(sweeps, 1)};
+lineScanROI = {cell(sweeps, 1)};
+postprocessing = [];
+artifactRemoval = [];
+markPointsMetadata = {cell(sweeps, 1)};
+markPointsIdx = {cell(sweeps, 1)};
+intrinsicProperties = struct(); % struct, not cell
+intrinsicPropertiesVRec = {cell(1)};
+intrinsicPropertiesVRecMetadata = struct();
+intrinsicPropertiesFileName = [];
+zStack = {cell(1)}; % only one
+zStackFileName = [];
+singleScan = {cell(1)}; % only one as representative, since saving all of them will be overwhelming for file size %%% what was this?
+singleScanFileName = [];
+sweepIdx = 1:sweeps;
+sweepStr = cell(sweeps, 1);
+for i = 1:sweeps
+    VRecMetadata{i} = [];
+    sweepStr{i} = num2str(i);
+    VOutName{i} = [];
+    VOut{i} = []; % let's just read the file name and not the actual file, since that one's insane
+end
+groupIdx = {}; % groupIdx = {cell(sweeps, 1)};
+groupStr = {};
+if sweeps == 1 % just for convenience if there's only one sweep
+    groupIdx{end + 1} = 1;
+    groupStr{end + 1} = '1';
+end
+
+notes = {};
+
+postprocessing = [h.params.actualParams.boxcarLength1, h.params.actualParams.besselFreq1, h.params.actualParams.besselOrder1];
+postprocessing = [postprocessing; [h.params.actualParams.boxcarLength2, h.params.actualParams.besselFreq2, h.params.actualParams.besselOrder2]];
+
+% fill sweeps
+%{
+if csvColumnsAsSweeps
+    for i = 1:sweeps
+        VRec{i} = [VRecTemp(:, timeColumn), VRecTemp(:, nonTimeColumn(i))];
+    end
+else
+    VRec{1} = VRecTemp;
+end
+%}
+
+% makeshift code for abf support %%% fixlater
+abfCh1Column = pvbsVoltageColumn - 1;
+abfCh2Column = pvbsCurrentColumn - 1;
+%VRec1 = abfTemp(:, abfCh1Column, :);
+%VRec2 = abfTemp(:, abfCh2Column, :);
+VRec = abfTemp(:, abfCh1Column, :);
+
+timeStampColumn = 0 : abfSamplingInterval : abfSamplingInterval*(size(abfTemp, 1) - 1);
+timeStampColumn = timeStampColumn';
+
+VRecTempTemp = {};
+for i = 1:size(VRec, 3) % unfortunate redundancy but better than not taking advantage of abfload()
+    VRecTemp = VRec(:,:,i);
+    VRecTemp = [timeStampColumn, VRecTemp];
+    VRecTempTemp{end + 1} = VRecTemp;
+end
+
+VRec = VRecTempTemp;
+VRecOriginal = VRec;
+
+
+% postprocessing - if applicable
+
+
+% this block now moved up in different parts to accommodate multiple-sweep .csv
+%{
+% load VRec
+VRecMetadata{1} = [];
+VRecFile = [fPath, fName];
+VRecTemp = csvread([fPath, fName], csvOffsetRow, csvOffsetColumn); % offset row by 1 ("time(ms), input 0, input 1"), and column by 0
+% this bizzare step has to be taken, because Prairie
+VRecTemp(:, pvbsVoltageColumn) = VRecTemp(:, pvbsVoltageColumn)*pvbsVoltageScalingFactor;
+VRecTemp(:, pvbsCurrentColumn) = VRecTemp(:, pvbsCurrentColumn)*pvbsCurrentScalingFactor;
+pvbsCurrentCorrectionAmount = nanmean(VRecTemp(1:pvbsCurrentCorrectionDataPoints, pvbsCurrentColumn));
+VRecTemp(:, pvbsCurrentColumn) = VRecTemp(:, pvbsCurrentColumn) - pvbsCurrentCorrectionFlag * pvbsCurrentCorrectionAmount;
+% - end of PV correction -
+VRec = VRecTemp;
+VRecOriginal = VRecTemp;
+VOutName = [];
+VOut = []; % let's just read the file name and not the actual file, since that one's insane
+%}
+
+% update experiment count and cell list
+experiment.experimentCount = experiment.experimentCount + 1;
+cellList{end + 1} = fName(1:end-4); % getting rid of the extension
+set(cellListDisplay, 'string', cellList);
+
+% save
+data.fileType{end + 1} = 'ABF';
 data.VRecMetadata{end + 1} = VRecMetadata;
 data.VRec{end + 1} = VRec;
 data.VRecOriginal{end + 1} = VRecOriginal;
@@ -11303,7 +11585,7 @@ function analysisOptionSel(src, event)
 end
 
 
-% VoltageRecording analysis selector
+% VoltageRecording analysis selector %%% this is so fucked up
 function output = oldAnalysisVRec(input_data, input_data_name, param_window, param_baseline, param_extra)
 
 % Select and run analysis
@@ -11429,22 +11711,38 @@ function output = oldAnalysisIntrinsic(input_data, input_data_name, param_window
 %  m: number of channels (for each channel in input_data)
 
 
-    %{
-    data_voltage_interval = param_extra.dataVoltageInterval;
-    RinAtSteadyState = param_extra.RinAtSteadyState;
-    RinByLinearFit = param_extra.RinByLinearFit;
-    RinSweep = param_extra.RinSweep;
-    spikeThreshold = param_extra.spikeThreshold;
-    spikeDetectionRearm = param_extra.spikeDetectionRearm;
+    %%{
+    try
+        data_voltage_interval = param_extra.dataVoltageInterval;
+        iStepSize = param_extra.iStepSize;
+        iStepFirst = param_extra.iStepFirst;
+        iStepLast = param_extra.iStepLast;
+        iStepOverride = param_extra.iStepOverride;
+        RinAtSteadyState = param_extra.RinAtSteadyState;
+        RinByLinearFit = param_extra.RinByLinearFit;
+        RinSweep = param_extra.RinSweep;
+        spike_trigger = param_extra.spikeThreshold;
+        spike_rearm = param_extra.spikeDetectionRearm;
+    catch ME
+        data_voltage_interval = 0.05; % (ms)
+        iStepSize = 50;
+        iStepFirst = -250;
+        iStepLast = 500;
+        iStepOverride = 1;
+        RinAtSteadyState = 0;
+        RinByLinearFit = 1;
+        RinSweep = 1;
+        spike_trigger = 10;
+        spike_rearm = 0;
+    end
     %}
     
 % Round i_cmd; will be recorded in results for safety, still use with caution
-%i_cmd_step = 50; % round to a multiple of this value (pA); set to 0 to not round
 roundingfactor = 5; % auto-detect, but then again round to a multiple of this value (pA) %%%%%%%
 
 % Spike counting parameters - caution: will not be prompted!
-spike_trigger = param_extra.spikeThreshold;
-spike_rearm = param_extra.spikeDetectionRearm;
+%spike_trigger = param_extra.spikeThreshold;
+%spike_rearm = param_extra.spikeDetectionRearm;
 %{
 spike_trigger = 10; % (mV); cationic E_rev, loosely correcting for usual LJP
 spike_rearm = 0; % (mV); re-arm threshold for spike detection, arbitrary; must have a good margin from triggering threshold
@@ -11477,10 +11775,10 @@ v_channel = 1 + v_channel; i_channel = 1 + i_channel;
 % Force only one baseline and detection window
 param_baseline = param_baseline(1,:);
 param_window = param_window(1,:);
-sprintf('Only window 1 will be used for intrinsic property analysis! (set to i_cmd window)');
+%fprintf('Only window 1 will be used for intrinsic property analysis! (set to i_cmd window)');
 
 % Get window length - will be used to convert spike count to frequency
-data_voltage_interval = param_extra.dataVoltageInterval;
+%data_voltage_interval = param_extra.dataVoltageInterval;
 param_window_length = ((param_window(2) - param_window(1)) * data_voltage_interval)/1000; % convert datapoints to ms to s
 
 % Calculate baseline (i.e. RMP) and insert to output (1st dimension)
@@ -11525,7 +11823,7 @@ end
 % Calculate delta(V) for non-spiking sweeps, at peak & steady-state
 i_v_sweeps = find(spike_count == 0);
 if max(spike_count) == 0 % following code will not work properly if all sweeps were subthreshold
-    i_v_sweeps = i_v_sweeps(1:9); % very arbitrary and annoying, but 9 should usually do in this case
+    i_v_sweeps = i_v_sweeps(1:9); % very arbitrary and annoying, but 9 should usually do in this case %%% wtf was behind the choice of 9 who knows now
 else
     i_v_sweeps = i_v_sweeps(i_v_sweeps < min(find(spike_count > 0))); % discard discontinuous later sweeps (will be either due to inactivation or from dummy sweeps from PV gap-free recording)
 end
@@ -11547,14 +11845,19 @@ for idx1 = i_v_sweeps(1):i_v_sweeps(end)
         output_temp(idx1, v_channel, 5) = 0; % peak direction
     end
     peak_timeof = find(input_data(param_window(1):param_window(2), v_channel, idx1) == output_temp(idx1, v_channel, 2)); % time of peak (NB. actually in points, not ms)
-    output_temp(idx1, v_channel, 4) = peak_timeof(1); % just in case of multiple occurrences
+    if isempty(peak_timeof) % idk why tf this happens sometimes even when the peak is detected
+        peak_timeof = NaN;
+    else
+        output_temp(idx1, v_channel, 4) = peak_timeof(1); % just in case of multiple occurrences
+    end
     clear peak_neg peak_pos;
 end
 % Steady-state V_m
 %  taken from the last 1/5 of detection window; intended to work with detection window covering the duration of current injection
 %  i.e. would be the last 100 ms if time of i_inj is 500 ms
 warning('off', 'all');
-param_window_start = param_window(1) + ceil(param_window(2) - param_window(1) + 1)*(1 - 1/5);
+steadyStateWindow = 0.2; % this much proportion towards the end of the current step
+param_window_start = param_window(1) + ceil(param_window(2) - param_window(1) + 1)*(1 - steadyStateWindow);
 for idx1 = i_v_sweeps(1):i_v_sweeps(end)
     output_temp(idx1, v_channel, 6) = nanmean(input_data(param_window_start:param_window(2), v_channel, idx1)); % mean (absolute)
     output_temp(idx1, v_channel, 7) = output_temp(idx1, v_channel, 6) - output_temp(idx1, v_channel, 1); % mean (relative)
@@ -11563,11 +11866,27 @@ for idx1 = i_v_sweeps(1):i_v_sweeps(end)
 end
 % i_cmd
 %  just allocate into separate 3rd dimension instead of putting next to the delta(V) columns
-for idx1 = 1:size(input_data, 3) % all rows here because this will also be used for f-i
-    output_temp(idx1, i_channel, 10) = nanmean(input_data(param_window(1):param_window(2), i_channel, idx1)); % mean (absolute)
-    output_temp(idx1, i_channel, 11) = output_temp(idx1, i_channel, 10) - output_temp(idx1, i_channel, 1); % mean (relative)
-    output_temp(idx1, i_channel, 12) = nanmedian(input_data(param_window(1):param_window(2), i_channel, idx1)); % median (absolute)
-    output_temp(idx1, i_channel, 13) = output_temp(idx1, i_channel, 12) - output_temp(idx1, i_channel, 1); % median (relative)
+if iStepOverride
+    for idx1 = 1:size(input_data, 3) % all rows here because this will also be used for f-i
+        output_temp(idx1, i_channel, 10) = iStepFirst + (i - 1)*iStepSize; % mean (absolute)
+        output_temp(idx1, i_channel, 11) = iStepSize; % mean (relative)
+        output_temp(idx1, i_channel, 12) = iStepFirst + (i - 1)*iStepSize; % median (absolute)
+        output_temp(idx1, i_channel, 13) = iStepSize; % median (relative)
+    end
+elseif nanmax(isnan(input_data(:, i_channel, :))) % this means i_cmd is not available
+    for idx1 = 1:size(input_data, 3) % all rows here because this will also be used for f-i
+        output_temp(idx1, i_channel, 10) = iStepFirst + (i - 1)*iStepSize; % mean (absolute)
+        output_temp(idx1, i_channel, 11) = iStepSize; % mean (relative)
+        output_temp(idx1, i_channel, 12) = iStepFirst + (i - 1)*iStepSize; % median (absolute)
+        output_temp(idx1, i_channel, 13) = iStepSize; % median (relative)
+    end
+else
+    for idx1 = 1:size(input_data, 3) % all rows here because this will also be used for f-i
+        output_temp(idx1, i_channel, 10) = nanmean(input_data(param_window(1):param_window(2), i_channel, idx1)); % mean (absolute)
+        output_temp(idx1, i_channel, 11) = output_temp(idx1, i_channel, 10) - output_temp(idx1, i_channel, 1); % mean (relative)
+        output_temp(idx1, i_channel, 12) = nanmedian(input_data(param_window(1):param_window(2), i_channel, idx1)); % median (absolute)
+        output_temp(idx1, i_channel, 13) = output_temp(idx1, i_channel, 12) - output_temp(idx1, i_channel, 1); % median (relative)
+    end
 end
 warning('on', 'all');
 clear idx1;
@@ -11585,20 +11904,73 @@ r_transient = r_transient(1:i_v_sweeps(end));
 v_steady = v_steady(1:i_v_sweeps(end));
 r_steady = r_steady(1:i_v_sweeps(end));
 
-% Prepare i_cmd arrays for convenience
+% Prepare i_cmd arrays for convenience %%% now redundant... but intrinsic analysis code is fubar at this point
 i_cmd_iv = output_temp(:, i_channel, 11); % relative means
 i_cmd_iv = i_cmd_iv(1:i_v_sweeps(end)); % only subthreshold sweeps
 i_cmd_fi = output_temp(:, i_channel, 11); % relative means
 
-% Auto-detect i_cmd step size and round
-i_cmd_step = 0; % initializing
-%for idx = 1 : size(input_data, 3) - 2 % exclude last sweep, as will most likely be a remainder sweep
-for idx = 1 : size(i_cmd_iv, 1) - 1 % only take subthreshold sweeps
-    i_cmd_step = i_cmd_step + (i_cmd_iv(idx + 1) - i_cmd_iv(idx)); % add up differences, using relative means
+if iStepOverride
+    i_cmd_step = iStepSize;
+    i_cmd_all = iStepFirst:iStepSize:iStepLast; % override i_cmd data (or the lack thereof) with custom i_step definition
+    i_cmd_fi = i_cmd_all; % initialize i_cmd for suprathreshold sweeps
+    %i_cmd_fi(i_v_sweeps) = []; % exclude subthereshold sweeps
+    i_cmd_iv = i_cmd_all(i_v_sweeps); % take only subthreshold sweeps
+    i_cmd_pos_min = min(find(i_cmd_fi >= 0)); % first sweep after crossing or at 0; tacitly assumes i_cmd starts from negative
+    i_cmd_neg_max = i_cmd_pos_min - 1; % last sweep before crossing 0; should not use max(find(i_cmd_fi < 0)) because of remainder sweeps; stupid Praire
+    if abs(i_cmd_fi(i_cmd_neg_max)) >= i_cmd_fi(i_cmd_pos_min) % to take the index of the smaller
+        i_cmd_zero = i_cmd_pos_min;
+    else
+        i_cmd_zero = i_cmd_neg_max;
+    end
+    i_cmd_fi = i_cmd_fi(i_cmd_zero:end); % only positive sweeps
+    spike_count = spike_count(i_cmd_zero:end); % only positive sweeps
+    clear i_cmd_zero;
+    i_cmd_iv = i_cmd_iv';
+    i_cmd_fi = i_cmd_fi';
+elseif nanmax(isnan(i_cmd_iv)) % this means i_cmd is not available
+    i_cmd_all = iStepFirst:iStepSize:iStepLast; % override i_cmd data (or the lack thereof) with custom i_step definition
+    i_cmd_fi = i_cmd_all; % initialize i_cmd for suprathreshold sweeps
+    %i_cmd_fi(i_v_sweeps) = []; % exclude subthereshold sweeps
+    i_cmd_iv = i_cmd_all(i_v_sweeps); % take only subthreshold sweeps
+    i_cmd_pos_min = min(find(i_cmd_fi >= 0)); % first sweep after crossing or at 0; tacitly assumes i_cmd starts from negative
+    i_cmd_neg_max = i_cmd_pos_min - 1; % last sweep before crossing 0; should not use max(find(i_cmd_fi < 0)) because of remainder sweeps; stupid Praire
+    if abs(i_cmd_fi(i_cmd_neg_max)) >= i_cmd_fi(i_cmd_pos_min) % to take the index of the smaller
+        i_cmd_zero = i_cmd_pos_min;
+    else
+        i_cmd_zero = i_cmd_neg_max;
+    end
+    i_cmd_fi = i_cmd_fi(i_cmd_zero:end); % only positive sweeps
+    spike_count = spike_count(i_cmd_zero:end); % only positive sweeps
+    clear i_cmd_zero;
+    i_cmd_iv = i_cmd_iv';
+    i_cmd_fi = i_cmd_fi';
+else
+    % Auto-detect i_cmd step size and round
+    i_cmd_step = 0; % initializing
+    %for idx = 1 : size(input_data, 3) - 2 % exclude last sweep, as will most likely be a remainder sweep
+    for idx = 1 : size(i_cmd_iv, 1) - 1 % only take subthreshold sweeps
+        i_cmd_step = i_cmd_step + (i_cmd_iv(idx + 1) - i_cmd_iv(idx)); % add up differences, using relative means
+    end
+    clear idx;
+    i_cmd_step = i_cmd_step / (size(i_cmd_iv, 1) - 1);
+    i_cmd_step = roundingfactor * round(i_cmd_step/roundingfactor); % actual rounding
+    % Only positive sweeps for f-i
+    %i_cmd_neg_max = max(find(i_cmd_fi < 0)); % last sweep before crossing 0
+    i_cmd_pos_min = min(find(i_cmd_fi >= 0)); % first sweep after crossing or at 0; tacitly assumes i_cmd starts from negative
+    i_cmd_neg_max = i_cmd_pos_min - 1; % last sweep before crossing 0; should not use max(find(i_cmd_fi < 0)) because of remainder sweeps; stupid Praire
+    if abs(i_cmd_fi(i_cmd_neg_max)) >= i_cmd_fi(i_cmd_pos_min) % to take the index of the smaller
+        i_cmd_zero = i_cmd_pos_min;
+    else
+        i_cmd_zero = i_cmd_neg_max;
+    end
+    i_cmd_fi = i_cmd_fi(i_cmd_zero:end); % only positive sweeps
+    spike_count = spike_count(i_cmd_zero:end); % only positive sweeps
+    clear i_cmd_zero;
+    i_cmd_iv = i_cmd_iv';
+    i_cmd_fi = i_cmd_fi';
+    i_cmd_all = [i_cmd_iv, i_cmd_fi];
 end
-clear idx;
-i_cmd_step = i_cmd_step / (size(i_cmd_iv, 1) - 1);
-i_cmd_step = roundingfactor * round(i_cmd_step/roundingfactor); % actual rounding
+
 % round i_cmd_iv and i_cmd_fi
 if i_cmd_step <= 0 % relic from manual input; just leave it
     i_cmd_step = 0;
@@ -11606,20 +11978,11 @@ else
     i_cmd_iv = i_cmd_step * round(i_cmd_iv/i_cmd_step);
     i_cmd_fi = i_cmd_step * round(i_cmd_fi/i_cmd_step);
 end
-i_cmd_all = i_cmd_fi; % preserve this for later. going back and forth again now...
 
-% Only positive sweeps for f-i
-%i_cmd_neg_max = max(find(i_cmd_fi < 0)); % last sweep before crossing 0
-i_cmd_pos_min = min(find(i_cmd_fi >= 0)); % first sweep after crossing or at 0; tacitly assumes i_cmd starts from negative
-i_cmd_neg_max = i_cmd_pos_min - 1; % last sweep before crossing 0; should not use max(find(i_cmd_fi < 0)) because of remainder sweeps; stupid Praire
-if abs(i_cmd_fi(i_cmd_neg_max)) >= i_cmd_fi(i_cmd_pos_min) % to take the index of the smaller
-    i_cmd_zero = i_cmd_pos_min;
-else
-    i_cmd_zero = i_cmd_neg_max;
-end
-i_cmd_fi = i_cmd_fi(i_cmd_zero:end); % only positive sweeps
-spike_count = spike_count(i_cmd_zero:end); % only positive sweeps
-clear i_cmd_zero;
+% clean up remainder sweeps or disregard missing sweeps (from ill defined i_step)
+sweepCountSmaller = min([length(i_cmd_fi), length(spike_count)]); % the latter would represent sweep count produced by episodic transformation
+i_cmd_fi = i_cmd_fi(1:sweepCountSmaller);
+spike_count = spike_count(1:sweepCountSmaller);
 
 % Remove erroneous spike counts from incomplete sweep at the end
 if max(spike_count) == 0 % following code will not work properly if all sweeps were subthreshold
@@ -11632,13 +11995,17 @@ if max(spike_count) == 0 % following code will not work properly if all sweeps w
     return; %%% fixlater
 else
     spike_count_first = min(find(spike_count ~= 0)); % index of first spiking sweep
-    spike_count_artifact = find(spike_count == 0); % find non-spiking sweeps
+    spike_count_artifact = find(spike_count == 0); % find non-spiking sweeps %%% why was this named artifact?
     spike_count_artifact = spike_count_artifact(spike_count_artifact > spike_count_first); % exclude subthreshold sweeps at the beginning
     if isempty(spike_count_artifact) % i.e. no remainder sweep at the end
     else % i.e. if there are remainder sweeps at the end
         spike_count_artifact = spike_count_artifact(1); % first remainder sweep
         spike_count = spike_count(1:spike_count_artifact - 1); % retain up to the last meaningful sweep
-        i_cmd_fi = i_cmd_fi(1:spike_count_artifact - 1); % truncate i_cmd_fi accordingly
+        %%% seems redundant but i can't fucking keep track anymore
+        %%{
+        sweepCountSmaller = min([length(i_cmd_fi), length(spike_count)]); % needs to be checked in case i_step was manually defined
+        i_cmd_fi = i_cmd_fi(1:sweepCountSmaller); % truncate i_cmd_fi if applicable
+        %}
     end
 end
 clear spike_count_artifact 
@@ -11667,10 +12034,10 @@ xlabel('i (pA)'); xticks(-10000:100:10000); % x ticks in 100 pA up to 10 nA
 ylabel('f (Hz)'); yticks(0:10:1000); % y ticks in 10 Hz up to 1000 Hz
 %}
 
-% Calculate R_in 
-RinAtSteadyState = param_extra.RinAtSteadyState;
-RinByLinearFit = param_extra.RinByLinearFit;
-RinSweep = param_extra.RinSweep;
+% Calculate R_in
+%RinAtSteadyState = param_extra.RinAtSteadyState;
+%RinByLinearFit = param_extra.RinByLinearFit;
+%RinSweep = param_extra.RinSweep;
 if RinByLinearFit % from linear regression of the i-V curve (passing origin)
     r_in = mldivide(i_cmd_iv, v_steady); % units are pA and mV, so this results in GOhm
 else % from sweep defined by RinSweep (= 1 by default, assumed to correspond to the sweep with largest negative current injection)
@@ -11692,17 +12059,24 @@ end
 % Get rheobase
 rheobase = i_cmd_fi(spike_count_first);
 rheobase_sweep = size(i_cmd_iv, 1) + 1; % number of subthreshold sweeps + 1
-rheobase_sweep_check = find(i_cmd_all == rheobase);
-if rheobase_sweep ~= rheobase_sweep_check
+%{
+rheobase_sweep_check = find(i_cmd_fi == rheobase);
+if rheobase_sweep ~= rheobase_sweep_check %%% why was this necessary??? maybe it got fubar while redefining i_cmd related things
     error('fix it');
 end
-rheobase_x2_sweep = find(i_cmd_all == 2*rheobase);
+%}
+try
+    rheobase_x2_sweep = find(i_cmd_all == 2*rheobase);
+catch ME
+    rheobase_x2_sweep = NaN;
+end
 clear spike_count_first;
 
 % Calculate RMP from averages of baselines from all sweeps
 rmp = nanmean(output_temp(:, v_channel, 1));
 
 % Arrange i-V and f-i into arrays
+v_steady = v_steady(1:length(i_cmd_iv)); % this is necessary in the case of manual i_step definition override, but can lead to problems if it is ill-defined
 i_v = [i_cmd_iv, v_steady];
 f_i = [i_cmd_fi, spike_count];
 
@@ -14210,7 +14584,7 @@ end
 function loadIntrinsic(src, ~)
 % load and display intrinsic membrane properties
 %  mostly recycled from very very old code (which is also why it's in snake_case)
-%  needs to cleaned up for performance... this part is really fucked up %%% fixlater
+%  needs to be cleaned up for performance... this part is really fucked up %%% fixlater
 
 h = guidata(src);
 
@@ -14253,7 +14627,7 @@ function [h, data_voltage_original] = loadIntrinsicActual(h)
 
     % load datafile
     try
-        [fName, fPath] = uigetfile({'*.xml', 'VoltageRecording Metadata'; '*.csv', 'VoltageRecording Data'}, 'Select VoltageRecording (.xml, .csv)'); % filters for '.xml' extension only
+        [fName, fPath] = uigetfile({'*.abf', 'Axon binary file'; '*.xml', 'VoltageRecording Metadata'; '*.csv', 'VoltageRecording Data'}, 'Select File (.abf, .xml, .csv)'); % filters for '.xml' extension only
     catch
         waitfor(msgbox('Error: Select valid .xml or .csv'));
         error('Error: Select valid .xml or .csv');
@@ -14264,11 +14638,14 @@ function [h, data_voltage_original] = loadIntrinsicActual(h)
     end
     tic; % start stopwatch
     
+    isCSV = 0;
+    isABF = 0;
     fExt = fName(end - 3:end);
-    if strcmp(fExt, '.xml'); % if .xml file is selected
-        isCSV = 0;
-    elseif strcmp(fExt, '.csv'); % if .csv file is selected
+    if strcmp(fExt, '.xml')
+    elseif strcmp(fExt, '.csv')
         isCSV = 1;
+    elseif strcmp(fExt, '.abf')
+        isABF = 1;
     else
         elapsedTime = toc;
         error('Error: Invalid file type');
@@ -14276,6 +14653,11 @@ function [h, data_voltage_original] = loadIntrinsicActual(h)
        
     % check if a file was loaded
     if isCSV
+        voltageRecordingMetadata = [];
+        h.exp.data.intrinsicPropertiesVRecMetadata{expIdx} = voltageRecordingMetadata;
+        h.exp.data.intrinsicProperties{expIdx}.fileName = fName;
+        h.exp.data.intrinsicProperties{expIdx}.filePath = fPath;
+    elseif isABF
         voltageRecordingMetadata = [];
         h.exp.data.intrinsicPropertiesVRecMetadata{expIdx} = voltageRecordingMetadata;
         h.exp.data.intrinsicProperties{expIdx}.fileName = fName;
@@ -14305,6 +14687,33 @@ function [h, data_voltage_original] = loadIntrinsicActual(h)
     % "....Sequence" may be a struct (with only 1 cycle total) or a cell (with multiple cycles), repeated for each cycle in the latter case
     if isCSV
         data_voltage_original = csvread([fPath, fName], csvOffsetRow, csvOffsetColumn); % offset row by 1 ("time(ms), input 0, input 1"), and column by 0
+    elseif isABF
+        
+        [abfTemp, abfSamplingInterval, abfMetadata] = abfload_pvbs([fPath, fName]); % abfMetadata is not very informative, can disregard
+        abfSamplingInterval = abfSamplingInterval/1000; % converting from us to ms
+        sweeps = size(abfTemp, 3);
+
+        % makeshift code for abf support %%% fixlater
+        pvbsVoltageColumn = h.params.actualParams.pvbsVoltageColumn;
+        pvbsCurrentColumn = h.params.actualParams.pvbsCurrentColumn;
+        abfCh1Column = pvbsVoltageColumn - 1;
+        abfCh2Column = pvbsCurrentColumn - 1;
+        %VRec1 = abfTemp(:, abfCh1Column, :);
+        %VRec2 = abfTemp(:, abfCh2Column, :);
+        VRec = abfTemp(:, abfCh1Column, :);
+
+        timeStampColumn = 0 : abfSamplingInterval : abfSamplingInterval*(size(abfTemp, 1) - 1);
+        timeStampColumn = timeStampColumn';
+
+        VRecTempTemp = {};
+        for i = 1:size(VRec, 3) % unfortunate redundancy but better than not taking advantage of abfload()
+            VRecTemp = VRec(:,:,i);
+            VRecTemp = [timeStampColumn, VRecTemp];
+            VRecTempTemp{end + 1} = VRecTemp;
+        end
+
+        VRec = VRecTempTemp;
+        data_voltage_original = VRec; %%% fixlater: make this into stupid PV-like gap free version
     else
         if isstruct(voltageRecordingMetadata.PVScan.Sequence)
             data_file_voltage = voltageRecordingMetadata.PVScan.Sequence.VoltageRecording.Attributes.dataFile; % ....Sequence.VoltageRecording is the 1st entry (or 3rd from end); mind the capitalization
@@ -14327,12 +14736,20 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
 
     analysisParameters = h.params.actualParams.intrinsicPropertiesAnalysis;
     try
+        iStepSize = analysisParameters.iStepSize;
+        iStepFirst = analysisParameters.iStepFirst;
+        iStepLast = analysisParameters.iStepLast;
+        iStepOverride = analysisParameters.iStepOverride;
         RinAtSteadyState = analysisParameters.RinAtSteadyState;
         RinByLinearFit = analysisParameters.RinByLinearFit;
         RinSweep = analysisParameters.RinSweep;
         spikeThreshold = analysisParameters.spikeThreshold;
         spikeDetectionRearm = analysisParameters.spikeDetectionRearm; 
     catch ME
+        iStepSize = 50;
+        iStepFirst = -250;
+        iStepLast = 500;
+        iStepOverride = 1; % another reverse compatibility thing
         RinAtSteadyState = 1; % hate this, but everything seems backwards here
         RinByLinearFit = 1; % hate this too
         RinSweep = 1; %
@@ -14387,64 +14804,91 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
     data_voltage = [];
     data_voltage_episodic = {}; % cell should be easier to handle than a 4-d array
     
-    % get data sampling rate from raw data; could also be fetched from metadata, but easier and more straightforward this way
-    data_voltage_interval_original = data_voltage_original(2,1) - data_voltage_original(1,1); % (ms)
-    data_voltage_samplingrate_original = 1/data_voltage_interval_original; % (kHz)
-    %h.experiment.voltageRecording.analysisParameters.voltageSamplingRateOriginal = data_voltage_samplingrate_original;
-    
-    % prune the end of data
-    data_voltage_length = floor(size(data_voltage_original, 1)/(data_voltage_samplingrate_original*data_length_unit))*data_length_unit; % see pvbs_voltagerecording.m for default
+    % this code is getting worse and worse %%%
+    expIdx = h.ui.cellListDisplay.Value;
+    expIdx = expIdx(1); % force single selection
+    h.ui.cellListDisplay.Value = expIdx;
+    try
+        isABF = h.exp.data.fileType;
+        isABF = isABF{expIdx};
+        isABF = strcmp(isABF, 'ABF');
+    catch ME
+        isABF = 0;
+    end
 
-    % truncate data into equal-length segments
-    data_voltage_interval = 1 / data_voltage_samplingrate; % (ms)
-    data_voltage_length_points = data_voltage_length / data_voltage_interval_original;
-    if length(data_voltage_original) < data_voltage_length_points
-        clear;
-        error(sprintf('\nDesignated data length exceeds original data length\n'));
-    else
-        data_voltage_cycle = data_voltage_original(1:data_voltage_length_points, 2:end); % removing timestamp
-    end
-    
-    % reduce data by boxcar averaging
-    data_voltage_samplingrate = data_voltage_samplingrate_original; %%% how about no
-    data_voltage_samplingrate_reductionfactor = data_voltage_samplingrate_original / data_voltage_samplingrate;
-    if data_voltage_samplingrate_reductionfactor < 1
-        clear;
-        error(sprintf('\nDesignated sampling rate exceeds original sampling rate\n'));
-    elseif data_voltage_samplingrate_reductionfactor > 1
-        data_voltage_new = NaN(floor(size(data_voltage_cycle, 1)/data_voltage_samplingrate_reductionfactor), size(data_voltage_cycle, 2));
-    end
-    for idx2 = 1:size(data_voltage_cycle, 2) % for each column in data, e.g. V_rec, I_cmd
-        for idx1 = 1:floor(size(data_voltage_cycle, 1)/data_voltage_samplingrate_reductionfactor)
-            data_voltage_new(idx1, idx2) = ...
-                nanmean(data_voltage_cycle(1 + data_voltage_samplingrate_reductionfactor*(idx1 - 1) : data_voltage_samplingrate_reductionfactor*idx1, idx2));
+    if isABF
+        %data_voltage_episodic = data_voltage_original; % that easy. fucking PV
+        % well not that easy, gotta convert from cell to array to make it work for the rest of the code. but the code was originally written for stupid ass PV data format
+        [numRows, numColumns] = size(data_voltage_original{1});
+        data_voltage_episodic = nan(numRows, numColumns, length(data_voltage_original));
+        for i = 1:length(data_voltage_original)
+            data_voltage_episodic(:,:,i) = data_voltage_original{i};
         end
-    end
-    data_voltage_cycle = data_voltage_new;
-    
-    % correct for cosmetic error produced by PV GPIO box 
-    %%%%%%% i is going away here!!!
-    if i_bsln_correction == 1 %%% is it worth it to avoid using if?
-        i_bsln_correction_value = nanmean(data_voltage_cycle(1:i_bsln_correction_window*data_voltage_samplingrate, 2));
-        data_voltage_cycle(:,2) = data_voltage_cycle(:,2) - i_bsln_correction_value;
-    end
-    %clear i_bsln_correction i_bsln_correction_value i_bsln_correction_window; %%% save these into analysis metadata... later
+        data_voltage_cycle_episodic = data_voltage_episodic; % the source of much redundancy %%% fixlater
 
-    % Re-append updated timestamp - this is an artifact from LineScan analysis code (where timestamps are unsynchronized between LineScan and VoltageRecording)
-    timestamp_voltage = 0 : data_voltage_interval : data_voltage_interval*size(data_voltage_cycle, 1);
-    timestamp_voltage = timestamp_voltage(1 : end - 1);
-    timestamp_voltage = timestamp_voltage';
-    data_voltage_cycle = [timestamp_voltage, data_voltage_cycle];
-    
-    % Unit conversion (see start of function for settings)
-    data_voltage_cycle(:,2) = data_voltage_cycle(:,2)*v_rec_gain;
-    data_voltage_cycle(:,3) = data_voltage_cycle(:,3)*i_cmd_gain; % Reminder: by lab convention, input 0 is V_rec, and input 1 is i_cmd
-    clear v_rec_gain i_cmd_gain;
+    else % this part was originally intended for transforming the stupid ass PV gap-free data to episodic form, oh the irony of doing the same stupid work twice over - thanks PV (idiots)
+        
+        % get data sampling rate from raw data; could also be fetched from metadata, but easier and more straightforward this way
+        data_voltage_interval_original = data_voltage_original(2,1) - data_voltage_original(1,1); % (ms)
+        data_voltage_samplingrate_original = 1/data_voltage_interval_original; % (kHz)
+        %h.experiment.voltageRecording.analysisParameters.voltageSamplingRateOriginal = data_voltage_samplingrate_original;
 
+        % prune the end of data
+        data_voltage_length = floor(size(data_voltage_original, 1)/(data_voltage_samplingrate_original*data_length_unit))*data_length_unit; % see pvbs_voltagerecording.m for default
 
-    % Segmentation of moronic gap-free PV data into episodic-like form
-    %data_segment_length = size(data_voltage_cycle, 1); % un-comment this to default to no segmentation
-    %if h.experiment.voltageRecording.analysisParameters.cyclesTotal == 1 || cycleCurrent == 1
+        % truncate data into equal-length segments - "cycle" is the fucking PV lingo for sweep
+        data_voltage_interval = 1 / data_voltage_samplingrate; % (ms)
+        data_voltage_length_points = data_voltage_length / data_voltage_interval_original;
+        if length(data_voltage_original) < data_voltage_length_points
+            clear;
+            error(sprintf('\nDesignated data length exceeds original data length\n'));
+        else
+            data_voltage_cycle = data_voltage_original(1:data_voltage_length_points, 2:end); % removing timestamp
+        end
+
+        % reduce data by boxcar averaging
+        data_voltage_samplingrate = data_voltage_samplingrate_original; %%% how about no
+        data_voltage_samplingrate_reductionfactor = data_voltage_samplingrate_original / data_voltage_samplingrate;
+        if data_voltage_samplingrate_reductionfactor < 1
+            clear;
+            error(sprintf('\nDesignated sampling rate exceeds original sampling rate\n'));
+        elseif data_voltage_samplingrate_reductionfactor > 1
+            data_voltage_new = NaN(floor(size(data_voltage_cycle, 1)/data_voltage_samplingrate_reductionfactor), size(data_voltage_cycle, 2));
+        end
+        for idx2 = 1:size(data_voltage_cycle, 2) % for each column in data, e.g. V_rec, I_cmd
+            for idx1 = 1:floor(size(data_voltage_cycle, 1)/data_voltage_samplingrate_reductionfactor)
+                data_voltage_new(idx1, idx2) = ...
+                    nanmean(data_voltage_cycle(1 + data_voltage_samplingrate_reductionfactor*(idx1 - 1) : data_voltage_samplingrate_reductionfactor*idx1, idx2));
+            end
+        end
+        data_voltage_cycle = data_voltage_new;
+
+        % correct for cosmetic error produced by PV GPIO box
+        %%%%%%% i is going away here!!!
+        if i_bsln_correction == 1 %%% is it worth it to avoid using if?
+            i_bsln_correction_value = nanmean(data_voltage_cycle(1:i_bsln_correction_window*data_voltage_samplingrate, 2));
+            data_voltage_cycle(:,2) = data_voltage_cycle(:,2) - i_bsln_correction_value;
+        end
+        %clear i_bsln_correction i_bsln_correction_value i_bsln_correction_window; %%% save these into analysis metadata... later
+
+        % Re-append updated timestamp - this is an artifact from LineScan analysis code (where timestamps are unsynchronized between LineScan and VoltageRecording)
+        timestamp_voltage = 0 : data_voltage_interval : data_voltage_interval*size(data_voltage_cycle, 1);
+        timestamp_voltage = timestamp_voltage(1 : end - 1);
+        timestamp_voltage = timestamp_voltage';
+        data_voltage_cycle = [timestamp_voltage, data_voltage_cycle];
+
+        % Unit conversion (see start of function for settings)
+        data_voltage_cycle(:,2) = data_voltage_cycle(:,2)*v_rec_gain;
+        try
+            data_voltage_cycle(:,3) = data_voltage_cycle(:,3)*i_cmd_gain; % Reminder: by lab convention, input 0 is V_rec, and input 1 is i_cmd
+        catch ME % this means i_cmd data is missing
+            data_voltage_cycle = [data_voltage_cycle, nan(size(data_voltage_cycle, 1), 1)];
+        end
+        clear v_rec_gain i_cmd_gain;
+
+        % Segmentation of moronic gap-free PV data into episodic-like form
+        %data_segment_length = size(data_voltage_cycle, 1); % un-comment this to default to no segmentation
+        %if h.experiment.voltageRecording.analysisParameters.cyclesTotal == 1 || cycleCurrent == 1
         %{
         prompt = {'Truncate first (ms): ', 'Segment length (ms; -1 to cancel segmentation): ', 'Discard last segment if incomplete? [0/1]', 'Calculate and display average? [0/1]'};
         prompt_ans_default = {num2str(data_segmentation_cutoff_first), num2str(data_segment_length), '1', '0'};
@@ -14452,75 +14896,75 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
         clear prompt prompt_ans_default;
         %}
         data_segmentation = {num2str(data_segmentation_cutoff_first), num2str(data_segment_length), '1', '0'};
-    %else
-    %end
+        %else
+        %end
 
-    % Data segmentation parameters
-    data_segmentation_cutoff_first = str2double(data_segmentation{1})/data_voltage_interval; % converting ms to datapoints
-    if str2double(data_segmentation{2}) == -1
-        data_segment_length = size(data_voltage_cycle, 1); % no segmentation
-    else
-        data_segment_length = str2double(data_segmentation{2})/data_voltage_interval; % converting ms to datapoints
-    end
-    if str2double(data_segmentation{3}) == 0 | str2double(data_segmentation{3}) == 1
-    else
-        %clear;
-        error(sprintf('\nInput for "Discard last segment if incomplete?" must be 0 or 1\n'));
-    end
+        % Data segmentation parameters
+        data_segmentation_cutoff_first = str2double(data_segmentation{1})/data_voltage_interval; % converting ms to datapoints
+        if str2double(data_segmentation{2}) == -1
+            data_segment_length = size(data_voltage_cycle, 1); % no segmentation
+        else
+            data_segment_length = str2double(data_segmentation{2})/data_voltage_interval; % converting ms to datapoints
+        end
+        if str2double(data_segmentation{3}) == 0 | str2double(data_segmentation{3}) == 1
+        else
+            %clear;
+            error(sprintf('\nInput for "Discard last segment if incomplete?" must be 0 or 1\n'));
+        end
 
-    % Prepare space for segmented data
-    if data_segment_length == 0 | isnan(data_segment_length)
-        %clear;
-        error(sprintf('\n"Data segment length" must not be 0\n'));
-    elseif str2double(data_segmentation{3}) == 0
-        data_segment_count = ceil((size(data_voltage_cycle, 1) - data_segmentation_cutoff_first)/data_segment_length);
-        data_voltage_cycle_episodic = nan(data_segment_length, size(data_voltage_cycle, 2), data_segment_count);
-    elseif str2double(data_segmentation{3}) == 1
-        data_segment_count = floor((size(data_voltage_cycle, 1) - data_segmentation_cutoff_first)/data_segment_length);
-        data_voltage_cycle_episodic = nan(data_segment_length, size(data_voltage_cycle, 2), data_segment_count);
-    end
+        % Prepare space for segmented data
+        if data_segment_length == 0 | isnan(data_segment_length)
+            %clear;
+            error(sprintf('\n"Data segment length" must not be 0\n'));
+        elseif str2double(data_segmentation{3}) == 0
+            data_segment_count = ceil((size(data_voltage_cycle, 1) - data_segmentation_cutoff_first)/data_segment_length);
+            data_voltage_cycle_episodic = nan(data_segment_length, size(data_voltage_cycle, 2), data_segment_count);
+        elseif str2double(data_segmentation{3}) == 1
+            data_segment_count = floor((size(data_voltage_cycle, 1) - data_segmentation_cutoff_first)/data_segment_length);
+            data_voltage_cycle_episodic = nan(data_segment_length, size(data_voltage_cycle, 2), data_segment_count);
+        end
 
-    % Get remainder data points; if 0, then just segment; if not 0, then follow users choice
-    data_segmentation_cutoff_last = rem((size(data_voltage_cycle, 1) - data_segmentation_cutoff_first), data_segment_length);
+        % Get remainder data points; if 0, then just segment; if not 0, then follow users choice
+        data_segmentation_cutoff_last = rem((size(data_voltage_cycle, 1) - data_segmentation_cutoff_first), data_segment_length);
 
-    % Actually allocate data into segments (equivalent of sweeps)
-    if data_segmentation_cutoff_last == 0 | str2double(data_segmentation{3}) == 1
-        for idx1 = 1 : data_segment_count
-            for idx2 = 1:data_segment_length
+        % Actually allocate data into segments (equivalent of sweeps)
+        if data_segmentation_cutoff_last == 0 | str2double(data_segmentation{3}) == 1
+            for idx1 = 1 : data_segment_count
+                for idx2 = 1:data_segment_length
+                    data_voltage_cycle_episodic(idx2, :, idx1) = data_voltage_cycle(data_segmentation_cutoff_first + (idx1-1)*data_segment_length + idx2,:);
+                end
+            end
+        else
+            for idx1 = 1 : data_segment_count - 1
+                for idx2 = 1:data_segment_length
+                    data_voltage_cycle_episodic(idx2, :, idx1) = data_voltage_cycle(data_segmentation_cutoff_first + (idx1-1)*data_segment_length + idx2,:);
+                end
+            end
+            idx1 = idx1 + 1; % last segment
+            for idx2 = 1:data_segmentation_cutoff_last
                 data_voltage_cycle_episodic(idx2, :, idx1) = data_voltage_cycle(data_segmentation_cutoff_first + (idx1-1)*data_segment_length + idx2,:);
             end
         end
-    else
-        for idx1 = 1 : data_segment_count - 1
-            for idx2 = 1:data_segment_length
-                data_voltage_cycle_episodic(idx2, :, idx1) = data_voltage_cycle(data_segmentation_cutoff_first + (idx1-1)*data_segment_length + idx2,:);
-            end
-        end
-        idx1 = idx1 + 1; % last segment
-        for idx2 = 1:data_segmentation_cutoff_last
-            data_voltage_cycle_episodic(idx2, :, idx1) = data_voltage_cycle(data_segmentation_cutoff_first + (idx1-1)*data_segment_length + idx2,:);
-        end
-    end
-    clear idx1 idx2;
+        clear idx1 idx2;
 
-    % Resetting timestamps for each segment
-    data_voltage_cycle_episodic(:,1,1) = data_voltage_cycle_episodic(:,1,1) - data_segmentation_cutoff_first * data_voltage_interval;
-    for idx = 2:size(data_voltage_cycle_episodic, 3)
-        data_voltage_cycle_episodic(:, 1, idx) = data_voltage_cycle_episodic(:, 1, 1);
-    end
-    clear idx;
+        % Resetting timestamps for each segment
+        data_voltage_cycle_episodic(:,1,1) = data_voltage_cycle_episodic(:,1,1) - data_segmentation_cutoff_first * data_voltage_interval;
+        for idx = 2:size(data_voltage_cycle_episodic, 3)
+            data_voltage_cycle_episodic(:, 1, idx) = data_voltage_cycle_episodic(:, 1, 1);
+        end
+        clear idx;
 
-    %%{
-    % Plot segments instead of entire recording
-    if str2double(data_segmentation{4}) == 0
-        trace_episodic_color = [0.5, 0.5, 0.5];
-    else
-        trace_episodic_color = [0.75, 0.75, 0.75];
-    end
-    %close(1); % to close the entire-length plot
-    
-    %{
-    if GUIHandles.scracm.lineScan.analysisParameters.cyclesTotal == 1
+        %%{
+        % Plot segments instead of entire recording
+        if str2double(data_segmentation{4}) == 0
+            trace_episodic_color = [0.5, 0.5, 0.5];
+        else
+            trace_episodic_color = [0.75, 0.75, 0.75];
+        end
+        %close(1); % to close the entire-length plot
+
+        %{
+    if GUIHandles.scracm.lineScan.analysisParameters.cyclesTotal == 1 %%% why tf is part of the scracm code here?
         figures(figure_num) =...
         figure('name', fName);
         figure_num = figure_num + 1;
@@ -14530,10 +14974,9 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
         figure_num = figure_num + 1;
     end
     hold on;
-    %}
-    
-    
-    %{
+        %}
+
+        %{
     % Calculate and display averaged (across segments) trace; no need to calculate if not going to display
     if str2double(data_segmentation{4}) ~= 0
         data_voltage_cycle_episodic_averaged = nan(size(data_voltage_cycle_episodic, 1), size(data_voltage_cycle_episodic, 2), 1);
@@ -14547,8 +14990,40 @@ function h = intrinsicAnalysis(h, data_voltage_original, flagScalingOverride)
         plot(data_voltage_cycle_episodic_averaged(:,1), data_voltage_cycle_episodic_averaged(:,1+voltage_signal_channel), 'color', 'k', 'linewidth', 1);
         hold off;
     end
-    %}
-    %}
+        %}
+        %}
+
+        % Append entire Cycle to complete data array
+        if isempty(data_voltage)
+            data_voltage = [timestamp_voltage];
+            data_voltage = [data_voltage, data_voltage_cycle(:, 2:end)]; % NB. May result in pairs or even groups of data (e.g. V_m, i_cmd, ...); V_m always acquired on channel 1 (= column 2, after timestamp) by lab convention
+        else
+            data_voltage = [data_voltage, data_voltage_cycle(:, 2:end)];
+        end
+        clear timestamp_voltage;
+
+        % Append segmented Cycle to complete data cell
+        data_voltage_episodic{end+1} = data_voltage_cycle_episodic; % NB. timestamp is already included for each segment
+        %%% This could potentially lead to confusion, but for now this assumes only 1 cycle as above
+        %%{
+        %if h.experiment.voltageRecording.analysisParameters.cyclesTotal == 1
+        data_voltage_episodic = data_voltage_episodic{1}; % arrays are easier to handle
+        %end
+        %}
+
+        % Old version with channel selection (e.g. can be used to get V_m only, discarding i_cmd)
+        %{
+    % Append to complete data array
+    if isempty(data_voltage)
+        data_voltage = timestamp_voltage;
+        data_voltage = [data_voltage, data_voltage_cycle(:,1 + voltage_signal_channel)]; % Refer to pvbs_voltagerecording.m; Vm always acquired on channel 1 (= column 2, after timestamp) by lab convention
+    else
+        data_voltage = [data_voltage, data_voltage_cycle(:,1 + voltage_signal_channel)];
+    end
+    clear timestamp_voltage;
+        %}
+
+    end
 
 %{
 %% #5: Run analysis for each Cycle
@@ -14599,38 +15074,6 @@ else
 end
 clear timestamp_fluorescence;
 %}
-
-
-    % Append entire Cycle to complete data array
-    if isempty(data_voltage)
-        data_voltage = [timestamp_voltage];
-        data_voltage = [data_voltage, data_voltage_cycle(:, 2:end)]; % NB. May result in pairs or even groups of data (e.g. V_m, i_cmd, ...); V_m always acquired on channel 1 (= column 2, after timestamp) by lab convention
-    else
-        data_voltage = [data_voltage, data_voltage_cycle(:, 2:end)];
-    end
-    clear timestamp_voltage;
-
-    % Append segmented Cycle to complete data cell
-    data_voltage_episodic{end+1} = data_voltage_cycle_episodic; % NB. timestamp is already included for each segment
-    %%% This could potentially lead to confusion, but for now this assumes only 1 cycle as above
-    %%{
-    %if h.experiment.voltageRecording.analysisParameters.cyclesTotal == 1
-        data_voltage_episodic = data_voltage_episodic{1}; % arrays are easier to handle
-    %end
-    %}
-
-    % Old version with channel selection (e.g. can be used to get V_m only, discarding i_cmd)
-    %{
-    % Append to complete data array
-    if isempty(data_voltage)
-        data_voltage = timestamp_voltage;
-        data_voltage = [data_voltage, data_voltage_cycle(:,1 + voltage_signal_channel)]; % Refer to pvbs_voltagerecording.m; Vm always acquired on channel 1 (= column 2, after timestamp) by lab convention
-    else
-        data_voltage = [data_voltage, data_voltage_cycle(:,1 + voltage_signal_channel)];
-    end
-    clear timestamp_voltage;
-    %}
-
     
     % Setting up analysis window
     window_detection_temp =...
@@ -14666,24 +15109,31 @@ clear timestamp_fluorescence;
     end
     
     % Run analysis from episodic-like processed data - reusing old code
+    % moved above with .abf support
+    %{
     expIdx = h.ui.cellListDisplay.Value;
     expIdx = expIdx(1); % force single selection
     h.ui.cellListDisplay.Value = expIdx;
+    %}
     fName = h.exp.fileName{expIdx};
     fPath = h.exp.filePath{expIdx};
     %%{
     param_extra = struct();
     param_extra.dataVoltageInterval = data_voltage_interval;
+    param_extra.iStepSize = iStepSize;
+    param_extra.iStepFirst = iStepFirst;
+    param_extra.iStepLast = iStepLast;
+    param_extra.iStepOverride = iStepOverride;
     param_extra.RinAtSteadyState = RinAtSteadyState;
     param_extra.RinByLinearFit = RinByLinearFit;
     param_extra.RinSweep = RinSweep;
     param_extra.spikeThreshold = spikeThreshold;
     param_extra.spikeDetectionRearm = spikeDetectionRearm;
     %}
-    results = oldAnalysisVRec(data_voltage_episodic, [fPath, fName], window_detection, window_baseline, param_extra);     
+    results = oldAnalysisVRec(data_voltage_episodic, [fPath, fName], window_detection, window_baseline, param_extra); %%% sooo fucked up...    
     h.exp.data.intrinsicProperties{expIdx} = results.intrinsic_properties{1}; %%% cycle 1
-    %h.exp.data.intrinsicPropertiesVRec{expIdx} = data_voltage_episodic;
-    h.exp.data.intrinsicPropertiesVRec{expIdx} = data_voltage_cycle_episodic;
+    h.exp.data.intrinsicPropertiesVRec{expIdx} = data_voltage_episodic;
+    %h.exp.data.intrinsicPropertiesVRec{expIdx} = data_voltage_cycle_episodic;
     %{
     h.experiment.voltageRecording.intrinsicProperties = results.intrinsic_properties{1}; %%% cycle 1
     h.experiment.voltageRecording.data = data_voltage_episodic;
@@ -14774,12 +15224,20 @@ function h = intrinsicAnalysis2(h, data_voltage_episodic, flagScalingOverride)
 
     analysisParameters = h.params.actualParams.intrinsicPropertiesAnalysis;
     try
+        iStepSize = analysisParameters.iStepSize;
+        iStepFirst = analysisParameters.iStepFirst;
+        iStepLast = analysisParameters.iStepLast;
+        iStepOverride = analysisParameters.iStepOverride;
         RinAtSteadyState = analysisParameters.RinAtSteadyState;
         RinByLinearFit = analysisParameters.RinByLinearFit;
         RinSweep = analysisParameters.RinSweep;
         spikeThreshold = analysisParameters.spikeThreshold;
         spikeDetectionRearm = analysisParameters.spikeDetectionRearm; 
     catch ME
+        iStepSize = 50;
+        iStepFirst = -250;
+        iStepLast = 500;
+        iStepOverride = 1; % another reverse compatibility thing
         RinAtSteadyState = 1; % hate this, but everything seems backwards here
         RinByLinearFit = 1; % hate this too
         RinSweep = 1; %
@@ -14878,6 +15336,10 @@ function h = intrinsicAnalysis2(h, data_voltage_episodic, flagScalingOverride)
     %%{
     param_extra = struct();
     param_extra.dataVoltageInterval = data_voltage_interval;
+    param_extra.iStepSize = iStepSize;
+    param_extra.iStepFirst = iStepFirst;
+    param_extra.iStepLast = iStepLast;
+    param_extra.iStepOverride = iStepOverride;
     param_extra.RinAtSteadyState = RinAtSteadyState;
     param_extra.RinByLinearFit = RinByLinearFit;
     param_extra.RinSweep = RinSweep;
@@ -15007,10 +15469,16 @@ hold on;
 % improve aesthetics and also how "hold on" is repeated for every sweep
 % just plot the first and the 2*rheo for now
 %for idx = 1:data_segment_count
-for idx = [1, results.intrinsic_properties{1}.rheobase_x2_sweep]
-%for idx = [1, results.intrinsic_properties{1}.rheobase_sweep]
-    %plot(data_voltage_cycle_episodic(:,1,idx), data_voltage_cycle_episodic(:,1+voltage_signal_channel,idx), 'parent', displayWindow, 'color', [0.5, 0.5, 0.5]); % trace_episodic_color was for this
-    plot(data_voltage_cycle_episodic(:,1,idx), data_voltage_cycle_episodic(:,1+voltage_signal_channel,idx), 'parent', h.ui.intrinsicPlot1, 'color', [0.5, 0.5, 0.5]); % trace_episodic_color was for this
+try % try to plot sweep at rheobase x2, if not possible plot sweep at rheobase
+    for idx = [1, results.intrinsic_properties{1}.rheobase_x2_sweep]
+        %plot(data_voltage_cycle_episodic(:,1,idx), data_voltage_cycle_episodic(:,1+voltage_signal_channel,idx), 'parent', displayWindow, 'color', [0.5, 0.5, 0.5]); % trace_episodic_color was for this
+        plot(data_voltage_cycle_episodic(:,1,idx), data_voltage_cycle_episodic(:,1+voltage_signal_channel,idx), 'parent', h.ui.intrinsicPlot1, 'color', [0.5, 0.5, 0.5]); % trace_episodic_color was for this
+    end
+catch ME
+    for idx = [1, results.intrinsic_properties{1}.rheobase_sweep]
+        %plot(data_voltage_cycle_episodic(:,1,idx), data_voltage_cycle_episodic(:,1+voltage_signal_channel,idx), 'parent', displayWindow, 'color', [0.5, 0.5, 0.5]); % trace_episodic_color was for this
+        plot(data_voltage_cycle_episodic(:,1,idx), data_voltage_cycle_episodic(:,1+voltage_signal_channel,idx), 'parent', h.ui.intrinsicPlot1, 'color', [0.5, 0.5, 0.5]); % trace_episodic_color was for this
+    end
 end
 %set(GUIHandles.UIElements.repTrace, 'YLim', [-120, 40], 'XLim', [0, size(data_voltage_cycle_episodic, 1)]);
 %set(h.ui.intrinsicPlot1, 'XLim', [0, data_segment_length * data_voltage_interval]);
@@ -15201,37 +15669,58 @@ h.ui.cellListDisplay.Value = expIdx;
 tic;
 fprintf('Analyzing intrinsic properties... ');
 
-data_voltage_original = h.exp.data.VRec{expIdx};
-if iscell(data_voltage_original)
-    if length(data_voltage_original) == 1
-        data_voltage_original = data_voltage_original{1};
-    else
-        data_voltage_original = data_voltage_original(1); % use 1st sweep
-        data_voltage_original = data_voltage_original{1}; % mind the brackets
-        %{
-        set(src, 'enable', 'on');
-        error('Error: data has to be in single-sweep, gap-free format');
-        %}
-    end
-else % let go, use the force
-end
-
-try
+try 
+    isCSV = 0;
+    isABF = 0;
     fName = h.exp.fileName{expIdx};
     fPath = h.exp.filePath{expIdx};
     fExt = fName(end - 3:end);
     if strcmp(fExt, '.xml')
-        isCSV = 0;
     elseif strcmp(fExt, '.csv')
         isCSV = 1;
+    elseif strcmp(fExt, '.abf')
+        isABF = 1;
     else
         elapsedTime = toc;
         set(src, 'enable', 'on');
         error('Error: Invalid file type');
     end
+catch ME
+end
+
+% modified for .abf support because they are not (usually) stupid gap-free like like PV and should already be in episodic form
+% what a stupid waste of time twice over, thanks again PV
+% would create problems if the .abf were recorded in gap-free mode for whatever stupid reason
+try
+    data_voltage_original = h.exp.data.VRec{expIdx};
+    if iscell(data_voltage_original)
+        if length(data_voltage_original) == 1
+            data_voltage_original = data_voltage_original{1};
+        else
+            if isABF % should already be in a cell of elements representing each sweep
+            else
+                data_voltage_original = data_voltage_original(1); % use 1st sweep
+                data_voltage_original = data_voltage_original{1}; % mind the brackets
+                %{
+                set(src, 'enable', 'on');
+                error('Error: data has to be in single-sweep, gap-free format');
+                %}
+            end
+        end
+    else % let go, use the force
+    end
+catch ME
+end
+
+try
        
     % check file type
     if isCSV
+        voltageRecordingMetadata = [];
+        h.exp.data.intrinsicPropertiesVRecMetadata{expIdx} = voltageRecordingMetadata;
+        h.exp.data.intrinsicProperties{expIdx}.fileName = fName;
+        h.exp.data.intrinsicProperties{expIdx}.filePath = fPath;
+    elseif isABF
         voltageRecordingMetadata = [];
         h.exp.data.intrinsicPropertiesVRecMetadata{expIdx} = voltageRecordingMetadata;
         h.exp.data.intrinsicProperties{expIdx}.fileName = fName;
@@ -15327,12 +15816,20 @@ set(srcButton, 'enable', 'off');
 % load parameters
 analysisParameters = h.params.actualParams.intrinsicPropertiesAnalysis;
 try
+    iStepSize = analysisParameters.iStepSize;
+    iStepFirst = analysisParameters.iStepFirst;
+    iStepLast = analysisParameters.iStepLast;
+    iStepOverride = analysisParameters.iStepOverride;
     RinAtSteadyState = analysisParameters.RinAtSteadyState;
     RinByLinearFit = analysisParameters.RinByLinearFit;
     RinSweep = analysisParameters.RinSweep;
     spikeThreshold = analysisParameters.spikeThreshold;
     spikeDetectionRearm = analysisParameters.spikeDetectionRearm;
 catch ME
+    iStepSize = 50;
+    iStepFirst = -250;
+    iStepLast = 500;
+    iStepOverride = 1; % another reverse compatibility thing
     RinAtSteadyState = 1; % hate this, but everything seems backwards here
     RinByLinearFit = 1; % hate this too
     RinSweep = 1; %
@@ -15341,53 +15838,64 @@ catch ME
 end
 
 % options
-optionsWin = figure('Name', 'Intrinsic Properties Analysis Options', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.2, 0.4, 0.32, 0.4], 'resize', 'off', 'DeleteFcn', @winClosed); % use CloseRequestFcn?
-oWin.segmentText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Gap-free to episodic format', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.9, 0.9, 0.05]);
-oWin.segmentLengthText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Segment length:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.825, 0.4, 0.05]);
-oWin.segmentLengthInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.data_segment_length), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.835, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
-oWin.segmentLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.825, 0.1, 0.05]);
-oWin.segmentOffsetText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Initial offset:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.825, 0.4, 0.05]);
-oWin.segmentOffsetInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.data_segmentation_cutoff_first), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.835, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
-oWin.segmentOffsetUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.825, 0.1, 0.05]);
+optionsWin = figure('Name', 'Intrinsic Properties Analysis Options', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.2, 0.2, 0.32, 0.6], 'resize', 'off', 'DeleteFcn', @winClosed); % use CloseRequestFcn?
+oWin.segmentText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Gap-free to episodic format', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.9, 0.9, 0.04]);
+oWin.segmentLengthText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Segment length:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.85, 0.4, 0.04]);
+oWin.segmentLengthInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.data_segment_length), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.86, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.segmentLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.85, 0.1, 0.04]);
+oWin.segmentOffsetText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Initial offset:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.85, 0.4, 0.04]);
+oWin.segmentOffsetInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.data_segmentation_cutoff_first), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.86, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.segmentOffsetUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.85, 0.1, 0.04]);
 
-oWin.baselineText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Baseline (at RMP)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.725, 0.9, 0.05]);
-oWin.baselineStartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Baseline start:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.65, 0.4, 0.05]);
-oWin.baselineStartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_baseline_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.66, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
-oWin.baselineStartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.65, 0.1, 0.05]);
-oWin.baselineEndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Baseline end:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.65, 0.4, 0.05]);
-oWin.baselineEndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_baseline_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.66, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
-oWin.baselineEndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.65, 0.1, 0.05]);
+oWin.baselineText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Baseline (at RMP)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.75, 0.9, 0.04]);
+oWin.baselineStartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Baseline start:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.7, 0.4, 0.04]);
+oWin.baselineStartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_baseline_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.71, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.baselineStartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.7, 0.1, 0.04]);
+oWin.baselineEndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Baseline end:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.7, 0.4, 0.04]);
+oWin.baselineEndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_baseline_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.71, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.baselineEndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.7, 0.1, 0.04]);
 
-oWin.windowsText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Analysis window', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.55, 0.9, 0.05]);
-%oWin.windowsText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Analysis windows (1: transient, 2: steady-state)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.55, 0.9, 0.05]);
-oWin.window1StartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step start:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.475, 0.4, 0.05]);
-oWin.window1StartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.485, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
-oWin.window1StartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.475, 0.1, 0.05]);
-oWin.window1EndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step end:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.475, 0.4, 0.05]);
-oWin.window1EndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.485, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
-oWin.window1EndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.475, 0.1, 0.05]);
+oWin.windowsText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Current step definition', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.6, 0.9, 0.04]);
+%oWin.windowsText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Analysis windows (1: transient, 2: steady-state)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.6, 0.9, 0.04]);
+oWin.window1StartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step start (t):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.55, 0.4, 0.04]);
+oWin.window1StartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.56, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.window1StartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.55, 0.1, 0.04]);
+oWin.window1EndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step end (t):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.55, 0.4, 0.04]);
+oWin.window1EndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.56, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.window1EndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.55, 0.1, 0.04]);
 %{
-oWin.window2StartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Window 2 start:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.4, 0.4, 0.05]);
-oWin.window2StartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_2_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.405, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
-oWin.window2StartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.4, 0.1, 0.05]);
-oWin.window2EndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Window 2 end:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.4, 0.4, 0.05]);
-oWin.window2EndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_2_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.405, 0.125, 0.05], 'callback', @lazyIntrinsicParamUpdate);
-oWin.window2EndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.4, 0.1, 0.05]);
+oWin.window2StartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Window 2 start:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.5, 0.4, 0.04]);
+oWin.window2StartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_2_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.51, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.window2StartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.5, 0.1, 0.04]);
+oWin.window2EndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Window 2 end:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.5, 0.4, 0.04]);
+oWin.window2EndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_2_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.51, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.window2EndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.5, 0.1, 0.04]);
 %}
-oWin.stepLengthText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step duration:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.4, 0.4, 0.05]);
-oWin.stepLengthInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_end - analysisParameters.window_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.405, 0.125, 0.05], 'enable', 'off');
-oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.4, 0.1, 0.05]);
-%oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms) [ = (Win 2 end) - (Win 1 start) ]', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.5, 0.4, 0.4, 0.05]);
+oWin.stepLengthText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step duration (t):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.5, 0.4, 0.04]);
+oWin.stepLengthInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_end - analysisParameters.window_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.51, 0.125, 0.04], 'enable', 'off');
+oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.5, 0.1, 0.04]);
+%oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms) [ = (Win 2 end) - (Win 1 start) ]', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.5, 0.5, 0.4, 0.04]);
 
-oWin.RinText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'R_in & sag ratio calculation', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.3, 0.9, 0.05]);
-oWin.Rin11 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use transient state (negative peak)', 'value', logical(~RinAtSteadyState), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.225, 0.4, 0.05], 'callback', @intrinsicRadiobuttonBehavior1);
-oWin.Rin12 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use steady state (mean)', 'value', logical(RinAtSteadyState), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.225, 0.4, 0.05], 'callback', @intrinsicRadiobuttonBehavior2);
-oWin.Rin21 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use sweep:', 'value', logical(~RinByLinearFit), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.15, 0.4, 0.05], 'callback', @intrinsicRadiobuttonBehavior3);
-oWin.Rin22 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(RinSweep), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.15, 0.125, 0.05]);
-oWin.Rin23 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use linear fit (crossing origin)', 'value', logical(RinByLinearFit), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.15, 0.4, 0.05], 'callback', @intrinsicRadiobuttonBehavior4);
+oWin.stepSizeText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step size (i):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.45, 0.6, 0.04]);
+oWin.stepSizeInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(iStepSize), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.46, 0.125, 0.04], 'enable', 'on');
+oWin.stepSizeUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(pA)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.45, 0.1, 0.04]);
+oWin.stepSizeOverride = uicontrol('Parent', optionsWin, 'Style', 'checkbox', 'string', 'Use this definition (when i_cmd unavailable)', 'value', logical(iStepOverride), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.46, 0.4, 0.04], 'callback', @intrinsiciStepOverride);
+oWin.stepFirstText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step first (i):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.4, 0.6, 0.04]);
+oWin.stepFirstInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(iStepFirst), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.41, 0.125, 0.04], 'enable', 'on');
+oWin.stepFirstUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(pA)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.4, 0.1, 0.04]);
+oWin.stepLastText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step last (i):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.4, 0.6, 0.04]);
+oWin.stepLastInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(iStepLast), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.41, 0.125, 0.04], 'enable', 'on');
+oWin.stepLastUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(pA)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.4, 0.1, 0.04]);
 
-oWin.resetButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.45, 0.025, 0.25, 0.075], 'callback', @resetIntrinsicOptions, 'interruptible', 'off');
-oWin.saveButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Save', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.725, 0.025, 0.25, 0.075], 'callback', @saveIntrinsicOptions, 'interruptible', 'off');
+oWin.RinText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'R_in & sag ratio calculation', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.3, 0.9, 0.04]);
+oWin.Rin11 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use transient state (negative peak)', 'value', logical(~RinAtSteadyState), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.25, 0.4, 0.04], 'callback', @intrinsicRadiobuttonBehavior1);
+oWin.Rin12 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use steady state (mean)', 'value', logical(RinAtSteadyState), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.25, 0.4, 0.04], 'callback', @intrinsicRadiobuttonBehavior2);
+oWin.Rin21 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use sweep:', 'value', logical(~RinByLinearFit), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.2, 0.4, 0.04], 'callback', @intrinsicRadiobuttonBehavior3);
+oWin.Rin22 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(RinSweep), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.2, 0.125, 0.04]);
+oWin.Rin23 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use linear fit (crossing origin)', 'value', logical(RinByLinearFit), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.2, 0.4, 0.04], 'callback', @intrinsicRadiobuttonBehavior4);
+
+oWin.resetButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.45, 0.025, 0.25, 0.06], 'callback', @resetIntrinsicOptions, 'interruptible', 'off');
+oWin.saveButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Save', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.725, 0.025, 0.25, 0.06], 'callback', @saveIntrinsicOptions, 'interruptible', 'off');
 
 oWinSegmentLength = oWin.segmentLengthInput.String;
 oWinOffset = oWin.segmentOffsetInput.String;
@@ -15414,6 +15922,9 @@ oWinW22 = str2num(oWinW22);
     function winClosed(src, ~)
         set(srcButton, 'enable', 'on');
         %guidata(srcButton, h); % don't save when closed without using the save button
+    end
+
+    function intrinsiciStepOverride(src, ~)
     end
 
     function intrinsicRadiobuttonBehavior1(src, ~)
@@ -15479,6 +15990,10 @@ oWinW22 = str2num(oWinW22);
         %oWinStepLength = oWinW22 - oWinW11;
         oWin.stepLengthInput.String = num2str(oWinStepLength);
         
+        oWiniStepSize = str2num(oWin.stepSizeInput.String);
+        oWiniStepFirst = str2num(oWin.stepFirstInput.String);
+        oWiniStepLast = str2num(oWin.stepLastInput.String);
+        
         %{
         h.params.actualParams.intrinsicPropertiesAnalysis.data_segment_length = oWinSegmentLength;
         h.params.actualParams.intrinsicPropertiesAnalysis.data_segmentation_cutoff_first = oWinOffset;
@@ -15523,17 +16038,28 @@ oWinW22 = str2num(oWinW22);
         oWin.stepLengthInput.String = num2str(oWinStepLength);
         
         try
+            oWin.stepSizeOverride.Value = h.params.actualParams.intrinsicPropertiesAnalysis.iStepOverride;
             oWin.Rin12.Value = h.params.actualParams.intrinsicPropertiesAnalysis.RinAtSteadyState;
             oWin.Rin11.Value = logical(~oWin.Rin12.Value);
             oWin.Rin23.Value = h.params.actualParams.intrinsicPropertiesAnalysis.RinByLinearFit;
             oWin.Rin21.Value = logical(~oWin.Rin23.Value);
             oWin.Rin22.String = num2str(h.params.actualParams.intrinsicPropertiesAnalysis.RinSweep);
         catch ME % for reverse compatibility with older versions of pvbs
+            oWin.stepSizeOverride.Value = 1;
             oWin.Rin12.Value = 1; % hate this, but everything seems backwards here
             oWin.Rin11.Value = 0;
             oWin.Rin23.Value = 1; % hate this too
             oWin.Rin21.Value = 0;
             oWin.Rin22.String = '1';            
+        end
+        try
+            oWin.stepSizeInput.String = num2str(h.params.actualParams.intrinsicPropertiesAnalysis.iStepSize);
+            oWin.stepFirstInput.String = num2str(h.params.actualParams.intrinsicPropertiesAnalysis.iStepFirst);
+            oWin.stepLastInput.String = num2str(h.params.actualParams.intrinsicPropertiesAnalysis.iStepLast);
+        catch ME % for reverse compatibility with older versions of pvbs
+            oWin.stepSizeInput.String = '50';
+            oWin.stepFirstInput.String = '-250';
+            oWin.stepLastInput.String = '500';
         end
         
         %guidata(win1, h);
@@ -15597,6 +16123,10 @@ oWinW22 = str2num(oWinW22);
         %}
         
         % R_in calculation
+        h.params.actualParams.intrinsicPropertiesAnalysis.iStepSize = str2num(oWin.stepSizeInput.String);
+        h.params.actualParams.intrinsicPropertiesAnalysis.iStepFirst = str2num(oWin.stepFirstInput.String);
+        h.params.actualParams.intrinsicPropertiesAnalysis.iStepLast = str2num(oWin.stepLastInput.String);
+        h.params.actualParams.intrinsicPropertiesAnalysis.iStepOverride = oWin.stepSizeOverride.Value;
         h.params.actualParams.intrinsicPropertiesAnalysis.RinAtSteadyState = oWin.Rin12.Value;
         h.params.actualParams.intrinsicPropertiesAnalysis.RinByLinearFit = oWin.Rin23.Value;
         h.params.actualParams.intrinsicPropertiesAnalysis.RinSweep = str2num(oWin.Rin22.String);
@@ -18559,7 +19089,7 @@ end %%% end of xml2struct_pvbs()
 
 % uipickfiles by Douglas Schwarz
 %  (https://www.mathworks.com/matlabcentral/fileexchange/10867-uipickfiles-uigetfile-on-steroids)
-function out = uipickfiles(varargin)
+function out = uipickfiles_pvbs(varargin)
 %uipickfiles: GUI program to select files and/or folders.
 %
 % Syntax:
@@ -20223,5 +20753,1610 @@ if ~isequal(fn,0) % fn will be zero if user hits cancel
 end
 end
 
+
+% abfload by Forrest Collman & Harald Hentschke
+%  (https://github.com/fcollman/abfload)
+%
+% Copyright (c) 2009, Forrest Collman
+% Copyright (c) 2004, Harald Hentschke
+% All rights reserved.
+% 
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions are
+% met:
+% 
+%     * Redistributions of source code must retain the above copyright
+%       notice, this list of conditions and the following disclaimer.
+%     * Redistributions in binary form must reproduce the above copyright
+%       notice, this list of conditions and the following disclaimer in
+%       the documentation and/or other materials provided with the distribution
+% 
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+% POSSIBILITY OF SUCH DAMAGE.
+%
+function [d,si,h]=abfload_pvbs(fn,varargin)
+% ** function [d,si,h]=abfload(fn,varargin)
+% loads and returns data in ABF (Axon Binary File) format.
+% Data may have been acquired in the following modes:
+% (1) event-driven variable-length (currently only abf versions < 2.0)
+% (2) event-driven fixed-length or waveform-fixed length
+% (3) gap-free
+% Information about scaling, the time base and the number of channels and 
+% episodes is extracted from the header of the abf file.
+%
+% OPERATION
+% If the second input variable is the char array 'info' as in 
+%         [d,si,h]=abfload('d:\data01.abf','info') 
+% abfload will not load any data but return detailed information (header
+% parameters) on the file in output variable h. d and si will be empty.
+% In all other cases abfload will load data. Optional input parameters
+% listed below (= all except the file name) must be specified as
+% parameter/value pairs, e.g. as in 
+%         d=abfload('d:\data01.abf','start',100,'stop','e');
+%
+% >>> INPUT VARIABLES >>>
+% NAME        TYPE, DEFAULT      DESCRIPTION
+% fn          char array         abf data file name
+% start       scalar, 0          only gap-free-data: start of cutout to be 
+%                                 read (unit: s)
+% stop        scalar or char,    only gap-free-data: end of cutout to be  
+%             'e'                 read (unit: sec). May be set to 'e' (end 
+%                                 of file).
+% sweeps      1d-array or char,  only episodic data: sweep numbers to be 
+%             'a'                 read. By default, all sweeps will be read
+%                                 ('a').
+% channels    cell array         names of channels to be read, like 
+%              or char, 'a'       {'IN 0','IN 8'} (make sure spelling is
+%                                 100% correct, including blanks). If set 
+%                                 to 'a', all channels will be read. 
+%                                 *****************************************
+%                                 NOTE: channel order in output variable d
+%                                 ignores the order in 'channels', and
+%                                 instead always matches the order inherent
+%                                 to the abf file, to be retrieved in
+%                                 output variable h!
+%                                 *****************************************
+% chunk       scalar, 0.05       only gap-free-data: the elementary chunk  
+%                                 size (megabytes) to be used for the 
+%                                 'discontinuous' mode of reading data 
+%                                 (fewer channels to be read than exist)
+% machineF    char array,        the 'machineformat' input parameter of the
+%              'ieee-le'          matlab fopen function. 'ieee-le' is the 
+%                                 correct option for windows; depending on 
+%                                 the platform the data were recorded/shall
+%                                 be read by abfload 'ieee-be' is the 
+%                                 alternative.
+% doDispInfo  logical, true      if true, information on the loaded file
+%                                 will be put out to console (if false,
+%                                 only ínformation on erroneous input will
+%                                 be displayed)
+% << OUTPUT VARIABLES <<<
+% NAME  TYPE            DESCRIPTION
+% d                     the data read, the format depending on the record-
+%                        ing mode
+%   1. GAP-FREE:
+%   2d array        2d array of size 
+%                    <data pts> by <number of chans>
+%                    Examples of access:
+%                    d(:,2)       data from channel 2 at full length
+%                    d(1:100,:)   first 100 data points from all channels
+%   2. EPISODIC FIXED-LENGTH/WAVEFORM FIXED-LENGTH/HIGH-SPEED OSCILLOSCOPE:
+%   3d array        3d array of size 
+%                    <data pts per sweep> by <number of chans> by <number 
+%                    of sweeps>.
+%                    Examples of access:
+%                    d(:,2,:)            a matrix containing all episodes 
+%                                        (at full length) of the second 
+%                                        channel in its columns
+%                    d(1:200,:,[1 11])   contains first 200 data points of 
+%                                        episodes 1 and 11 of all channels
+%   3. EPISODIC VARIABLE-LENGTH:
+%   cell array      cell array whose elements correspond to single sweeps. 
+%                    Each element is a (regular) array of size
+%                    <data pts per sweep> by <number of chans>
+%                    Examples of access:
+%                    d{1}            a 2d-array which contains episode 1 
+%                                    (all of it, all channels)
+%                    d{2}(1:100,2)   a 1d-array containing the first 100
+%                                    data points of channel 2 in episode 1
+% si    scalar           the sampling interval in us
+% h     struct           information on file (selected header parameters)
+% 
+% CONTRIBUTORS
+%   Original version by Harald Hentschke (harald.hentschke@uni-tuebingen.de)
+%   Extended to abf version 2.0 by Forrest Collman (fcollman@Princeton.edu)
+%   pvpmod.m by Ulrich Egert (egert@bccn.uni-freiburg.de)
+%   Small patch to avoid error caused by activated HumSilencer by Michael Rabenstein (michael.rabenstein@ukbonn.de)
+
+% -------------------------------------------------------------------------
+%                       PART 1: check of input vars
+% -------------------------------------------------------------------------
+% --- defaults   
+% gap-free
+start=0.0;
+stop='e';
+% episodic
+sweeps='a';
+% general
+channels='a';
+% the size of data chunks (see above) in Mb. 0.05 Mb is an empirical value
+% which works well for abf with 6-16 channels and recording durations of 
+% 5-30 min
+chunk=0.05;
+machineF='ieee-le';
+doDispInfo=false;
+% if first and only optional input argument is string 'info' the user's
+% request is to obtain information on the file (header parameters), so set
+% flag accordingly
+if nargin==2 && ischar(varargin{1}) && strcmp('info',varargin{1})
+  doLoadData=false;
+  % if no output argument is requested assume that the user would like to
+  % obtain some basic information on the file on the command window, so
+  % leave doDispInfo at its default (true value). Do the same if only one
+  % output arg is specified (which is most certainly done inadvertently
+  % because in 'info' mode this will be an empty array). In all other cases
+  % assume that text output is not required so suppress it
+  if nargout>1
+    doDispInfo=false;
+  end
+else
+  doLoadData=true;
+  % assign values of optional input parameters if any were given
+  pvpmod(varargin);
+end
+
+% some constants
+BLOCKSIZE=512;
+% output variables
+d=[]; 
+si=[];
+h=[];
+if ischar(stop)
+  if ~strcmpi(stop,'e')
+    error('input parameter ''stop'' must be specified as ''e'' (=end of recording) or as a scalar');
+  end
+end
+% check existence of file
+if ~exist(fn,'file')
+  error(['could not find file ' fn]);
+end
+
+% -------------------------------------------------------------------------
+%                       PART 2a: determine abf version
+% -------------------------------------------------------------------------
+dispif(doDispInfo,['opening ' fn '..']);
+[fid,messg]=fopen(fn,'r',machineF);
+if fid == -1
+  error(messg);
+end
+% on the occasion, determine absolute file size
+fseek(fid,0,'eof');
+fileSz=ftell(fid);
+fseek(fid,0,'bof');
+
+% *** read value of parameter 'fFileSignature' (i.e. abf version) from header ***
+sz=4;
+[fFileSignature,n]=fread(fid,sz,'uchar=>char');
+if n~=sz
+  fclose(fid);
+  error('something went wrong reading value(s) for fFileSignature');
+end
+% rewind
+fseek(fid,0,'bof');
+% transpose
+fFileSignature=fFileSignature';
+
+% one of the first checks must be whether file signature is valid
+switch fFileSignature
+  case 'ABF ' % ** note the blank
+    % ************************
+    %     abf version < 2.0
+    % ************************
+  case 'ABF2'
+    % ************************
+    %     abf version >= 2.0
+    % ************************
+  otherwise
+    error('unknown or incompatible file signature');
+end
+
+% -------------------------------------------------------------------------
+%    PART 2b: define file information ('header' parameters) of interest
+% -------------------------------------------------------------------------
+% The list of header parameters created below (variable 'headPar') is
+% derived from the abf version 1.8 header section. It is by no means
+% exhaustive (i.e. there are many more parameters in abf files) but
+% sufficient for proper upload, scaling and arrangement of data acquired
+% under many conditons. Further below, these parameters will be made fields
+% of struct h. h, which is also an output variable, is then used in PART 3,
+% which does the actual job of uploading, scaling and rearranging the data.
+% That part of the code relies on h having a certain set of fields
+% irrespective of ABF version.
+% Unfortunately, in the transition to ABF version 2.0 many of the header
+% parameters were moved to different places within the abf file and/or
+% given other names or completely restructured. In order for the code to
+% work with pre- and post-2.0 data files, all parameters missing in the
+% header must be gotten into h. This is accomplished in lines ~288 and
+% following:
+%     if h.fFileVersionNumber>=2
+%       ...
+% Furthermore,
+% - h as an output from an ABF version < 2.0 file will not contain new
+%   parameters introduced into the header like 'nCRCEnable'
+% - h will in any case contain a few 'home-made' fields that have
+%   proven to be useful. Some of them depend on the recording mode. Among
+%   the more or less self-explanatory ones are
+% -- si                   sampling interval
+% -- recChNames           the names of all channels, e.g. 'IN 8',...
+% -- dataPtsPerChan       sample points per channel
+% -- dataPts              sample points in file
+% -- recTime              recording start and stop time in seconds from
+%                         midnight (millisecond resolution)
+% -- sweepLengthInPts     sample points per sweep (one channel)
+% -- sweepStartInPts      the start times of sweeps in sample points
+%                         (from beginning of recording)
+
+
+% define header proper depending on ABF version by call to local function 
+headPar=define_header(fFileSignature);
+% define all sections that there are
+Sections=define_Sections;
+% define a few of these (currently, only the TagInfo section is used for
+% all versions of ABF, but that may change in the future)
+ProtocolInfo=define_ProtocolInfo;
+ADCInfo=define_ADCInfo;
+TagInfo=define_TagInfo;
+UserListInfo=define_UserListInfo;
+EpochPerDACInfo=define_EpochPerDACInfo;
+
+% -------------------------------------------------------------------------
+%    PART 2c: read parameters of interest
+% -------------------------------------------------------------------------
+% convert headPar to struct
+s=cell2struct(headPar,{'name','offs','numType','value'},2);
+numOfParams=size(s,1);
+clear tmp headPar;
+
+% convert names in structure to variables and read value from header
+for g=1:numOfParams
+  if fseek(fid, s(g).offs,'bof')~=0
+    fclose(fid);
+    error(['something went wrong locating ' s(g).name]);
+  end
+  sz=length(s(g).value);
+  % use dynamic field names
+  [h.(s(g).name),n]=fread(fid,sz,s(g).numType);
+  if n~=sz
+    fclose(fid);
+    error(['something went wrong reading value(s) for ' s(g).name]);
+  end
+end
+% file signature needs to be transposed
+h.fFileSignature=h.fFileSignature';
+% several header parameters need a fix or version-specific refinement:
+if strcmp(h.fFileSignature,'ABF2')
+  % h.fFileVersionNumber needs to be converted from an array of integers to
+  % a float
+  h.fFileVersionNumber=h.fFileVersionNumber(4)+h.fFileVersionNumber(3)*.1...
+    +h.fFileVersionNumber(2)*.001+h.fFileVersionNumber(1)*.0001;
+  % convert ms to s
+  h.lFileStartTime=h.uFileStartTimeMS*.001;
+else
+  % h.fFileVersionNumber is a float32 the value of which is sometimes a
+  % little less than what it should be (e.g. 1.6499999 instead of 1.65)
+  h.fFileVersionNumber=.001*round(h.fFileVersionNumber*1000);
+  % in abf < 2.0 two parameters are needed to obtain the file start time
+  % with millisecond precision - let's integrate both into parameter
+  % lFileStartTime (unit: s) so that nFileStartMillisecs will not be needed
+  h.lFileStartTime=h.lFileStartTime+h.nFileStartMillisecs*.001;
+end
+
+if h.fFileVersionNumber>=2
+  % -----------------------------------------------------------------------
+  % *** read file information that has moved from the header section to
+  % other sections in ABF version >= 2.0 and assign selected values to
+  % fields of 'generic' header variable h ***
+  % -----------------------------------------------------------------------
+  % --- read in the Sections
+  Sects=cell2struct(Sections,{'name'},2);
+  numOfSections=length(Sections);
+  offset=76;
+  % this creates all sections (ADCSection, ProtocolSection, etc.)
+  for i=1:numOfSections
+    eval([Sects(i).name '=ReadSectionInfo(fid,offset);']);
+    offset=offset+4+4+8;
+  end
+  % --- read in the StringsSection and use some fields (to retrieve
+  % information on the names of recorded channels and the units as well as
+  % the recording protocol used)
+  fseek(fid,StringsSection.uBlockIndex*BLOCKSIZE,'bof');
+  BigString=fread(fid,StringsSection.uBytes,'char');
+  % extract path and name of protocol file (excluding drive letter):
+  % - find the first occurrence of a backslash in BigString
+  tmpIx1=strfind(lower(char(BigString)'),'\');
+  % - find '.pro' as this is the file extension of protocol files
+  tmpIx2=strfind(lower(char(BigString)'),'.pro');
+  % - extract everything in between and place in field of header struct h
+  if ~isempty(tmpIx1) && ~isempty(tmpIx2) 
+    h.protocolName=char(BigString(tmpIx1:tmpIx2(1)+3))';
+  else
+    h.protocolName='protocol name could not be identified';
+  end
+  % this is a hack: determine where either of strings 'clampex',
+  % 'clampfit', 'axoscope' or patchxpress' begin
+  progString={'clampex','clampfit','axoscope','patchxpress'};
+  goodstart=[];
+  for i=1:numel(progString)
+    goodstart=cat(1,goodstart,strfind(lower(char(BigString)'),progString{i}));
+  end
+  if isempty(goodstart)
+    error('problems in StringsSection: unrecognized acquisition program');
+  end
+  BigString=BigString(goodstart(1):end)';
+  stringends=find(BigString==0);
+  stringends=[0 stringends];
+  Strings=cell(1,length(stringends)-1);
+  for i=1:length(stringends)-1
+    Strings{i}=char(BigString(stringends(i)+1:stringends(i+1)-1));
+  end
+  h.recChNames=cell(ADCSection.llNumEntries,1);
+  h.recChUnits=cell(ADCSection.llNumEntries,1);
+  
+  % --- read in the ADCSection & copy some values to header h
+  for i=1:ADCSection.llNumEntries
+    ADCsec(i)=ReadSection(fid,ADCSection.uBlockIndex*BLOCKSIZE+ADCSection.uBytes*(i-1),ADCInfo);
+    ii=ADCsec(i).nADCNum+1;
+    h.nADCSamplingSeq(i)=ADCsec(i).nADCNum;
+    h.recChNames(i)=Strings(ADCsec(i).lADCChannelNameIndex);
+    unitsIndex=ADCsec(i).lADCUnitsIndex;
+    if unitsIndex>0
+        h.recChUnits(i)=Strings(ADCsec(i).lADCUnitsIndex);
+    else
+        h.recChUnits(i)={'nil'};
+    end
+    h.nTelegraphEnable(ii)=ADCsec(i).nTelegraphEnable;
+    h.fTelegraphAdditGain(ii)=ADCsec(i).fTelegraphAdditGain;
+    h.fInstrumentScaleFactor(ii)=ADCsec(i).fInstrumentScaleFactor;
+    h.fSignalGain(ii)=ADCsec(i).fSignalGain;
+    h.fADCProgrammableGain(ii)=ADCsec(i).fADCProgrammableGain;
+    h.fInstrumentOffset(ii)=ADCsec(i).fInstrumentOffset;
+    h.fSignalOffset(ii)=ADCsec(i).fSignalOffset;
+  end
+  % --- read in the protocol section & copy some values to header h
+  ProtocolSec=ReadSection(fid,ProtocolSection.uBlockIndex*BLOCKSIZE,ProtocolInfo);
+  h.nOperationMode=ProtocolSec.nOperationMode;
+  h.fSynchTimeUnit=ProtocolSec.fSynchTimeUnit;
+  h.lNumSamplesPerEpisode=ProtocolSec.lNumSamplesPerEpisode;
+  
+  h.nADCNumChannels=ADCSection.llNumEntries;
+  h.lActualAcqLength=DataSection.llNumEntries;
+  h.lDataSectionPtr=DataSection.uBlockIndex;
+  h.nNumPointsIgnored=0;
+  % in ABF version < 2.0 h.fADCSampleInterval is the sampling interval
+  % defined as
+  %     1/(sampling freq*number_of_channels)
+  % so divide ProtocolSec.fADCSequenceInterval by the number of
+  % channels
+  h.fADCSampleInterval=ProtocolSec.fADCSequenceInterval/h.nADCNumChannels;
+  h.fADCRange=ProtocolSec.fADCRange;
+  h.lADCResolution=ProtocolSec.lADCResolution;
+  
+  % --- read in the Epoch section, rearrange values and place in header
+  % struct h
+  for i=1:EpochPerDACSection.llNumEntries
+    EPDsec(i)=ReadSection(fid,EpochPerDACSection.uBlockIndex*BLOCKSIZE+EpochPerDACSection.uBytes*(i-1),EpochPerDACInfo);
+  end
+  if EpochPerDACSection.llNumEntries>0
+    % number of analog output (AO) channels
+    uniqueAO=unique([EPDsec.nDACNum]);
+    for k=1:numel(uniqueAO)
+      % index to elements of EDPsec dealing with current AO channel
+      ix=[EPDsec.nDACNum]==uniqueAO(k);
+      % struct DACEpoch contains one element per AO channel; the values of
+      % its fields represent the values of the different epochs (columns
+      % labeled A, B and so on in the waveform tab in clampex), the only
+      % exception being the numeric index of the channel
+      h.DACEpoch(k).nDACNum=uniqueAO(k);
+      % compute the 'first/last holding' values, the small additional delay
+      % after which stimulation waveforms are put out. The unit is sample
+      % points. ** NOTE: the formula below is based on
+      % i) code in function ABFH_GetHoldingDuration in abfhwave.cpp,
+      % presumably a code file belonging to an early version of program
+      % 'stimfit', and presumably derived from code available back then
+      % from the company formerly known as Axon Instruments
+      % ii) heuristics, determined from a number of abf V. 2.00 files from
+      % different labs in all of which 16/8-channel ADC/DAC systems were
+      % used.
+      % The formula may be hardware dependent; it may change (=be
+      % corrected, should it not be general) in the future.
+      h.DACEpoch(k).firstHolding=floor(...
+        8*(h.lNumSamplesPerEpisode/h.nADCNumChannels)/512);
+      fieldNm=setdiff(fieldnames(EPDsec),'nDACNum','stable');
+      for fIx=1:numel(fieldNm)
+        h.DACEpoch(k).(fieldNm{fIx})=[EPDsec(ix).(fieldNm{fIx})];
+      end
+    end
+  else
+    h.DACEpoch=[];
+  end
+  % --- read in the user list section - unclear how to get the values
+  % (commented code lines below are a first guess)
+  UserListSec=ReadSection(fid,UserListSection.uBlockIndex*BLOCKSIZE,UserListInfo);
+  %   fseek(fid,UserListSec.lULParamValueListIndex*BLOCKSIZE,'bof');
+  %   nada=fread(fid,100,'uchar=>char')
+  
+  % --- in contrast to procedures with all other sections do not read the 
+  % sync array section but rather copy the values of its fields to the
+  % corresponding fields of h
+  h.lSynchArrayPtr=SynchArraySection.uBlockIndex;
+  h.lSynchArraySize=SynchArraySection.llNumEntries;
+else
+  % -------------------------------------------------------------------------
+  % *** here, do the inverse: in ABF version<2 files extract information
+  % from header variable h and place it in corresponding new section
+  % variable(s)
+  % -------------------------------------------------------------------------
+  TagSection.llNumEntries=h.lNumTagEntries;
+  TagSection.uBlockIndex=h.lTagSectionPtr;
+  TagSection.uBytes=64;
+end
+% -------------------------------------------------------------------------
+%    PART 2d: groom parameters & perform some plausibility checks
+% -------------------------------------------------------------------------
+if h.lActualAcqLength<h.nADCNumChannels
+  fclose(fid);
+  error('less data points than sampled channels in file');
+end
+% the numerical value of all recorded channels (numbers 0..15)
+recChIdx=h.nADCSamplingSeq(1:h.nADCNumChannels);
+% the corresponding indices into loaded data d
+recChInd=1:length(recChIdx);
+if h.fFileVersionNumber<2
+  % the channel names, e.g. 'IN 8' (for ABF version 2.0 these have been
+  % extracted above at this point)
+  h.recChNames=(reshape(char(h.sADCChannelName),10,16))';
+  h.recChNames=h.recChNames(recChIdx+1,:);
+  % same with signal units
+  h.recChUnits=(reshape(char(h.sADCUnits),8,16))';
+  h.recChUnits=h.recChUnits(recChIdx+1,:);
+  % convert to cell arrays
+  h.recChNames=deblank(cellstr(h.recChNames));
+  h.recChUnits=deblank(cellstr(h.recChUnits));
+end
+
+% check whether requested channels exist
+chInd=[];
+eflag=0;
+if ischar(channels)
+  if strcmp(channels,'a')
+    chInd=recChInd;
+  else
+    fclose(fid);
+    error('input parameter ''channels'' must either be a cell array holding channel names or the single character ''a'' (=all channels)');
+  end
+else
+  % check for requested channels which do not exist
+  missingChan=setdiff(channels,h.recChNames);
+  % identify requested channels among available ones
+  [nil,chInd]=intersect(h.recChNames,channels);
+  % ** index chInd must be sorted because intersect sorts h.recChNames
+  % alphanumerically, which needs not necessarily correspond to the order
+  % inherent in the abf file (e.g. if channels are named 'Lynx1 ... Lynx10
+  % etc.)
+  chInd=sort(chInd);
+  if isempty(chInd) || ~isempty(missingChan)
+    % set error flag to 1
+    eflag=1;
+  end
+end
+if eflag
+  fclose(fid);
+  disp('**** available channels:');
+  disp(h.recChNames);
+  disp(' ');
+  disp('**** requested channels:');
+  disp(channels);
+  error('at least one of the requested channels does not exist in data file (see above)');
+else
+  dispif(doDispInfo,'**** available channels:');
+  dispif(doDispInfo,h.recChNames);
+end
+
+% gain of telegraphed instruments, if any
+if h.fFileVersionNumber>=1.65
+  addGain=h.nTelegraphEnable.*h.fTelegraphAdditGain;
+  addGain(addGain==0)=1;
+else
+  addGain=ones(size(h.fTelegraphAdditGain));
+end
+
+% determine offset at which data start
+switch h.nDataFormat
+  case 0
+    dataSz=2;  % bytes/point
+    precision='int16';
+  case 1
+    dataSz=4;  % bytes/point
+    precision='float32';
+  otherwise
+    fclose(fid);
+    error('invalid number format');
+end
+headOffset=h.lDataSectionPtr*BLOCKSIZE+h.nNumPointsIgnored*dataSz;
+% h.fADCSampleInterval is the TOTAL sampling interval
+h.si=h.fADCSampleInterval*h.nADCNumChannels;
+% assign same value to si, which is an output variable
+si=h.si;
+if ischar(sweeps) && sweeps=='a'
+  nSweeps=h.lActualEpisodes;
+  sweeps=1:h.lActualEpisodes;
+else
+  nSweeps=length(sweeps);
+end
+
+% determine time unit in synch array section
+switch h.fSynchTimeUnit
+  case 0  
+    % time information in synch array section is in terms of ticks
+    h.synchArrTimeBase=1;
+  otherwise
+    % time information in synch array section is in terms of usec
+    h.synchArrTimeBase=h.fSynchTimeUnit;
+end
+
+% read in the TagSection, do a few computations & write to h.tags
+h.tags=[];
+for i=1:TagSection.llNumEntries
+  tmp=ReadSection(fid,TagSection.uBlockIndex*BLOCKSIZE+TagSection.uBytes*(i-1),TagInfo);
+  % time of tag entry from start of experiment in s (corresponding expisode
+  % number, if applicable, will be determined later)
+  h.tags(i).timeSinceRecStart=tmp.lTagTime*h.synchArrTimeBase/1e6;
+  h.tags(i).comment=char(tmp.sComment)';
+end
+
+% -------------------------------------------------------------------------
+%    PART 3: read data (note: from here on code is generic and abf version
+%    should not matter)
+% -------------------------------------------------------------------------
+switch h.nOperationMode
+  case 1
+    dispif(doDispInfo,'data were acquired in event-driven variable-length mode');
+    if h.fFileVersionNumber>=2.0
+      errordlg('abfload currently does not work with data acquired in event-driven variable-length mode and ABF version 2.0','ABF version issue');
+    else
+      if (h.lSynchArrayPtr<=0 || h.lSynchArraySize<=0)
+        fclose(fid);
+        error('internal variables ''lSynchArraynnn'' are zero or negative');
+      end
+      % the byte offset at which the SynchArraySection starts
+      h.lSynchArrayPtrByte=BLOCKSIZE*h.lSynchArrayPtr;
+      % before reading Synch Arr parameters check if file is big enough to hold them
+      % 4 bytes/long, 2 values per episode (start and length)
+      if h.lSynchArrayPtrByte+2*4*h.lSynchArraySize<fileSz
+        fclose(fid);
+        error('file seems not to contain complete Synch Array Section');
+      end
+      if fseek(fid,h.lSynchArrayPtrByte,'bof')~=0
+        fclose(fid);
+        error('something went wrong positioning file pointer to Synch Array Section');
+      end
+      [synchArr,n]=fread(fid,h.lSynchArraySize*2,'int32');
+      if n~=h.lSynchArraySize*2
+        fclose(fid);
+        error('something went wrong reading synch array section');
+      end
+      % make synchArr a h.lSynchArraySize x 2 matrix
+      synchArr=permute(reshape(synchArr',2,h.lSynchArraySize),[2 1]);
+      % the length of episodes in sample points
+      segLengthInPts=synchArr(:,2)/h.synchArrTimeBase;
+      % the starting ticks of episodes in sample points WITHIN THE DATA FILE
+      segStartInPts=cumsum([0 (segLengthInPts(1:end-1))']*dataSz)+headOffset;
+      % start time (synchArr(:,1)) has to be divided by h.nADCNumChannels to get true value
+      % go to data portion
+      if fseek(fid,headOffset,'bof')~=0
+        fclose(fid);
+        error('something went wrong positioning file pointer (too few data points ?)');
+      end
+      % ** load data if requested
+      if doLoadData
+        d=cell(1,nSweeps);
+        for i=1:nSweeps
+          % if selected sweeps are to be read, seek correct position
+          if ~isequal(nSweeps,h.lActualEpisodes)
+            fseek(fid,segStartInPts(sweeps(i)),'bof');
+          end
+          [tmpd,n]=fread(fid,segLengthInPts(sweeps(i)),precision);
+          if n~=segLengthInPts(sweeps(i))
+            warning(['something went wrong reading episode ' int2str(sweeps(i)) ': ' segLengthInPts(sweeps(i)) ' points should have been read, ' int2str(n) ' points actually read']);
+          end
+          h.dataPtsPerChan=n/h.nADCNumChannels;
+          if rem(n,h.nADCNumChannels)>0
+            fclose(fid);
+            error('number of data points in episode not OK');
+          end
+          % separate channels..
+          tmpd=reshape(tmpd,h.nADCNumChannels,h.dataPtsPerChan);
+          % retain only requested channels
+          tmpd=tmpd(chInd,:);
+          tmpd=tmpd';
+          % if data format is integer, scale appropriately; if it's float, tmpd is fine
+          if ~h.nDataFormat
+            for j=1:length(chInd)
+              ch=recChIdx(chInd(j))+1;
+              tmpd(:,j)=tmpd(:,j)/(h.fInstrumentScaleFactor(ch)*h.fSignalGain(ch)*h.fADCProgrammableGain(ch)*addGain(ch))...
+                *h.fADCRange/h.lADCResolution+h.fInstrumentOffset(ch)-h.fSignalOffset(ch);
+            end
+          end
+          % now place in cell array, an element consisting of one sweep with channels in columns
+          d{i}=tmpd;
+        end
+      end
+    end
+    
+  case {2,4,5}
+    if h.nOperationMode==2
+      dispif(doDispInfo,'data were acquired in event-driven fixed-length mode');
+    elseif h.nOperationMode==4
+      dispif(doDispInfo,'data were acquired in high-speed oscilloscope mode');
+    else
+      dispif(doDispInfo,'data were acquired in waveform fixed-length mode');
+    end
+    % extract timing information on sweeps
+    if (h.lSynchArrayPtr<=0 || h.lSynchArraySize<=0)
+      fclose(fid);
+      error('internal variables ''lSynchArraynnn'' are zero or negative');
+    end
+    % the byte offset at which the SynchArraySection starts
+    h.lSynchArrayPtrByte=BLOCKSIZE*h.lSynchArrayPtr;
+    % before reading Synch Arr parameters check if file is big enough to hold them
+    % 4 bytes/long, 2 values per episode (start and length)
+    if h.lSynchArrayPtrByte+2*4*h.lSynchArraySize>fileSz
+      fclose(fid);
+      error('file seems not to contain complete Synch Array Section');
+    end
+    if fseek(fid,h.lSynchArrayPtrByte,'bof')~=0
+      fclose(fid);
+      error('something went wrong positioning file pointer to Synch Array Section');
+    end
+    [synchArr,n]=fread(fid,h.lSynchArraySize*2,'int32');
+    if n~=h.lSynchArraySize*2
+      fclose(fid);
+      error('something went wrong reading synch array section');
+    end
+    % make synchArr a h.lSynchArraySize x 2 matrix
+    synchArr=permute(reshape(synchArr',2,h.lSynchArraySize),[2 1]);
+    if numel(unique(synchArr(:,2)))>1
+      fclose(fid);
+      error('sweeps of unequal length in file recorded in fixed-length mode');
+    end
+    % the length of sweeps in sample points (**note: parameter lLength of
+    % the ABF synch section is expressed in samples (ticks) whereas
+    % parameter lStart is given in synchArrTimeBase units)
+    h.sweepLengthInPts=synchArr(1,2)/h.nADCNumChannels;
+    % the starting ticks of episodes in sample points (t0=1=beginning of
+    % recording)
+    h.sweepStartInPts=synchArr(:,1)*(h.synchArrTimeBase/h.fADCSampleInterval/h.nADCNumChannels);
+    % recording start and stop times in seconds from midnight
+    h.recTime=h.lFileStartTime;
+    h.recTime=h.recTime+[0  (1e-6*(h.sweepStartInPts(end)+h.sweepLengthInPts))*h.fADCSampleInterval*h.nADCNumChannels];
+    % determine first point and number of points to be read
+    startPt=0;
+    h.dataPts=h.lActualAcqLength;
+    h.dataPtsPerChan=h.dataPts/h.nADCNumChannels;
+    if rem(h.dataPts,h.nADCNumChannels)>0 || rem(h.dataPtsPerChan,h.lActualEpisodes)>0
+      fclose(fid);
+      error('number of data points not OK');
+    end
+    % temporary helper var
+    dataPtsPerSweep=h.sweepLengthInPts*h.nADCNumChannels;
+    if fseek(fid,startPt*dataSz+headOffset,'bof')~=0
+      fclose(fid);
+      error('something went wrong positioning file pointer (too few data points ?)');
+    end
+    % the starting ticks of episodes in sample points WITHIN THE DATA FILE
+    selectedSegStartInPts=((sweeps-1)*dataPtsPerSweep)*dataSz+headOffset;
+    % ** load data if requested
+    if doLoadData
+      % preallocate d
+      d=zeros(h.sweepLengthInPts,length(chInd),nSweeps);
+      for i=1:nSweeps
+        status=fseek(fid,selectedSegStartInPts(i),'bof');
+        if status==-1
+          fclose(fid);
+          error(['something went wrong reading episode ' int2str(sweeps(i)) '; file pointer beyond file limits (check sweeps)']);
+        end
+        [tmpd,n]=fread(fid,dataPtsPerSweep,precision);
+        if n~=dataPtsPerSweep
+          fclose(fid);
+          error(['something went wrong reading episode ' int2str(sweeps(i)) ': ' dataPtsPerSweep ' points should have been read, ' int2str(n) ' points actually read']);
+        end
+        h.dataPtsPerChan=n/h.nADCNumChannels;
+        if rem(n,h.nADCNumChannels)>0
+          fclose(fid);
+          error('number of data points in episode not OK');
+        end
+        % separate channels..
+        tmpd=reshape(tmpd,h.nADCNumChannels,h.dataPtsPerChan);
+        % retain only requested channels
+        tmpd=tmpd(chInd,:);
+        tmpd=tmpd';
+        % if data format is integer, scale appropriately; if it's float, d is fine
+        if ~h.nDataFormat
+          for j=1:length(chInd)
+            ch=recChIdx(chInd(j))+1;
+            tmpd(:,j)=tmpd(:,j)/(h.fInstrumentScaleFactor(ch)*h.fSignalGain(ch)*h.fADCProgrammableGain(ch)*addGain(ch))...
+              *h.fADCRange/h.lADCResolution+h.fInstrumentOffset(ch)-h.fSignalOffset(ch);
+          end
+        end
+        % now fill 3d array
+        d(:,:,i)=tmpd;
+      end
+    end
+    
+  case 3
+    dispif(doDispInfo,'data were acquired in gap-free mode');
+    % from start, stop, headOffset and h.fADCSampleInterval calculate first point to be read
+    %  and - unless stop is given as 'e' - number of points
+    startPt=floor(1e6*start*(1/h.fADCSampleInterval));
+    % this corrects undesired shifts in the reading frame due to rounding errors in the previous calculation
+    startPt=floor(startPt/h.nADCNumChannels)*h.nADCNumChannels;
+    % if stop is a char array, it can only be 'e' at this point (other values would have
+    % been caught above)
+    if ischar(stop)
+      h.dataPtsPerChan=h.lActualAcqLength/h.nADCNumChannels-floor(1e6*start/h.si);
+      h.dataPts=h.dataPtsPerChan*h.nADCNumChannels;
+    else
+      h.dataPtsPerChan=floor(1e6*(stop-start)*(1/h.si));
+      h.dataPts=h.dataPtsPerChan*h.nADCNumChannels;
+      if h.dataPts<=0
+        fclose(fid);
+        error('start is larger than or equal to stop');
+      end
+    end
+    if rem(h.dataPts,h.nADCNumChannels)>0
+      fclose(fid);
+      error('number of data points not OK');
+    end
+    tmp=1e-6*h.lActualAcqLength*h.fADCSampleInterval;
+    dispif(doDispInfo,['total length of recording: ' num2str(tmp,'%5.1f') ' s ~ ' num2str(tmp/60,'%3.0f') ' min']);
+    dispif(doDispInfo,['sampling interval: ' num2str(h.si,'%5.0f') ' µs']);
+    % 8 bytes per data point expressed in Mb
+    dispif(doDispInfo,['memory requirement for complete upload in matlab: '...
+      num2str(round(8*h.lActualAcqLength/2^20)) ' MB']);
+    % recording start and stop times in seconds from midnight
+    h.recTime=h.lFileStartTime;
+    h.recTime=[h.recTime h.recTime+tmp];
+    if fseek(fid,startPt*dataSz+headOffset,'bof')~=0
+      fclose(fid);
+      error('something went wrong positioning file pointer (too few data points ?)');
+    end
+    if doLoadData
+      % *** decide on the most efficient way to read data:
+      % (i) all (of one or several) channels requested: read, done
+      % (ii) one (of many) channels requested: use the 'skip' feature of
+      % fread (which for up to 16 channels is slower than scenario iii below)
+      % (iii) more than one but not all (of several) channels requested:
+      % 'discontinuous' mode of reading data. Read a reasonable chunk of data
+      % (all channels), separate channels, discard non-requested ones (if
+      % any), place data in preallocated array, repeat until done. This is
+      % faster than reading the data in one big lump, separating channels and
+      % discarding the ones not requested
+      if length(chInd)==1 && h.nADCNumChannels>16
+        % --- situation (ii)
+        % jump to proper reading frame position in file
+        if fseek(fid,(chInd-1)*dataSz,'cof')~=0
+          fclose(fid);
+          error('something went wrong positioning file pointer (too few data points ?)');
+        end
+        % read, skipping h.nADCNumChannels-1 data points after each read
+        [d,n]=fread(fid,h.dataPtsPerChan,precision,dataSz*(h.nADCNumChannels-1));
+        if n~=h.dataPtsPerChan
+          fclose(fid);
+          error(['something went wrong reading file (' int2str(h.dataPtsPerChan) ' points should have been read, ' int2str(n) ' points actually read']);
+        end
+      elseif length(chInd)/h.nADCNumChannels<1
+        % --- situation (iii)
+        % prepare chunkwise upload:
+        % preallocate d
+        d=nan(h.dataPtsPerChan,length(chInd));
+        % the number of data points corresponding to the maximal chunk size,
+        % rounded off such that from each channel the same number of points is
+        % read (do not forget that each data point will by default be made a
+        % double of 8 bytes, no matter what the original data format is)
+        chunkPtsPerChan=floor(chunk*2^20/8/h.nADCNumChannels);
+        chunkPts=chunkPtsPerChan*h.nADCNumChannels;
+        % the number of those chunks..
+        nChunk=floor(h.dataPts/chunkPts);
+        % ..and the remainder
+        restPts=h.dataPts-nChunk*chunkPts;
+        restPtsPerChan=restPts/h.nADCNumChannels;
+        % chunkwise row indices into d
+        dix=(1:chunkPtsPerChan:h.dataPtsPerChan)';
+        dix(:,2)=dix(:,1)+chunkPtsPerChan-1;
+        dix(end,2)=h.dataPtsPerChan;
+        if nChunk
+          dispif(doDispInfo,['reading file in ' int2str(nChunk) ' chunks of ~' num2str(chunk) ' Mb']);
+        end
+        % do it: if no remainder exists loop through all rows of dix,
+        % otherwise spare last row for the lines below (starting with
+        % 'if restPts')
+        for ci=1:size(dix,1)-(restPts>0)
+          [tmpd,n]=fread(fid,chunkPts,precision);
+          if n~=chunkPts
+            fclose(fid);
+            error(['something went wrong reading chunk #' int2str(ci) ' (' ...
+              int2str(chunkPts) ' points should have been read, ' int2str(n) ' points actually read']);
+          end
+          % separate channels..
+          tmpd=reshape(tmpd,h.nADCNumChannels,chunkPtsPerChan);
+          d(dix(ci,1):dix(ci,2),:)=tmpd(chInd,:)';
+        end
+        % collect the rest, if any
+        if restPts
+          [tmpd,n]=fread(fid,restPts,precision);
+          if n~=restPts
+            fclose(fid);
+            error(['something went wrong reading last chunk (' ...
+              int2str(restPts) ' points should have been read, ' int2str(n) ' points actually read']);
+          end
+          % separate channels..
+          tmpd=reshape(tmpd,h.nADCNumChannels,restPtsPerChan);
+          d(dix(end,1):dix(end,2),:)=tmpd(chInd,:)';
+        end
+      else
+        % --- situation (i)
+        [d,n]=fread(fid,h.dataPts,precision);
+        if n~=h.dataPts
+          fclose(fid);
+          error(['something went wrong reading file (' int2str(h.dataPts) ' points should have been read, ' int2str(n) ' points actually read']);
+        end
+        % separate channels..
+        d=reshape(d,h.nADCNumChannels,h.dataPtsPerChan);
+        d=d';
+      end
+      % if data format is integer, scale appropriately; if it's float, d is fine
+      if ~h.nDataFormat
+        for j=1:length(chInd)
+          ch=recChIdx(chInd(j))+1;
+          d(:,j)=d(:,j)/(h.fInstrumentScaleFactor(ch)*h.fSignalGain(ch)*h.fADCProgrammableGain(ch)*addGain(ch))...
+            *h.fADCRange/h.lADCResolution+h.fInstrumentOffset(ch)-h.fSignalOffset(ch);
+        end
+      end
+    end
+  otherwise
+    warning('unknown recording mode -- returning empty matrix');
+    d=[];
+    h.si=[];
+end
+fclose(fid);
+
+% finally, possibly add information on episode number to tags
+%Modified by MR to avoid error caused by activated HumSilencer
+if ~isempty(h.tags) && isfield(h,'sweepStartInPts')
+    for i=1:numel(h.tags)
+        if h.tags(i).timeSinceRecStart > 0 %Comments added during recording
+            tmp=find(h.tags(i).timeSinceRecStart>=h.sweepStartInPts/1e6*h.si);
+            h.tags(i).episodeIndex=tmp(end);
+        elseif h.tags(i).timeSinceRecStart == 0 %HumSilencer comment at timeSinceRecStart = 0
+            h.tags(i).episodeIndex = 0; %Will be added to episode 0
+        end
+    end
+end
+end
+
+
+% ########################################################################
+%                         LOCAL FUNCTIONS
+% ########################################################################
+
+function headPar=define_header(fileSig)
+switch fileSig
+ case 'ABF ' % ** note the blank
+   % ************************
+   %     abf version < 2.0
+   % ************************
+   %
+   % temporary initializing var
+   tmp=repmat(-1,1,16);
+   % define vital header parameters and initialize them with -1: set up a
+   % cell array (and convert it to a struct later on, which is more
+   % convenient)
+   % column order is
+   %    name, position in header in bytes, type, value)
+   headPar={
+     'fFileSignature',0,'*char',[-1 -1 -1 -1];
+     'fFileVersionNumber',4,'float32',-1;
+     'nOperationMode',8,'int16',-1;
+     'lActualAcqLength',10,'int32',-1;
+     'nNumPointsIgnored',14,'int16',-1;
+     'lActualEpisodes',16,'int32',-1;
+     'lFileStartTime',24,'int32',-1;
+     'lDataSectionPtr',40,'int32',-1;
+     'lTagSectionPtr',44,'int32',-1;
+     'lNumTagEntries',48,'int32',-1;
+     'lSynchArrayPtr',92,'int32',-1;
+     'lSynchArraySize',96,'int32',-1;
+     'nDataFormat',100,'int16',-1;
+     'nADCNumChannels', 120, 'int16', -1;
+     'fADCSampleInterval',122,'float', -1;
+     'fSynchTimeUnit',130,'float',-1;
+     'lNumSamplesPerEpisode',138,'int32',-1;
+     'lPreTriggerSamples',142,'int32',-1;
+     'lEpisodesPerRun',146,'int32',-1;
+     'fADCRange', 244, 'float', -1;
+     'lADCResolution', 252, 'int32', -1;
+     'nFileStartMillisecs', 366, 'int16', -1;
+     'nADCPtoLChannelMap', 378, 'int16', tmp;
+     'nADCSamplingSeq', 410, 'int16',  tmp;
+     'sADCChannelName',442, 'uchar', repmat(tmp,1,10);
+     'sADCUnits',602, 'uchar', repmat(tmp,1,8);
+     'fADCProgrammableGain', 730, 'float', tmp;
+     'fInstrumentScaleFactor', 922, 'float', tmp;
+     'fInstrumentOffset', 986, 'float', tmp;
+     'fSignalGain', 1050, 'float', tmp;
+     'fSignalOffset', 1114, 'float', tmp;
+     'nTelegraphEnable',4512,'int16',tmp;
+     'fTelegraphAdditGain',4576,'float',tmp
+     };
+ case 'ABF2'
+   % ************************
+   %     abf version >= 2.0
+   % ************************
+   headPar={
+     'fFileSignature',0,'*char',[-1 -1 -1 -1];
+     'fFileVersionNumber',4,'bit8=>int',[-1 -1 -1 -1];
+     'uFileInfoSize',8,'uint32',-1;
+     'lActualEpisodes',12,'uint32',-1;
+     'uFileStartDate',16','uint32',-1;
+     'uFileStartTimeMS',20,'uint32',-1;
+     'uStopwatchTime',24,'uint32',-1;
+     'nFileType',28,'int16',-1;
+     'nDataFormat',30,'int16',-1;
+     'nSimultaneousScan',32,'int16',-1;
+     'nCRCEnable',34,'int16',-1;
+     'uFileCRC',36,'uint32',-1;
+     'FileGUID',40,'uint32',-1;
+     'uCreatorVersion',56,'uint32',-1;
+     'uCreatorNameIndex',60,'uint32',-1;
+     'uModifierVersion',64,'uint32',-1;
+     'uModifierNameIndex',68,'uint32',-1;
+     'uProtocolPathIndex',72,'uint32',-1;
+     };
+end
+end
+
+function Sections=define_Sections
+Sections={'ProtocolSection';
+ 'ADCSection';
+ 'DACSection';
+ 'EpochSection';
+ 'ADCPerDACSection';
+ 'EpochPerDACSection';
+ 'UserListSection';
+ 'StatsRegionSection';
+ 'MathSection';
+ 'StringsSection';
+ 'DataSection';
+ 'TagSection';
+ 'ScopeSection';
+ 'DeltaSection';
+ 'VoiceTagSection';
+ 'SynchArraySection';
+ 'AnnotationSection';
+ 'StatsSection';
+ };
+end
+
+function ProtocolInfo=define_ProtocolInfo
+ProtocolInfo={
+ 'nOperationMode','int16',1;
+ 'fADCSequenceInterval','float',1;
+ 'bEnableFileCompression','bit1',1;
+ 'sUnused1','char',3;
+ 'uFileCompressionRatio','uint32',1;
+ 'fSynchTimeUnit','float',1;
+ 'fSecondsPerRun','float',1;
+ 'lNumSamplesPerEpisode','int32',1;
+ 'lPreTriggerSamples','int32',1;
+ 'lEpisodesPerRun','int32',1;
+ 'lRunsPerTrial','int32',1;
+ 'lNumberOfTrials','int32',1;
+ 'nAveragingMode','int16',1;
+ 'nUndoRunCount','int16',1;
+ 'nFirstEpisodeInRun','int16',1;
+ 'fTriggerThreshold','float',1;
+ 'nTriggerSource','int16',1;
+ 'nTriggerAction','int16',1;
+ 'nTriggerPolarity','int16',1;
+ 'fScopeOutputInterval','float',1;
+ 'fEpisodeStartToStart','float',1;
+ 'fRunStartToStart','float',1;
+ 'lAverageCount','int32',1;
+ 'fTrialStartToStart','float',1;
+ 'nAutoTriggerStrategy','int16',1;
+ 'fFirstRunDelayS','float',1;
+ 'nChannelStatsStrategy','int16',1;
+ 'lSamplesPerTrace','int32',1;
+ 'lStartDisplayNum','int32',1;
+ 'lFinishDisplayNum','int32',1;
+ 'nShowPNRawData','int16',1;
+ 'fStatisticsPeriod','float',1;
+ 'lStatisticsMeasurements','int32',1;
+ 'nStatisticsSaveStrategy','int16',1;
+ 'fADCRange','float',1;
+ 'fDACRange','float',1;
+ 'lADCResolution','int32',1;
+ 'lDACResolution','int32',1;
+ 'nExperimentType','int16',1;
+ 'nManualInfoStrategy','int16',1;
+ 'nCommentsEnable','int16',1;
+ 'lFileCommentIndex','int32',1;
+ 'nAutoAnalyseEnable','int16',1;
+ 'nSignalType','int16',1;
+ 'nDigitalEnable','int16',1;
+ 'nActiveDACChannel','int16',1;
+ 'nDigitalHolding','int16',1;
+ 'nDigitalInterEpisode','int16',1;
+ 'nDigitalDACChannel','int16',1;
+ 'nDigitalTrainActiveLogic','int16',1;
+ 'nStatsEnable','int16',1;
+ 'nStatisticsClearStrategy','int16',1;
+ 'nLevelHysteresis','int16',1;
+ 'lTimeHysteresis','int32',1;
+ 'nAllowExternalTags','int16',1;
+ 'nAverageAlgorithm','int16',1;
+ 'fAverageWeighting','float',1;
+ 'nUndoPromptStrategy','int16',1;
+ 'nTrialTriggerSource','int16',1;
+ 'nStatisticsDisplayStrategy','int16',1;
+ 'nExternalTagType','int16',1;
+ 'nScopeTriggerOut','int16',1;
+ 'nLTPType','int16',1;
+ 'nAlternateDACOutputState','int16',1;
+ 'nAlternateDigitalOutputState','int16',1;
+ 'fCellID','float',3;
+ 'nDigitizerADCs','int16',1;
+ 'nDigitizerDACs','int16',1;
+ 'nDigitizerTotalDigitalOuts','int16',1;
+ 'nDigitizerSynchDigitalOuts','int16',1;
+ 'nDigitizerType','int16',1;
+ };
+end
+
+function ADCInfo=define_ADCInfo
+ADCInfo={
+ 'nADCNum','int16',1;
+ 'nTelegraphEnable','int16',1;
+ 'nTelegraphInstrument','int16',1;
+ 'fTelegraphAdditGain','float',1;
+ 'fTelegraphFilter','float',1;
+ 'fTelegraphMembraneCap','float',1;
+ 'nTelegraphMode','int16',1;
+ 'fTelegraphAccessResistance','float',1;
+ 'nADCPtoLChannelMap','int16',1;
+ 'nADCSamplingSeq','int16',1;
+ 'fADCProgrammableGain','float',1;
+ 'fADCDisplayAmplification','float',1;
+ 'fADCDisplayOffset','float',1;
+ 'fInstrumentScaleFactor','float',1;
+ 'fInstrumentOffset','float',1;
+ 'fSignalGain','float',1;
+ 'fSignalOffset','float',1;
+ 'fSignalLowpassFilter','float',1;
+ 'fSignalHighpassFilter','float',1;
+ 'nLowpassFilterType','char',1;
+ 'nHighpassFilterType','char',1;
+ 'fPostProcessLowpassFilter','float',1;
+ 'nPostProcessLowpassFilterType','char',1;
+ 'bEnabledDuringPN','bit1',1;
+ 'nStatsChannelPolarity','int16',1;
+ 'lADCChannelNameIndex','int32',1;
+ 'lADCUnitsIndex','int32',1;
+ };
+end
+
+function EpochPerDACInfo=define_EpochPerDACInfo 
+EpochPerDACInfo={ 
+    'nEpochNum','int16',1; 
+    'nDACNum','int16',1; 
+    'nEpochType','int16',1; 
+    'fEpochInitLevel','float',1; 
+    'fEpochLevelInc','float',1; 
+    'lEpochInitDuration','int32',1; 
+    'lEpochDurationInc','int32',1; 
+    'lEpochPulsePeriod','int32',1; 
+    'lEpochPulseWidth','int32',1; 
+};
+end
+
+function TagInfo=define_TagInfo
+TagInfo={
+   'lTagTime','int32',1;
+   'sComment','char',56;
+   'nTagType','int16',1;
+   'nVoiceTagNumber_or_AnnotationIndex','int16',1;
+};
+end
+
+function UserListInfo=define_UserListInfo
+UserListInfo={
+   'nListNum','int16',1;
+   'nULEnable','int16',1;
+   'nULParamToVary','int16',1;
+   'nULRepeat','int16',1;
+   'lULParamValueListIndex','int32',1;
+   'sUnused','uchar',52;   
+};
+end
+
+% // FUNCTION: ReadUserList
+% // PURPOSE:  Reads the user list from the data file.
+% //
+% BOOL CABF2ProtocolReader::ReadUserList()
+% {
+%     MEMBERASSERT();
+% 
+%     BOOL bOK = TRUE;
+%     if( m_FileInfo.UserListSection.uBlockIndex )
+%     {
+%         ABF_UserListInfo UserList;
+%         ASSERT( m_FileInfo.UserListSection.uBytes == sizeof( UserList ) );
+%         ASSERT( m_FileInfo.UserListSection.llNumEntries );
+%         bOK &= m_pFI->Seek( LONGLONG(m_FileInfo.UserListSection.uBlockIndex) * ABF_BLOCKSIZE, FILE_BEGIN );
+%         if( !bOK )
+%             return FALSE;
+% 
+%         for( long i=0; i<m_FileInfo.UserListSection.llNumEntries; i++ )
+%         {
+%             bOK &= m_pFI->Read( &UserList, sizeof( UserList ) );
+%             short u = UserList.nListNum;        
+% 
+%             m_pFH->nULEnable[u]      = 1;    
+%             m_pFH->nULParamToVary[u] = UserList.nULParamToVary;          
+%             m_pFH->nULRepeat[u]      = UserList.nULRepeat;
+% 
+%             bOK &= GetString( UserList.lULParamValueListIndex, m_pFH->sULParamValueList[u], ABF_USERLISTLEN );
+%         }
+%     }
+%     return bOK;
+% }
+
+function Section=ReadSection(fid,offset,Format)
+s=cell2struct(Format,{'name','numType','number'},2);
+fseek(fid,offset,'bof');
+for i=1:length(s)
+ [Section.(s(i).name)]=fread(fid,s(i).number,s(i).numType);
+end
+end
+
+function SectionInfo=ReadSectionInfo(fid,offset)
+fseek(fid,offset,'bof');
+SectionInfo.uBlockIndex=fread(fid,1,'uint32');
+fseek(fid,offset+4,'bof');
+SectionInfo.uBytes=fread(fid,1,'uint32');
+fseek(fid,offset+8,'bof');
+SectionInfo.llNumEntries=fread(fid,1,'int64');
+end
+
+function pvpmod(x)
+% PVPMOD             - evaluate parameter/value pairs
+% pvpmod(x) assigns the value x(i+1) to the parameter defined by the
+% string x(i) in the calling workspace. This is useful to evaluate 
+% <varargin> contents in an mfile, e.g. to change default settings 
+% of any variable initialized before pvpmod(x) is called.
+%
+% (c) U. Egert 1998
+
+% this loop is assigns the parameter/value pairs in x to the calling
+% workspace.
+if ~isempty(x)
+  for i = 1:2:size(x,2)
+     assignin('caller', x{i}, x{i+1});
+  end
+end
+end
+
+function dispif(doDispInfo, msg)
+if doDispInfo
+  disp(msg)
+end
+end
+
+
+% 
+% struct ABF_FileInfo
+% {
+%    UINT  uFileSignature;
+%    UINT  uFileVersionNumber;
+% 
+%    // After this point there is no need to be the same as the ABF 1 equivalent.
+%    UINT  uFileInfoSize;
+% 
+%    UINT  uActualEpisodes;
+%    UINT  uFileStartDate;
+%    UINT  uFileStartTimeMS;
+%    UINT  uStopwatchTime;
+%    short nFileType;
+%    short nDataFormat;
+%    short nSimultaneousScan;
+%    short nCRCEnable;
+%    UINT  uFileCRC;
+%    GUID  FileGUID;
+%    UINT  uCreatorVersion;
+%    UINT  uCreatorNameIndex;
+%    UINT  uModifierVersion;
+%    UINT  uModifierNameIndex;
+%    UINT  uProtocolPathIndex;   
+% 
+%    // New sections in ABF 2 - protocol stuff ...
+%    ABF_Section ProtocolSection;           // the protocol
+%    ABF_Section ADCSection;                // one for each ADC channel
+%    ABF_Section DACSection;                // one for each DAC channel
+%    ABF_Section EpochSection;              // one for each epoch
+%    ABF_Section ADCPerDACSection;          // one for each ADC for each DAC
+%    ABF_Section EpochPerDACSection;        // one for each epoch for each DAC
+%    ABF_Section UserListSection;           // one for each user list
+%    ABF_Section StatsRegionSection;        // one for each stats region
+%    ABF_Section MathSection;
+%    ABF_Section StringsSection;
+% 
+%    // ABF 1 sections ...
+%    ABF_Section DataSection;            // Data
+%    ABF_Section TagSection;             // Tags
+%    ABF_Section ScopeSection;           // Scope config
+%    ABF_Section DeltaSection;           // Deltas
+%    ABF_Section VoiceTagSection;        // Voice Tags
+%    ABF_Section SynchArraySection;      // Synch Array
+%    ABF_Section AnnotationSection;      // Annotations
+%    ABF_Section StatsSection;           // Stats config
+%    
+%    char  sUnused[148];     // size = 512 bytes
+%    
+%    ABF_FileInfo() 
+%    { 
+%       MEMSET_CTOR;
+%       STATIC_ASSERT( sizeof( ABF_FileInfo ) == 512 );
+% 
+%       uFileSignature = ABF_FILESIGNATURE;
+%       uFileInfoSize  = sizeof( ABF_FileInfo);
+%    }
+% 
+% };
+% 
+% struct ABF_ProtocolInfo
+% {
+%    short nOperationMode;
+%    float fADCSequenceInterval;
+%    bool  bEnableFileCompression;
+%    char  sUnused1[3];
+%    UINT  uFileCompressionRatio;
+% 
+%    float fSynchTimeUnit;
+%    float fSecondsPerRun;
+%    long  lNumSamplesPerEpisode;
+%    long  lPreTriggerSamples;
+%    long  lEpisodesPerRun;
+%    long  lRunsPerTrial;
+%    long  lNumberOfTrials;
+%    short nAveragingMode;
+%    short nUndoRunCount;
+%    short nFirstEpisodeInRun;
+%    float fTriggerThreshold;
+%    short nTriggerSource;
+%    short nTriggerAction;
+%    short nTriggerPolarity;
+%    float fScopeOutputInterval;
+%    float fEpisodeStartToStart;
+%    float fRunStartToStart;
+%    long  lAverageCount;
+%    float fTrialStartToStart;
+%    short nAutoTriggerStrategy;
+%    float fFirstRunDelayS;
+% 
+%    short nChannelStatsStrategy;
+%    long  lSamplesPerTrace;
+%    long  lStartDisplayNum;
+%    long  lFinishDisplayNum;
+%    short nShowPNRawData;
+%    float fStatisticsPeriod;
+%    long  lStatisticsMeasurements;
+%    short nStatisticsSaveStrategy;
+% 
+%    float fADCRange;
+%    float fDACRange;
+%    long  lADCResolution;
+%    long  lDACResolution;
+%    
+%    short nExperimentType;
+%    short nManualInfoStrategy;
+%    short nCommentsEnable;
+%    long  lFileCommentIndex;            
+%    short nAutoAnalyseEnable;
+%    short nSignalType;
+% 
+%    short nDigitalEnable;
+%    short nActiveDACChannel;
+%    short nDigitalHolding;
+%    short nDigitalInterEpisode;
+%    short nDigitalDACChannel;
+%    short nDigitalTrainActiveLogic;
+% 
+%    short nStatsEnable;
+%    short nStatisticsClearStrategy;
+% 
+%    short nLevelHysteresis;
+%    long  lTimeHysteresis;
+%    short nAllowExternalTags;
+%    short nAverageAlgorithm;
+%    float fAverageWeighting;
+%    short nUndoPromptStrategy;
+%    short nTrialTriggerSource;
+%    short nStatisticsDisplayStrategy;
+%    short nExternalTagType;
+%    short nScopeTriggerOut;
+% 
+%    short nLTPType;
+%    short nAlternateDACOutputState;
+%    short nAlternateDigitalOutputState;
+% 
+%    float fCellID[3];
+% 
+%    short nDigitizerADCs;
+%    short nDigitizerDACs;
+%    short nDigitizerTotalDigitalOuts;
+%    short nDigitizerSynchDigitalOuts;
+%    short nDigitizerType;
+% 
+%    char  sUnused[304];     // size = 512 bytes
+%    
+%    ABF_ProtocolInfo() 
+%    { 
+%       MEMSET_CTOR; 
+%       STATIC_ASSERT( sizeof( ABF_ProtocolInfo ) == 512 );
+%    }
+% };
+% 
+% struct ABF_MathInfo
+% {
+%    short nMathEnable;
+%    short nMathExpression;
+%    UINT  uMathOperatorIndex;     
+%    UINT  uMathUnitsIndex;        
+%    float fMathUpperLimit;
+%    float fMathLowerLimit;
+%    short nMathADCNum[2];
+%    char  sUnused[16];
+%    float fMathK[6];
+% 
+%    char  sUnused2[64];     // size = 128 bytes
+%    
+%    ABF_MathInfo()
+%    { 
+%       MEMSET_CTOR; 
+%       STATIC_ASSERT( sizeof( ABF_MathInfo ) == 128 );
+%    }
+% };
+% 
+% struct ABF_ADCInfo
+% {
+%    // The ADC this struct is describing.
+%    short nADCNum;
+% 
+%    short nTelegraphEnable;
+%    short nTelegraphInstrument;
+%    float fTelegraphAdditGain;
+%    float fTelegraphFilter;
+%    float fTelegraphMembraneCap;
+%    short nTelegraphMode;
+%    float fTelegraphAccessResistance;
+% 
+%    short nADCPtoLChannelMap;
+%    short nADCSamplingSeq;
+% 
+%    float fADCProgrammableGain;
+%    float fADCDisplayAmplification;
+%    float fADCDisplayOffset;
+%    float fInstrumentScaleFactor;
+%    float fInstrumentOffset;
+%    float fSignalGain;
+%    float fSignalOffset;
+%    float fSignalLowpassFilter;
+%    float fSignalHighpassFilter;
+% 
+%    char  nLowpassFilterType;
+%    char  nHighpassFilterType;
+%    float fPostProcessLowpassFilter;
+%    char  nPostProcessLowpassFilterType;
+%    bool  bEnabledDuringPN;
+% 
+%    short nStatsChannelPolarity;
+% 
+%    long  lADCChannelNameIndex;
+%    long  lADCUnitsIndex;
+% 
+%    char  sUnused[46];         // size = 128 bytes
+%    
+%    ABF_ADCInfo()
+%    { 
+%       MEMSET_CTOR; 
+%       STATIC_ASSERT( sizeof( ABF_ADCInfo ) == 128 );
+%    }
+% };
+% 
+% struct ABF_DACInfo
+% {
+%    // The DAC this struct is describing.
+%    short nDACNum;
+% 
+%    short nTelegraphDACScaleFactorEnable;
+%    float fInstrumentHoldingLevel;
+% 
+%    float fDACScaleFactor;
+%    float fDACHoldingLevel;
+%    float fDACCalibrationFactor;
+%    float fDACCalibrationOffset;
+% 
+%    long  lDACChannelNameIndex;
+%    long  lDACChannelUnitsIndex;
+% 
+%    long  lDACFilePtr;
+%    long  lDACFileNumEpisodes;
+% 
+%    short nWaveformEnable;
+%    short nWaveformSource;
+%    short nInterEpisodeLevel;
+% 
+%    float fDACFileScale;
+%    float fDACFileOffset;
+%    long  lDACFileEpisodeNum;
+%    short nDACFileADCNum;
+% 
+%    short nConditEnable;
+%    long  lConditNumPulses;
+%    float fBaselineDuration;
+%    float fBaselineLevel;
+%    float fStepDuration;
+%    float fStepLevel;
+%    float fPostTrainPeriod;
+%    float fPostTrainLevel;
+%    short nMembTestEnable;
+% 
+%    short nLeakSubtractType;
+%    short nPNPolarity;
+%    float fPNHoldingLevel;
+%    short nPNNumADCChannels;
+%    short nPNPosition;
+%    short nPNNumPulses;
+%    float fPNSettlingTime;
+%    float fPNInterpulse;
+% 
+%    short nLTPUsageOfDAC;
+%    short nLTPPresynapticPulses;
+% 
+%    long  lDACFilePathIndex;
+% 
+%    float fMembTestPreSettlingTimeMS;
+%    float fMembTestPostSettlingTimeMS;
+% 
+%    short nLeakSubtractADCIndex;
+% 
+%    char  sUnused[124];     // size = 256 bytes
+%    
+%    ABF_DACInfo()
+%    { 
+%       MEMSET_CTOR; 
+%       STATIC_ASSERT( sizeof( ABF_DACInfo ) == 256 );
+%    }
+% };
+% 
+% struct ABF_EpochInfoPerDAC
+% {
+%    // The Epoch / DAC this struct is describing.
+%    short nEpochNum;
+%    short nDACNum;
+% 
+%    // One full set of epochs (ABF_EPOCHCOUNT) for each DAC channel ...
+%    short nEpochType;
+%    float fEpochInitLevel;
+%    float fEpochLevelInc;
+%    long  lEpochInitDuration;  
+%    long  lEpochDurationInc;
+%    long  lEpochPulsePeriod;
+%    long  lEpochPulseWidth;
+% 
+%    char  sUnused[18];      // size = 48 bytes
+%    
+%    ABF_EpochInfoPerDAC()
+%    { 
+%       MEMSET_CTOR; 
+%       STATIC_ASSERT( sizeof( ABF_EpochInfoPerDAC ) == 48 );
+%    }
+% };
+% 
+% struct ABF_EpochInfo
+% {
+%    // The Epoch this struct is describing.
+%    short nEpochNum;
+% 
+%    // Describes one epoch
+%    short nDigitalValue;
+%    short nDigitalTrainValue;
+%    short nAlternateDigitalValue;
+%    short nAlternateDigitalTrainValue;
+%    bool  bEpochCompression;   // Compress the data from this epoch using uFileCompressionRatio
+% 
+%    char  sUnused[21];      // size = 32 bytes
+%    
+%    ABF_EpochInfo()
+%    { 
+%       MEMSET_CTOR; 
+%       STATIC_ASSERT( sizeof( ABF_EpochInfo ) == 32 );
+%    }
+% };
+% 
+% struct ABF_StatsRegionInfo
+% { 
+%    // The stats region this struct is describing.
+%    short nRegionNum;
+%    short nADCNum;
+% 
+%    short nStatsActiveChannels;
+%    short nStatsSearchRegionFlags;
+%    short nStatsSelectedRegion;
+%    short nStatsSmoothing;
+%    short nStatsSmoothingEnable;
+%    short nStatsBaseline;
+%    long  lStatsBaselineStart;
+%    long  lStatsBaselineEnd;
+% 
+%    // Describes one stats region
+%    long  lStatsMeasurements;
+%    long  lStatsStart;
+%    long  lStatsEnd;
+%    short nRiseBottomPercentile;
+%    short nRiseTopPercentile;
+%    short nDecayBottomPercentile;
+%    short nDecayTopPercentile;
+%    short nStatsSearchMode;
+%    short nStatsSearchDAC;
+%    short nStatsBaselineDAC;
+% 
+%    char  sUnused[78];   // size = 128 bytes
+%    
+%    ABF_StatsRegionInfo()
+%    { 
+%       MEMSET_CTOR; 
+%       STATIC_ASSERT( sizeof( ABF_StatsRegionInfo ) == 128 );
+%    }
+% };
+% 
+% struct ABF_UserListInfo
+% {
+%    // The user list this struct is describing.
+%    short nListNum;
+% 
+%    // Describes one user list
+%    short nULEnable;
+%    short nULParamToVary;
+%    short nULRepeat;
+%    long  lULParamValueListIndex;
+% 
+%    char  sUnused[52];   // size = 64 bytes
+%    
+%    ABF_UserListInfo()
+%    { 
+%       MEMSET_CTOR; 
+%       STATIC_ASSERT( sizeof( ABF_UserListInfo ) == 64 );
+%    }
+% };*/=
 
 %% ----------------------------------------------------------------------------------------------------
