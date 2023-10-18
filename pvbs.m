@@ -51,11 +51,12 @@
 %
 %
 % - NB.
-%   Default settings are designed for current-clamp experiments and 
-%   positive direction for peak detection (e.g. EPSP), but the code is 
-%   fully compatible with either current-clamp or voltage-clamp, or 
-%   peaks in any direction.
-%   "If you only knew the power of the dark side... [of patch clamp]"
+%   Default settings were intended for i-clamp experiments and positive
+%   direction for peak detection (e.g. EPSP), but the code is compatible 
+%   with either i-clamp or V-clamp, or peaks in any direction. (Axis labels 
+%   can be incorrect, especially when experiments with different signal 
+%   types (i or V) are loaded in the same instance of PVBS, but the values 
+%   are correct)
 %
 %
 % - Features underway for future versions:
@@ -101,7 +102,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.10.13';
+pvbsLastMod = '2023.10.18';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -175,7 +176,7 @@ params.y2RangeDefault = [-1, 4]; % y axis range for main trace display, for F
 params.y2Range = params.y2RangeDefault; 
 params.y2RangeZoom = 2; % y range zooming factor, for F
 params.y2RangeMove = 0.083333334; % y range moving factor, for F
-params.y3RangeDefault = [-1000, 2000]; % y axis range for main trace display, for i
+params.y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
 params.y3Range = params.y3RangeDefault; 
 params.y3RangeZoom = 2; % y range zooming factor, for i
 params.y3RangeMove = 0.083333334; % y range moving factor, for i
@@ -2783,6 +2784,72 @@ VRecFile = [fPath, fName];
 [abfTemp, abfSamplingInterval, abfMetadata] = abfload_pvbs(VRecFile); % abfMetadata is not very informative, can disregard
 abfSamplingInterval = abfSamplingInterval/1000; % converting from us to ms
 
+%%{
+try
+    % load parameters
+    %h = guidata(win1);
+    params = h.params;
+    analysisParameters = h.params.actualParams;
+    analysisParametersDefault = h.params.defaultParams;
+
+    abfUnits = abfMetadata.recChUnits;
+    abfSignals = length(abfUnits);
+    if abfSignals > 2
+            warningString = sprintf(' Warning: more than 2 signals present - displaying first two only\n');
+            fprintf(warningString);
+    end
+
+    for i = 1:abfSignals
+
+        try % ditto; but should be irrelevant because this feature was missing
+            if i == 1
+                if strcmp(abfUnits(i), 'pA')
+                    signal1Type = 1; % current, voltage, fluorescence
+                elseif strcmp(abfUnits(i), 'nA') % in case someone has a very bad taste
+                    signal1Type = 1; % current, voltage, fluorescence
+                elseif strcmp(abfUnits(i), 'mV')
+                    signal1Type = 2; % current, voltage, fluorescence
+                elseif strcmp(abfUnits(i), 'uV') % maybe for field recordings this might be the case, but really just here because of OCD
+                    signal1Type = 2; % current, voltage, fluorescence
+                else % don't know what to do, so leave it alone for now %%% fixlater
+                    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage, vestige from 46
+                end
+                signal1Channel = 2; % for .abf timestamp will not be present initially upon loading with abfload(), but will be appended at the end of this function
+                h.params.actualParams.signal1Channel = signal1Channel;
+                h.params.actualParams.signal1Type = signal1Type;
+                h.params.defaultParams.signal1Channel = signal1Channel;
+                h.params.defaultParams.signal1Type = signal1Type;
+                signal2Type = signal1Type; % this is really only for aesthetics, for axis label
+                signal2Channel = 0; % to suppress signal 2 display in a very crude stupid way %%% fixlater
+                h.params.actualParams.signal2Channel = signal2Channel;
+                h.params.actualParams.signal2Type = signal2Type;
+                h.params.defaultParams.signal2Channel = signal2Channel;
+                h.params.defaultParams.signal2Type = signal2Type;
+            else
+                if strcmp(abfUnits(i), 'pA')
+                    signal2Type = 1; % current, voltage, fluorescence
+                elseif strcmp(abfUnits(i), 'nA') % in case someone has a very bad taste
+                    signal2Type = 1; % current, voltage, fluorescence
+                elseif strcmp(abfUnits(i), 'mV')
+                    signal2Type = 2; % current, voltage, fluorescence
+                elseif strcmp(abfUnits(i), 'uV') % maybe for field recordings this might be the case, but really just here because of OCD
+                    signal2Type = 2; % current, voltage, fluorescence
+                else % don't know what to do, so leave it alone for now %%% fixlater
+                    signal2Type = signal1Type; % match to signal 1 in case of dual recordings (will backfire in some cases, e.g. when recording i_cmd with V_m)
+                end
+                signal2Channel = 2; % for .abf timestamp will not be present initially upon loading with abfload(), but will be appended at the end of this function
+                h.params.actualParams.signal2Channel = signal2Channel;
+                h.params.actualParams.signal2Type = signal2Type;
+                h.params.defaultParams.signal2Channel = signal2Channel;
+                h.params.defaultParams.signal2Type = signal2Type;
+            end
+        catch ME
+        end
+    end
+catch ME
+end
+%}
+
 csvColumnsAsSweeps = 0; % override this for .abf; NB. see start of function for definition intended for the original function loadCSV()
 if csvColumnsAsSweeps
     
@@ -3321,6 +3388,13 @@ set(traceDisplay, 'SortMethod', 'depth');
 h.ui.traceDisplayYRange = traceDisplayYRange; % y range; to be shared across experiments
 h.ui.traceDisplayY2Range = traceDisplayY2Range; % y range; to be shared across experiments
 h.ui.traceDisplayXRange = traceDisplayXRange; % x range; to be shared across experiments
+
+%%% fixlater: update axis label according to signal type for each experiment file
+%{
+try
+catch ME
+end
+%}
 
 end
 
@@ -18391,7 +18465,7 @@ end
 try
     y3RangeDefault = params.y3RangeDefault;
 catch ME
-    y3RangeDefault = [-1000, 2000]; % y axis range for main trace display, for i
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
     params.y3RangeDefault = y3RangeDefault;
 end
 
