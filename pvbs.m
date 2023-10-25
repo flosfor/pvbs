@@ -102,7 +102,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.10.18';
+pvbsLastMod = '2023.10.25';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -738,18 +738,18 @@ intrinsicPropertiesAnalysis.displayStart = intrinsicPropertiesAnalysis.stepStart
 intrinsicPropertiesAnalysis.displayEnd = intrinsicPropertiesAnalysis.stepEnd + intrinsicPropertiesAnalysis.displayMargin * intrinsicPropertiesAnalysis.stepLength;
 %}
 %  R_in calculation
-intrinsicPropertiesAnalysis.iStepSize = 50; % (pA); default i_cmd step size to override where i_cmd data is unavailable
-intrinsicPropertiesAnalysis.iStepFirst = -250; % (pA); default i_cmd first step to override where i_cmd data is unavailable
+intrinsicPropertiesAnalysis.iStepSize = 20; % (pA); default i_cmd step size to override where i_cmd data is unavailable
+intrinsicPropertiesAnalysis.iStepFirst = -200; % (pA); default i_cmd first step to override where i_cmd data is unavailable
 intrinsicPropertiesAnalysis.iStepLast = 500; % (pA); default i_cmd last step to override where i_cmd data is unavailable
 intrinsicPropertiesAnalysis.iStepOverride = 1; % override i_step definition with values above where i_cmd data is unavailable
 intrinsicPropertiesAnalysis.RinAtSteadyState = 0; % no more of those idiotic practice at 46
 intrinsicPropertiesAnalysis.RinByLinearFit = 1; % don't like this either
 intrinsicPropertiesAnalysis.RinSweep = 1; %
 %  Spike threshold
-%intrinsicPropertiesAnalysis.spikeThreshold = 10; % (mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
-%intrinsicPropertiesAnalysis.spikeThreshold = 0; % (mV); a compromise
-intrinsicPropertiesAnalysis.spikeThreshold = -10; % (mV); a big compromise
-intrinsicPropertiesAnalysis.spikeDetectionRearm = -30; % (mV); very arbitrary
+%intrinsicPropertiesAnalysis.spikeThreshold = 10; % (mV); relatively strict
+intrinsicPropertiesAnalysis.spikeThreshold = 0; % (mV); meh
+%intrinsicPropertiesAnalysis.spikeThreshold = -10; % (mV); relatively loose
+intrinsicPropertiesAnalysis.spikeDetectionRearm = -20; % (mV); very arbitrary
 
 end
 
@@ -3146,7 +3146,6 @@ groupStr = h.exp.data.groupStr{itemSelected};
 axes(traceDisplay);
 
 try % use try-catch here
-    
     workingAxis = 1;
     if signal1Type == 3 % i, V, F
         displayTraceF(workingAxis);
@@ -3155,7 +3154,15 @@ try % use try-catch here
     else % default to V in case signal1Type is incorrectly set due to whatever miracle
         displayTraceV(workingAxis); % can't think of a better name; also separate axis labeling from this function
     end
+catch ME
+    errorString = sprintf(' \nWarning: invalid display parameters (Axis #%s) - check signal channels\n', num2str(workingAxis));
+    %error(errorString);
+    fprintf(errorString); % not exactly an error
+    yyaxis left; % return to left axis as a failsafe
+    %return
+end
     
+try % use try-catch here
     workingAxis = 2;
     if signal2Type == 3 % i, V, F
         displayTraceF(workingAxis);
@@ -3163,14 +3170,13 @@ try % use try-catch here
         displayTraceV(workingAxis); % can't think of a better name; also separate axis labeling from this function
     else % default to V in case signal1Type is incorrectly set due to whatever miracle
         displayTraceV(workingAxis); % can't think of a better name; also separate axis labeling from this function
-    end
-    
+    end    
 catch ME
-    errorString = sprintf(' Warning: invalid display parameters (Axis #%s) - check signal channels\n', num2str(workingAxis));
+    errorString = sprintf(' \nWarning: invalid display parameters (Axis #%s) - check signal channels\n', num2str(workingAxis));
     %error(errorString);
     fprintf(errorString); % not exactly an error
     yyaxis left; % return to left axis as a failsafe
-    return
+    %return
 end
 
     function displayTraceF(axisIdx)
@@ -3481,7 +3487,6 @@ groupStr = h.exp.data.groupStr{itemSelected};
 axes(traceDisplay);
 
 try % use try-catch here
-    
     if displayFlag(1)
         workingAxis = 1;
         if signal1Type == 3 % i, V, F
@@ -3492,7 +3497,15 @@ try % use try-catch here
             displayTraceV2(workingAxis); % can't think of a better name; also separate axis labeling from this function
         end
     end
-    
+catch ME
+    %errorString = sprintf(' \nWarning: invalid display parameters (Axis #%s) - check signal channels\n', num2str(workingAxis));
+    %error(errorString);
+    %fprintf(errorString); % not exactly an error
+    yyaxis left; % return to left axis as a failsafe
+    %return
+end
+
+try % use try-catch here
     if displayFlag(2)
         workingAxis = 2;
         if signal2Type == 3 % i, V, F
@@ -3503,13 +3516,12 @@ try % use try-catch here
             displayTraceV2(workingAxis); % can't think of a better name; also separate axis labeling from this function
         end
     end
-    
 catch ME
-    %errorString = sprintf(' Warning: invalid display parameters (Axis #%s) - check signal channels\n', num2str(workingAxis));
+    %errorString = sprintf(' \nWarning: invalid display parameters (Axis #%s) - check signal channels\n', num2str(workingAxis));
     %error(errorString);
     %fprintf(errorString); % not exactly an error
     yyaxis left; % return to left axis as a failsafe
-    return
+    %return
 end
 
     function displayTraceF2(axisIdx)
@@ -4178,6 +4190,8 @@ ui2.saveButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Upd
                     ylabel('dF/F', 'color', 'k');
                     ylim(h.params.y2RangeDefault);
                 otherwise % nonexistent
+                    ylabel('Value', 'color', 'k');
+                    ylim(h.params.y2RangeDefault);
                     return
             end
             yyaxis right;
@@ -4192,6 +4206,8 @@ ui2.saveButton = uicontrol('Parent', win2, 'Style', 'pushbutton', 'string', 'Upd
                     ylabel('dF/F', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
                     ylim(h.params.y2RangeDefault);
                 otherwise % nonexistent
+                    ylabel('Value', 'color', [0, 0.5, 0]); % keep the color convention from older version where left axis was Vm, right axis was dF/F
+                    ylim(h.params.y2RangeDefault);
                     return
             end
             h.ui.traceDisplay = traceDisplay;
@@ -13464,7 +13480,7 @@ try
                         case 3
                             ylabel('dF/F');
                         otherwise
-                            ylabel('');
+                            ylabel('Value');
                     end
                 case 2
                     switch signal1Type % i, V, F
@@ -13475,7 +13491,7 @@ try
                         case 3
                             ylabel('Area ((dF/F)*ms)');
                         otherwise
-                            ylabel('');
+                            ylabel('Value');
                     end
                 case 3
                     switch signal1Type % i, V, F
@@ -13555,7 +13571,7 @@ try
                         case 3
                             ylabel('dF/F');
                         otherwise
-                            ylabel('');
+                            ylabel('Value');
                     end
                 case 2
                     switch signal2Type % i, V, F
@@ -13566,7 +13582,7 @@ try
                         case 3
                             ylabel('Area ((dF/F)*ms)');
                         otherwise
-                            ylabel('');
+                            ylabel('Value');
                     end
                 case 3
                     switch signal2Type % i, V, F
@@ -13781,7 +13797,7 @@ try
                         case 3
                             ylabel('dF/F');
                         otherwise
-                            ylabel('');
+                            ylabel('Value');
                     end
                 case 2
                     switch signal1Type % i, V, F
@@ -13792,7 +13808,7 @@ try
                         case 3
                             ylabel('Area ((dF/F)*ms)');
                         otherwise
-                            ylabel('');
+                            ylabel('Value');
                     end
                 case 3
                     switch signal1Type % i, V, F
@@ -13872,7 +13888,7 @@ try
                         case 3
                             ylabel('dF/F');
                         otherwise
-                            ylabel('');
+                            ylabel('Value');
                     end
                 case 2
                     switch signal2Type % i, V, F
@@ -13883,7 +13899,7 @@ try
                         case 3
                             ylabel('Area ((dF/F)*ms)');
                         otherwise
-                            ylabel('');
+                            ylabel('Value');
                     end
                 case 3
                     switch signal2Type % i, V, F
@@ -14131,7 +14147,7 @@ if plotIdx == 1
                             case 3
                                 ylabel('dF/F');
                             otherwise
-                                ylabel('');
+                                ylabel('Value');
                         end
                     case 2
                         switch signal1Type % i, V, F
@@ -14142,7 +14158,7 @@ if plotIdx == 1
                             case 3
                                 ylabel('Area ((dF/F)*ms)');
                             otherwise
-                                ylabel('');
+                                ylabel('Value');
                         end
                     case 3
                         switch signal1Type % i, V, F
@@ -14224,7 +14240,7 @@ if plotIdx == 1
                             case 3
                                 ylabel('dF/F');
                             otherwise
-                                ylabel('');
+                                ylabel('Value');
                         end
                     case 2
                         switch signal2Type % i, V, F
@@ -14235,7 +14251,7 @@ if plotIdx == 1
                             case 3
                                 ylabel('Area ((dF/F)*ms)');
                             otherwise
-                                ylabel('');
+                                ylabel('Value');
                         end
                     case 3
                         switch signal2Type % i, V, F
@@ -14431,7 +14447,7 @@ if plotIdx == 2
                             case 3
                                 ylabel('dF/F');
                             otherwise
-                                ylabel('');
+                                ylabel('Value');
                         end
                     case 2
                         switch signal1Type % i, V, F
@@ -14442,7 +14458,7 @@ if plotIdx == 2
                             case 3
                                 ylabel('Area ((dF/F)*ms)');
                             otherwise
-                                ylabel('');
+                                ylabel('Value');
                         end
                     case 3
                         switch signal1Type % i, V, F
@@ -14522,7 +14538,7 @@ if plotIdx == 2
                             case 3
                                 ylabel('dF/F');
                             otherwise
-                                ylabel('');
+                                ylabel('Value');
                         end
                     case 2
                         switch signal2Type % i, V, F
@@ -14533,7 +14549,7 @@ if plotIdx == 2
                             case 3
                                 ylabel('Area ((dF/F)*ms)');
                             otherwise
-                                ylabel('');
+                                ylabel('Value');
                         end
                     case 3
                         switch signal2Type % i, V, F
@@ -18328,12 +18344,25 @@ traceDisplayYRange = params.yRangeDefault;
 traceDisplayY2Range = params.y2RangeDefault;
 %}
 
+try
+    isABF = h.exp.data.fileType;
+    isABF = isABF{expIdx};
+    isABF = strcmp(isABF, 'ABF');
+catch ME
+    isABF = 0;
+end
+
 try % try-catch for reverse compatibility
     signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
     signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
 catch ME
-    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
-    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    if isABF
+        signal1Type = 1; % current, voltage, fluorescence - defaulting to current
+        signal2Type = signal1Type; % match to signal 1 in case of dual recordings (will backfire in some cases, e.g. when recording i_cmd with V_m)
+    else
+        signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+        signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    end
 end
 
 switch signal1Type % i, V, F
@@ -18442,12 +18471,25 @@ traceDisplayYRange = params.yRangeDefault;
 traceDisplayY2Range = params.y2RangeDefault;
 %}
 
+try
+    isABF = h.exp.data.fileType;
+    isABF = isABF{expIdx};
+    isABF = strcmp(isABF, 'ABF');
+catch ME
+    isABF = 0;
+end
+
 try % try-catch for reverse compatibility
     signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
     signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
 catch ME
-    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
-    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    if isABF
+        signal1Type = 1; % current, voltage, fluorescence - defaulting to current
+        signal2Type = signal1Type; % match to signal 1 in case of dual recordings (will backfire in some cases, e.g. when recording i_cmd with V_m)
+    else
+        signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+        signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    end
 end
 
 try
@@ -22432,5 +22474,6 @@ end
 %       STATIC_ASSERT( sizeof( ABF_UserListInfo ) == 64 );
 %    }
 % };*/=
+
 
 %% ----------------------------------------------------------------------------------------------------
