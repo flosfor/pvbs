@@ -102,7 +102,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.10.25';
+pvbsLastMod = '2023.12.11';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -749,7 +749,7 @@ intrinsicPropertiesAnalysis.RinSweep = 1; %
 %intrinsicPropertiesAnalysis.spikeThreshold = 10; % (mV); relatively strict
 intrinsicPropertiesAnalysis.spikeThreshold = 0; % (mV); meh
 %intrinsicPropertiesAnalysis.spikeThreshold = -10; % (mV); relatively loose
-intrinsicPropertiesAnalysis.spikeDetectionRearm = -20; % (mV); very arbitrary
+intrinsicPropertiesAnalysis.spikeDetectionRearm = -10; % (mV); very arbitrary
 
 end
 
@@ -11822,8 +11822,8 @@ function output = oldAnalysisIntrinsic(input_data, input_data_name, param_window
         RinAtSteadyState = 0;
         RinByLinearFit = 1;
         RinSweep = 1;
-        spike_trigger = 10;
-        spike_rearm = 0;
+        spike_trigger = 0;
+        spike_rearm = -10;
     end
     %}
     
@@ -15331,8 +15331,8 @@ function h = intrinsicAnalysis2(h, data_voltage_episodic, flagScalingOverride)
         RinAtSteadyState = 1; % hate this, but everything seems backwards here
         RinByLinearFit = 1; % hate this too
         RinSweep = 1; %
-        spikeThreshold = 10; % (mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
-        spikeDetectionRearm = 0; % (mV)
+        spikeThreshold = 0; % (mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
+        spikeDetectionRearm = -10; % (mV)
     end
 
     % Unit conversion for V_rec (unit for raw numbers: 10 nV for Dagan - PV)
@@ -15923,36 +15923,36 @@ catch ME
     RinAtSteadyState = 1; % hate this, but everything seems backwards here
     RinByLinearFit = 1; % hate this too
     RinSweep = 1; %
-    spikeThreshold = 10; % (mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
-    spikeDetectionRearm = 0; % (mV)
+    spikeThreshold = 0; % (mV); reasonably accurate and slightly generous considering nonselective cationic E_rev and LJP under normal circumstances
+    spikeDetectionRearm = -10; % (mV)
 end
 
 % options
 optionsWin = figure('Name', 'Intrinsic Properties Analysis Options', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.2, 0.2, 0.32, 0.6], 'resize', 'off', 'DeleteFcn', @winClosed); % use CloseRequestFcn?
-oWin.segmentText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Gap-free to episodic format', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.9, 0.9, 0.04]);
-oWin.segmentLengthText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Segment length:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.85, 0.4, 0.04]);
-oWin.segmentLengthInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.data_segment_length), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.86, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
-oWin.segmentLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.85, 0.1, 0.04]);
-oWin.segmentOffsetText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Initial offset:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.85, 0.4, 0.04]);
-oWin.segmentOffsetInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.data_segmentation_cutoff_first), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.86, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
-oWin.segmentOffsetUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.85, 0.1, 0.04]);
+oWin.segmentText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Gap-free to episodic format', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.925, 0.9, 0.04]);
+oWin.segmentLengthText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Segment length:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.875, 0.4, 0.04]);
+oWin.segmentLengthInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.data_segment_length), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.885, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.segmentLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.875, 0.1, 0.04]);
+oWin.segmentOffsetText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Initial offset:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.875, 0.4, 0.04]);
+oWin.segmentOffsetInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.data_segmentation_cutoff_first), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.885, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.segmentOffsetUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.875, 0.1, 0.04]);
 
-oWin.baselineText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Baseline (at RMP)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.75, 0.9, 0.04]);
-oWin.baselineStartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Baseline start:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.7, 0.4, 0.04]);
-oWin.baselineStartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_baseline_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.71, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
-oWin.baselineStartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.7, 0.1, 0.04]);
-oWin.baselineEndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Baseline end:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.7, 0.4, 0.04]);
-oWin.baselineEndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_baseline_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.71, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
-oWin.baselineEndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.7, 0.1, 0.04]);
+oWin.baselineText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Baseline (at RMP)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.8, 0.9, 0.04]);
+oWin.baselineStartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Baseline start:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.75, 0.4, 0.04]);
+oWin.baselineStartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_baseline_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.76, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.baselineStartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.75, 0.1, 0.04]);
+oWin.baselineEndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Baseline end:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.75, 0.4, 0.04]);
+oWin.baselineEndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_baseline_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.76, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.baselineEndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.75, 0.1, 0.04]);
 
-oWin.windowsText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Current step definition', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.6, 0.9, 0.04]);
+oWin.windowsText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Current step definition', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.675, 0.9, 0.04]);
 %oWin.windowsText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Analysis windows (1: transient, 2: steady-state)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.6, 0.9, 0.04]);
-oWin.window1StartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step start (t):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.55, 0.4, 0.04]);
-oWin.window1StartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.56, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
-oWin.window1StartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.55, 0.1, 0.04]);
-oWin.window1EndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step end (t):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.55, 0.4, 0.04]);
-oWin.window1EndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.56, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
-oWin.window1EndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.55, 0.1, 0.04]);
+oWin.window1StartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step start (t):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.625, 0.4, 0.04]);
+oWin.window1StartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.635, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.window1StartUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.625, 0.1, 0.04]);
+oWin.window1EndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step end (t):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.625, 0.4, 0.04]);
+oWin.window1EndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.635, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
+oWin.window1EndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.625, 0.1, 0.04]);
 %{
 oWin.window2StartText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Window 2 start:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.5, 0.4, 0.04]);
 oWin.window2StartInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_2_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.51, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
@@ -15961,31 +15961,39 @@ oWin.window2EndText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string',
 oWin.window2EndInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_2_end), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.51, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
 oWin.window2EndUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.5, 0.1, 0.04]);
 %}
-oWin.stepLengthText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step duration (t):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.5, 0.4, 0.04]);
-oWin.stepLengthInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_end - analysisParameters.window_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.51, 0.125, 0.04], 'enable', 'off');
-oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.5, 0.1, 0.04]);
+oWin.stepLengthText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step duration (t):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.575, 0.4, 0.04]);
+oWin.stepLengthInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.window_end - analysisParameters.window_start), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.585, 0.125, 0.04], 'enable', 'off');
+oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.575, 0.1, 0.04]);
 %oWin.stepLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms) [ = (Win 2 end) - (Win 1 start) ]', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.5, 0.5, 0.4, 0.04]);
 
-oWin.stepSizeText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step size (i):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.45, 0.6, 0.04]);
-oWin.stepSizeInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(iStepSize), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.46, 0.125, 0.04], 'enable', 'on');
-oWin.stepSizeUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(pA)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.45, 0.1, 0.04]);
-oWin.stepSizeOverride = uicontrol('Parent', optionsWin, 'Style', 'checkbox', 'string', 'Use this definition (when i_cmd unavailable)', 'value', logical(iStepOverride), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.46, 0.4, 0.04], 'callback', @intrinsiciStepOverride);
-oWin.stepFirstText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step first (i):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.4, 0.6, 0.04]);
-oWin.stepFirstInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(iStepFirst), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.41, 0.125, 0.04], 'enable', 'on');
-oWin.stepFirstUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(pA)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.4, 0.1, 0.04]);
-oWin.stepLastText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step last (i):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.4, 0.6, 0.04]);
-oWin.stepLastInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(iStepLast), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.41, 0.125, 0.04], 'enable', 'on');
-oWin.stepLastUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(pA)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.4, 0.1, 0.04]);
+oWin.stepSizeText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step size (i):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.525, 0.6, 0.04]);
+oWin.stepSizeInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(iStepSize), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.535, 0.125, 0.04], 'enable', 'on');
+oWin.stepSizeUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(pA)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.525, 0.1, 0.04]);
+oWin.stepSizeOverride = uicontrol('Parent', optionsWin, 'Style', 'checkbox', 'string', 'Use this definition (when i_cmd unavailable)', 'value', logical(iStepOverride), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.535, 0.4, 0.04], 'callback', @intrinsiciStepOverride);
+oWin.stepFirstText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step first (i):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.475, 0.6, 0.04]);
+oWin.stepFirstInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(iStepFirst), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.485, 0.125, 0.04], 'enable', 'on');
+oWin.stepFirstUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(pA)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.475, 0.1, 0.04]);
+oWin.stepLastText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'i_step last (i):', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.475, 0.6, 0.04]);
+oWin.stepLastInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(iStepLast), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.485, 0.125, 0.04], 'enable', 'on');
+oWin.stepLastUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(pA)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.475, 0.1, 0.04]);
 
-oWin.RinText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'R_in & sag ratio calculation', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.3, 0.9, 0.04]);
-oWin.Rin11 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use transient state (negative peak)', 'value', logical(~RinAtSteadyState), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.25, 0.4, 0.04], 'callback', @intrinsicRadiobuttonBehavior1);
-oWin.Rin12 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use steady state (mean)', 'value', logical(RinAtSteadyState), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.25, 0.4, 0.04], 'callback', @intrinsicRadiobuttonBehavior2);
-oWin.Rin21 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use sweep:', 'value', logical(~RinByLinearFit), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.2, 0.4, 0.04], 'callback', @intrinsicRadiobuttonBehavior3);
-oWin.Rin22 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(RinSweep), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.2, 0.125, 0.04]);
-oWin.Rin23 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use linear fit (crossing origin)', 'value', logical(RinByLinearFit), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.2, 0.4, 0.04], 'callback', @intrinsicRadiobuttonBehavior4);
+oWin.RinText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'R_in & sag ratio calculation', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.4, 0.9, 0.04]);
+oWin.Rin11 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use transient state (negative peak)', 'value', logical(~RinAtSteadyState), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.35, 0.4, 0.04], 'callback', @intrinsicRadiobuttonBehavior1);
+oWin.Rin12 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use steady state (mean)', 'value', logical(RinAtSteadyState), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.35, 0.4, 0.04], 'callback', @intrinsicRadiobuttonBehavior2);
+oWin.Rin21 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use sweep:', 'value', logical(~RinByLinearFit), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.3, 0.4, 0.04], 'callback', @intrinsicRadiobuttonBehavior3);
+oWin.Rin22 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(RinSweep), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.3, 0.125, 0.04]);
+oWin.Rin23 = uicontrol('Parent', optionsWin, 'Style', 'radiobutton', 'string', 'Use linear fit (crossing origin)', 'value', logical(RinByLinearFit), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.3, 0.4, 0.04], 'callback', @intrinsicRadiobuttonBehavior4);
 
-oWin.resetButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.45, 0.025, 0.25, 0.06], 'callback', @resetIntrinsicOptions, 'interruptible', 'off');
-oWin.saveButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Save', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.725, 0.025, 0.25, 0.06], 'callback', @saveIntrinsicOptions, 'interruptible', 'off');
+oWin.APText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'AP detection', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.225, 0.9, 0.04]);
+oWin.APThresholdText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'AP threshold:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.175, 0.6, 0.04]);
+oWin.APThresholdInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(spikeThreshold), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.185, 0.125, 0.04], 'enable', 'on');
+oWin.APThresholdUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(mV)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.175, 0.1, 0.04]);
+oWin.APRearmText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Reset detection at:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.175, 0.6, 0.04]);
+oWin.APRearmInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(spikeDetectionRearm), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.75, 0.185, 0.125, 0.04], 'enable', 'on');
+oWin.APRearmUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(mV)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.9, 0.175, 0.1, 0.04]);
+
+oWin.resetButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.45, 0.05, 0.25, 0.06], 'callback', @resetIntrinsicOptions, 'interruptible', 'off');
+oWin.saveButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Save', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.725, 0.05, 0.25, 0.06], 'callback', @saveIntrinsicOptions, 'interruptible', 'off');
 
 oWinSegmentLength = oWin.segmentLengthInput.String;
 oWinOffset = oWin.segmentOffsetInput.String;
@@ -16094,6 +16102,10 @@ oWinW22 = str2num(oWinW22);
         h.params.actualParams.intrinsicPropertiesAnalysis.window_2_start = oWinW21;
         h.params.actualParams.intrinsicPropertiesAnalysis.window_2_end = oWinW22;
         %}
+
+        spikeThreshold = str2num(oWin.APThresholdInput.String);
+        spikeDetectionRearm = str2num(oWin.APRearmInput.String);
+
     end
 
     function resetIntrinsicOptions(src, ~)
@@ -16150,6 +16162,13 @@ oWinW22 = str2num(oWinW22);
             oWin.stepSizeInput.String = '50';
             oWin.stepFirstInput.String = '-250';
             oWin.stepLastInput.String = '500';
+        end
+        try
+            oWin.APThresholdInput.String = num2str(h.params.actualParams.intrinsicPropertiesAnalysis.spikeThreshold);
+            oWin.APRearmInput.String = num2str(h.params.actualParams.intrinsicPropertiesAnalysis.spikeDetectionRearm);
+        catch ME % ditto
+            oWin.APThresholdInput.String = '0';
+            oWin.APRearmInput.String = '-10';
         end
         
         %guidata(win1, h);
@@ -16220,6 +16239,10 @@ oWinW22 = str2num(oWinW22);
         h.params.actualParams.intrinsicPropertiesAnalysis.RinAtSteadyState = oWin.Rin12.Value;
         h.params.actualParams.intrinsicPropertiesAnalysis.RinByLinearFit = oWin.Rin23.Value;
         h.params.actualParams.intrinsicPropertiesAnalysis.RinSweep = str2num(oWin.Rin22.String);
+
+        % AP detection %%% variable names inconsistent af
+        h.params.actualParams.intrinsicPropertiesAnalysis.spikeThreshold = str2num(oWin.APThresholdInput.String);
+        h.params.actualParams.intrinsicPropertiesAnalysis.spikeDetectionRearm = str2num(oWin.APRearmInput.String);
         
         guidata(win1, h);
         close(optionsWin);
