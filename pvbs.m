@@ -15929,7 +15929,7 @@ end
 
 % options
 optionsWin = figure('Name', 'Intrinsic Properties Analysis Options', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.2, 0.2, 0.32, 0.6], 'resize', 'off', 'DeleteFcn', @winClosed); % use CloseRequestFcn?
-oWin.segmentText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Gap-free to episodic format', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.925, 0.9, 0.04]);
+oWin.segmentText = uicontrol('Parent', optionsWin, 'Style', 'text', 'fontweight', 'bold', 'string', 'Gap-free to episodic format (if applicable)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.925, 0.9, 0.04]);
 oWin.segmentLengthText = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Segment length:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.875, 0.4, 0.04]);
 oWin.segmentLengthInput = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.data_segment_length), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.25, 0.885, 0.125, 0.04], 'callback', @lazyIntrinsicParamUpdate);
 oWin.segmentLengthUnit = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.4, 0.875, 0.1, 0.04]);
