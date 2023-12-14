@@ -102,7 +102,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.12.11';
+pvbsLastMod = '2023.12.14';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -2794,10 +2794,16 @@ try
 
     abfUnits = abfMetadata.recChUnits;
     abfSignals = length(abfUnits);
+    %{
     if abfSignals > 2
             warningString = sprintf(' Warning: more than 2 signals present - displaying first two only\n');
             fprintf(warningString);
+    elseif abfSignals == 2 % dual recordings
+
+    else % single recordings
+
     end
+    %}
 
     for i = 1:abfSignals
 
@@ -2809,7 +2815,7 @@ try
                     signal1Type = 1; % current, voltage, fluorescence
                 elseif strcmp(abfUnits(i), 'mV')
                     signal1Type = 2; % current, voltage, fluorescence
-                elseif strcmp(abfUnits(i), 'uV') % maybe for field recordings this might be the case, but really just here because of OCD
+                elseif strcmp(abfUnits(i), 'uV') % maybe for field recordings this might be the case, but really just here because of OCD %%% but they would be written as actual micro instead of "u"?
                     signal1Type = 2; % current, voltage, fluorescence
                 else % don't know what to do, so leave it alone for now %%% fixlater
                     signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage, vestige from 46
@@ -2980,7 +2986,28 @@ abfCh1Column = pvbsVoltageColumn - 1;
 abfCh2Column = pvbsCurrentColumn - 1;
 %VRec1 = abfTemp(:, abfCh1Column, :);
 %VRec2 = abfTemp(:, abfCh2Column, :);
-VRec = abfTemp(:, abfCh1Column, :);
+%VRec = abfTemp(:, abfCh1Column, :);
+if abfSignals > 2
+    warningString = sprintf(' Warning: more than 2 signals present - displaying first two only\n');
+    fprintf(warningString);
+    VRec1 = abfTemp(:, abfCh1Column, :);
+    VRec2 = abfTemp(:, abfCh2Column, :);
+    VRec = [VRec1, VRec2];
+    h.params.actualParams.signal1Channel = abfCh1Column + 1; % +1 is necessary... stupid coding as usual by me, will surely regret this later
+    h.params.actualParams.signal2Channel = abfCh2Column + 1;
+    h.params.defaultParams.signal1Channel = abfCh1Column + 1;
+    h.params.defaultParams.signal2Channel = abfCh2Column + 1;
+elseif abfSignals == 2 % dual recordings
+    VRec1 = abfTemp(:, abfCh1Column, :);
+    VRec2 = abfTemp(:, abfCh2Column, :);
+    VRec = [VRec1, VRec2];
+    h.params.actualParams.signal1Channel = abfCh1Column + 1;
+    h.params.actualParams.signal2Channel = abfCh2Column + 1;
+    h.params.defaultParams.signal1Channel = abfCh1Column + 1;
+    h.params.defaultParams.signal2Channel = abfCh2Column + 1;
+else % single recordings
+    VRec = abfTemp(:, abfCh1Column, :);
+end
 
 timeStampColumn = 0 : abfSamplingInterval : abfSamplingInterval*(size(abfTemp, 1) - 1);
 timeStampColumn = timeStampColumn';
@@ -14790,7 +14817,28 @@ function [h, data_voltage_original] = loadIntrinsicActual(h)
         abfCh2Column = pvbsCurrentColumn - 1;
         %VRec1 = abfTemp(:, abfCh1Column, :);
         %VRec2 = abfTemp(:, abfCh2Column, :);
-        VRec = abfTemp(:, abfCh1Column, :);
+        %VRec = abfTemp(:, abfCh1Column, :);
+        if abfSignals > 2
+            warningString = sprintf(' Warning: more than 2 signals present - displaying first two only\n');
+            fprintf(warningString);
+            VRec1 = abfTemp(:, abfCh1Column, :);
+            VRec2 = abfTemp(:, abfCh2Column, :);
+            VRec = [VRec1, VRec2];
+            h.params.actualParams.signal1Channel = abfCh1Column + 1; % +1 is necessary... stupid coding as usual by me, will surely regret this later
+            h.params.actualParams.signal2Channel = abfCh2Column + 1;
+            h.params.defaultParams.signal1Channel = abfCh1Column + 1;
+            h.params.defaultParams.signal2Channel = abfCh2Column + 1;
+        elseif abfSignals == 2 % dual recordings
+            VRec1 = abfTemp(:, abfCh1Column, :);
+            VRec2 = abfTemp(:, abfCh2Column, :);
+            VRec = [VRec1, VRec2];
+            h.params.actualParams.signal1Channel = abfCh1Column + 1;
+            h.params.actualParams.signal2Channel = abfCh2Column + 1;
+            h.params.defaultParams.signal1Channel = abfCh1Column + 1;
+            h.params.defaultParams.signal2Channel = abfCh2Column + 1;
+        else % single recordings
+            VRec = abfTemp(:, abfCh1Column, :);
+        end
 
         timeStampColumn = 0 : abfSamplingInterval : abfSamplingInterval*(size(abfTemp, 1) - 1);
         timeStampColumn = timeStampColumn';
