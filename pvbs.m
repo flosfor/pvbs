@@ -102,7 +102,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.12.14';
+pvbsLastMod = '2023.12.15';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -1786,7 +1786,7 @@ cellListDisplay = h.ui.cellListDisplay;
 fprintf('Loading experiment(s)...');
 
 % select experiment metadata .xml (or directory of the same name containing it)
-filesToImport = uipickfiles_pvbs('type', {'*.abf', 'Axon binary file (.abf)'; '*.xml', 'VRec/LScn/tSer directory or metadata (.xml)'; '*.csv', 'VRec data (.csv)'});
+filesToImport = uipickfiles_pvbs('type', {'*.*', 'All files (.*)'; '*.abf', 'Axon binary file (.abf)'; '*.xml', 'VRec/LScn/tSer directory or metadata (.xml)'; '*.csv', 'VRec data (.csv)'});
 tic; % start stopwatch
 if iscell(filesToImport)
     if isempty(filesToImport)
@@ -1856,6 +1856,9 @@ end
 h.ui.sweepListDisplay.Value = 1;
 h = highlightSweep(h, 1);
 set(h.ui.groupSweepText, 'string', 'Sweep 1');
+
+% reset trace display range
+h = traceDisplayResetCalled(h);
 
 % save
 guidata(src, h);
@@ -2838,7 +2841,7 @@ try
                     signal2Type = 1; % current, voltage, fluorescence
                 elseif strcmp(abfUnits(i), 'mV')
                     signal2Type = 2; % current, voltage, fluorescence
-                elseif strcmp(abfUnits(i), 'uV') % maybe for field recordings this might be the case, but really just here because of OCD
+                elseif strcmp(abfUnits(i), 'uV') % maybe for field recordings this might be the case, but really just here because of OCD %%% but they would be written as actual micro instead of "u"?
                     signal2Type = 2; % current, voltage, fluorescence
                 else % don't know what to do, so leave it alone for now %%% fixlater
                     signal2Type = signal1Type; % match to signal 1 in case of dual recordings (will backfire in some cases, e.g. when recording i_cmd with V_m)
@@ -14744,7 +14747,7 @@ function [h, data_voltage_original] = loadIntrinsicActual(h)
 
     % load datafile
     try
-        [fName, fPath] = uigetfile({'*.abf', 'Axon binary file'; '*.xml', 'VoltageRecording Metadata'; '*.csv', 'VoltageRecording Data'}, 'Select File (.abf, .xml, .csv)'); % filters for '.xml' extension only
+        [fName, fPath] = uigetfile({'*.*', 'All files (.*)'; '*.abf', 'Axon binary file'; '*.xml', 'VoltageRecording Metadata'; '*.csv', 'VoltageRecording Data'}, 'Select File (.abf, .xml, .csv)'); % filters for '.xml' extension only
     catch
         waitfor(msgbox('Error: Select valid .xml or .csv'));
         error('Error: Select valid .xml or .csv');
