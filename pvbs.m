@@ -1,7 +1,8 @@
 %% PVBS: Prairie View Browsing Solution
 % (https://github.com/flosfor/pvbs)
 %
-% Copyright 2022-2023, Jaeyoung Yoon (yoonjy@mit.edu, yjy@snu.ac.kr).
+% Copyright 2022-2023, Jaeyoung Yoon 
+% (jy.yoon@tch.harvard.edu; yoonjy@mit.edu; yjy@snu.ac.kr).
 % 
 % The use or modification of this software (PVBS) is consented only 
 % under agreement to cite the developer and/or the original source code 
@@ -180,7 +181,7 @@ params.y3RangeDefault = [-500, 400]; % y axis range for main trace display, for 
 params.y3Range = params.y3RangeDefault; 
 params.y3RangeZoom = 2; % y range zooming factor, for i
 params.y3RangeMove = 0.083333334; % y range moving factor, for i
-params.traceColorInactive = [0.6, 0.6, 0.6]; % color for inactive traces
+params.traceColorInactive = [0.75, 0.75, 0.75]; % color for inactive traces
 params.traceColorActive = [1, 0, 0]; % color for active (selected) traces
 params.trace2ColorInactive = [0.9, 0.95, 0.9]; % secondary color for inactive traces
 params.trace2ColorActive = [0.6, 0.8, 0.6]; % secondary color for active (selected) traces
