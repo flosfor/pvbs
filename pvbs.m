@@ -1,7 +1,7 @@
 %% PVBS: Prairie View Browsing Solution
 % (https://github.com/flosfor/pvbs)
 %
-% Copyright 2022-2023, Jaeyoung Yoon. 
+% Copyright 2022-2024, Jaeyoung Yoon. 
 % (jy.yoon@tch.harvard.edu; yoonjy@mit.edu; yjy@snu.ac.kr)
 % 
 % The use or modification of this software (PVBS) is consented only 
@@ -103,7 +103,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2023.12.15';
+pvbsLastMod = '2024.01.24';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -11871,7 +11871,8 @@ spike_rearm = 0; % (mV); re-arm threshold for spike detection, arbitrary; must h
 
 % Supported output types; see also struct assignment at the bottom
 %  will be used for field names in a struct, so do not use spaces, etc.
-output_type_list = {'rmp', 'r_in', 'sag_ratio', 'rheobase', 'i_v', 'f_i', 'i_step_resolution', 'rheobase_sweep', 'rheobase_x2_sweep'};
+%output_type_list = {'rmp', 'r_in', 'sag_ratio', 'rheobase', 'i_v', 'f_i', 'i_step_resolution', 'rheobase_sweep', 'rheobase_x2_sweep'}; %%% why the fuck did i write it like this? see also end of function
+output_type_list = {'rmp', 'r_in', 'sag_ratio', 'rheobase', 'i_v', 'f_i', 'i_step_resolution', 'rheobase_sweep', 'rheobase_x2_sweep', 'spike_times'};
 
 % Initialize output array (sweeps * channels * types)
 output_temp = nan(size(input_data, 3), size(input_data, 2), size(output_type_list, 2));
@@ -11890,7 +11891,7 @@ elseif v_channel == 2
 else
     error(sprintf('\nCheck acquisition channels for V_m and i_cmd\n'));
 end
-% offset column by 1 for timestamp
+% offset column by 1 for timestamp %%% fixlater but this already assumes timestamp present in column 1
 v_channel = 1 + v_channel; i_channel = 1 + i_channel;
 
 % Force only one baseline and detection window
@@ -11922,14 +11923,17 @@ clear idx1 idx2;
 
 % Count spikes
 spike_count = zeros(size(input_data, 3), 1); % could also accommodate multiple channels, but for the time being just count from one channel in each sweep
+spike_times = cell(size(input_data, 3), 1); % ditto
 for idx1 = 1:size(input_data, 3) % iterate for each sweep
     spike_counter = 0; % spike counter: start from 0
     spike_counter_armed = 1; % spike counter status: armed at start
+    spike_times_temp = []; % initializing
     for idx2 = param_window(1):param_window(2) % scan for spikes across detection window
         if spike_counter_armed == 1 % spike counter armed; search for spikes
             if input_data(idx2, v_channel, idx1) >= spike_trigger % spike detected
                 spike_counter = spike_counter + 1; % increase counter by 1
                 spike_counter_armed = 0; % disarm spike counter until V_m falls back
+                spike_times_temp(end + 1) = input_data(idx2, 1, idx1); % here it's assumed that timestamp is in column 1 %%% fixlater
             end
         else % spike counter unarmed; ongoing spike
             if input_data(idx2, v_channel, idx1) <= spike_rearm % when V_m falls back
@@ -11939,7 +11943,9 @@ for idx1 = 1:size(input_data, 3) % iterate for each sweep
     end
     spike_count(idx1, 1) = spike_counter; % number of spikes for the current sweep
     spike_counter = 0; % reset spike counter
+    spike_times{idx1} = spike_times_temp;
 end
+spike_times = {spike_times}; % this is required to not fuck up the output struct %%% fixlater - although this whole function is fubar at this point
 
 % Calculate delta(V) for non-spiking sweeps, at peak & steady-state
 i_v_sweeps = find(spike_count == 0);
@@ -12112,7 +12118,8 @@ if max(spike_count) == 0 % following code will not work properly if all sweeps w
     r_in = r_in * 10^3; % converting to MOhm 
     % Calculate sag ratio from the largest negative current injection
     sag_ratio = (r_transient(1) - r_steady(1)) / r_transient(1);
-    output = struct(output_type_list{1}, rmp, output_type_list{2}, r_in, output_type_list{3}, sag_ratio, output_type_list{4}, [], output_type_list{5}, [], output_type_list{6}, [], output_type_list{7}, i_cmd_step, output_type_list{8}, [], output_type_list{9}, []);
+    %output = struct(output_type_list{1}, rmp, output_type_list{2}, r_in, output_type_list{3}, sag_ratio, output_type_list{4}, [], output_type_list{5}, [], output_type_list{6}, [], output_type_list{7}, i_cmd_step, output_type_list{8}, [], output_type_list{9}, []);
+    output = struct(output_type_list{1}, rmp, output_type_list{2}, r_in, output_type_list{3}, sag_ratio, output_type_list{4}, [], output_type_list{5}, [], output_type_list{6}, [], output_type_list{7}, i_cmd_step, output_type_list{8}, [], output_type_list{9}, [], output_type_list{10}, []);
     return; %%% fixlater
 else
     spike_count_first = min(find(spike_count ~= 0)); % index of first spiking sweep
@@ -12202,7 +12209,8 @@ i_v = [i_cmd_iv, v_steady];
 f_i = [i_cmd_fi, spike_count];
 
 % Organize into struct
-output = struct(output_type_list{1}, rmp, output_type_list{2}, r_in, output_type_list{3}, sag_ratio, output_type_list{4}, rheobase, output_type_list{5}, i_v, output_type_list{6}, f_i, output_type_list{7}, i_cmd_step, output_type_list{8}, rheobase_sweep, output_type_list{9}, rheobase_x2_sweep);
+%output = struct(output_type_list{1}, rmp, output_type_list{2}, r_in, output_type_list{3}, sag_ratio, output_type_list{4}, rheobase, output_type_list{5}, i_v, output_type_list{6}, f_i, output_type_list{7}, i_cmd_step, output_type_list{8}, rheobase_sweep, output_type_list{9}, rheobase_x2_sweep);
+output = struct(output_type_list{1}, rmp, output_type_list{2}, r_in, output_type_list{3}, sag_ratio, output_type_list{4}, rheobase, output_type_list{5}, i_v, output_type_list{6}, f_i, output_type_list{7}, i_cmd_step, output_type_list{8}, rheobase_sweep, output_type_list{9}, rheobase_x2_sweep, output_type_list{10}, spike_times);
 
 end
 
