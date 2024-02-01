@@ -2830,7 +2830,7 @@ try
                 h.params.defaultParams.signal1Channel = signal1Channel;
                 h.params.defaultParams.signal1Type = signal1Type;
                 signal2Type = signal1Type; % this is really only for aesthetics, for axis label
-                signal2Channel = 0; % to suppress signal 2 display in a very crude stupid way %%% fixlater
+                signal2Channel = 0; % to suppress signal 2 display in a very crude stupid way %%% fixlater %%% cazzo
                 h.params.actualParams.signal2Channel = signal2Channel;
                 h.params.actualParams.signal2Type = signal2Type;
                 h.params.defaultParams.signal2Channel = signal2Channel;
@@ -8169,7 +8169,7 @@ t322 = str2num(oWin.t322.String);
                 oWin.t102.Value = 2;
                 return
             case 4
-                errorMessage = sprintf('\nSelection aborted: Waveform analysis currently unavailable, feature underway\n');
+                errorMessage = sprintf('\nSelection aborted: Feature underway - use pvbs_as_apkinetics.m in the meantime\n');
                 fprintf(errorMessage);
                 oWin.t102.Value = 2;
                 return
@@ -11126,6 +11126,13 @@ function results = analysisPeak(results, params, data, windows, analysisColumn)
 % peak analysis - also calculate area and mean
 % code as old as time
 
+%%% fixlater - quick and dirty fix as usual for single-channel (not ion channel; input channel) recordings
+if isnan(analysisColumn)
+    return
+elseif ~analysisColumn
+    return
+end
+
 % parameters
 windowNum = size(windows, 1) - 1; % number of windows - subtract 1 to account for baseline (row 1)
 %direction = params.peakDirection; % -1: negative, 0: absolute, +1: positive - obsolete
@@ -11288,7 +11295,7 @@ for j = 2:size(windows, 1)
             windowsNew = round(windows ./ samplingInterval); % converting to datapoints
             windowsNew = windowsNew + 1; % add 1 because timestamp starts at t = 0, (i.e. point 1)
         end
-                
+
         % calculate baseline
         if isempty(data{i})
             baselineNow = NaN;
@@ -11640,7 +11647,7 @@ switch h.ui.analysisType1.Value
         h.ui.analysisType1.Value = 1;
         return
     case 4
-        errorMessage = sprintf('\nSelection aborted: Waveform analysis feature unavailable with current version of PVBS\n');
+        errorMessage = sprintf('\nSelection aborted: Feature underway - use pvbs_as_apkinetics.m in the meantime\n');
         fprintf(errorMessage);
         h.ui.analysisType1.Value = 1;
         return
@@ -11652,7 +11659,7 @@ switch h.ui.analysisType2.Value
         h.ui.analysisType2.Value = 1;
         return
     case 4
-        errorMessage = sprintf('\nSelection aborted: Waveform analysis feature unavailable with current version of PVBS\n');
+        errorMessage = sprintf('\nSelection aborted: Feature underway - use pvbs_as_apkinetics.m in the meantime\n');
         fprintf(errorMessage);
         h.ui.analysisType2.Value = 1;
         return
