@@ -103,7 +103,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2024.01.24';
+pvbsLastMod = '2024.02.02';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -8168,11 +8168,13 @@ t322 = str2num(oWin.t322.String);
                 fprintf(errorMessage);
                 oWin.t102.Value = 2;
                 return
+                %{
             case 4
                 errorMessage = sprintf('\nSelection aborted: Feature underway - use pvbs_as_apkinetics.m in the meantime\n');
                 fprintf(errorMessage);
                 oWin.t102.Value = 2;
                 return
+                %}
         end
     end
 
@@ -8653,51 +8655,54 @@ catch ME
 end
 
 % group results
-groups = h.exp.data.groupIdx{expIdx};
-resultsTempGrp = resultsTemp; % easier way to initialize; overwrite afterwards
-resultsTempGrp.peak = cell(size(resultsTemp.peak, 1), length(groups));
-resultsTempGrp.timeOfPeak = cell(size(resultsTemp.timeOfPeak, 1), length(groups));
-resultsTempGrp.riseTime = cell(size(resultsTemp.riseTime, 1), length(groups));
-resultsTempGrp.decayTime = cell(size(resultsTemp.decayTime, 1), length(groups));
-resultsTempGrp.riseSlope = cell(size(resultsTemp.riseSlope, 1), length(groups));
-resultsTempGrp.decaySlope = cell(size(resultsTemp.decaySlope, 1), length(groups));
-resultsTempGrp.area = cell(size(resultsTemp.area, 1), length(groups));
-resultsTempGrp.mean = cell(size(resultsTemp.mean, 1), length(groups));
-nanSweepCount = 0; % only a failsafe, shouldn't be necessary
-for i = 1:length(groups)
-    sweepsInGroup = groups{i};
-    %  converting to absolute indices from ordinal indices on sweep list
-    sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
-    sweepsInGroup = find(sweepsInGroup == 1); % find their indices
-    for j = sweepsInGroup
-        resultsTempGrp.baseline{i} = resultsTempGrp.baseline{i} + resultsTemp.baseline{j};
-    end
-    resultsTempGrp.baseline{i} = resultsTempGrp.baseline{i}./length(sweepsInGroup);
-    for k = 1:size(resultsTemp.peak, 1) % this will suffice
-        resultsTempGrp.peak{k, i} = zeros(size(resultsTemp.peak{1}));
-        resultsTempGrp.timeOfPeak{k, i} = zeros(size(resultsTemp.timeOfPeak{1}));
-        resultsTempGrp.riseTime{k, i} = zeros(size(resultsTemp.riseTime{1}));
-        resultsTempGrp.decayTime{k, i} = zeros(size(resultsTemp.decayTime{1}));
-        resultsTempGrp.riseSlope{k, i} = zeros(size(resultsTemp.riseSlope{1}));
-        resultsTempGrp.decaySlope{k, i} = zeros(size(resultsTemp.decaySlope{1}));
-        resultsTempGrp.area{k, i} = zeros(size(resultsTemp.area{1}));
-        resultsTempGrp.mean{k, i} = zeros(size(resultsTemp.mean{1}));
+if analysisType1Idx == 1
+elseif analysisType1Idx == 2
+    groups = h.exp.data.groupIdx{expIdx};
+    resultsTempGrp = resultsTemp; % easier way to initialize; overwrite afterwards
+    resultsTempGrp.peak = cell(size(resultsTemp.peak, 1), length(groups));
+    resultsTempGrp.timeOfPeak = cell(size(resultsTemp.timeOfPeak, 1), length(groups));
+    resultsTempGrp.riseTime = cell(size(resultsTemp.riseTime, 1), length(groups));
+    resultsTempGrp.decayTime = cell(size(resultsTemp.decayTime, 1), length(groups));
+    resultsTempGrp.riseSlope = cell(size(resultsTemp.riseSlope, 1), length(groups));
+    resultsTempGrp.decaySlope = cell(size(resultsTemp.decaySlope, 1), length(groups));
+    resultsTempGrp.area = cell(size(resultsTemp.area, 1), length(groups));
+    resultsTempGrp.mean = cell(size(resultsTemp.mean, 1), length(groups));
+    %nanSweepCount = 0; % only a failsafe, shouldn't be necessary
+    for i = 1:length(groups)
+        sweepsInGroup = groups{i};
+        %  converting to absolute indices from ordinal indices on sweep list
+        sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
+        sweepsInGroup = find(sweepsInGroup == 1); % find their indices
         for j = sweepsInGroup
-            nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
-            if all(isnan(resultsTemp.peak{k, j}))
-                nanSweepCount = nanSweepCount + 1;
-            end
-            %%{
-            resultsTempGrp.peak{k, i} = nansum([resultsTempGrp.peak{k, i}; resultsTemp.peak{k, j}]);
-            resultsTempGrp.timeOfPeak{k, i} = nansum([resultsTempGrp.timeOfPeak{k, i}; resultsTemp.timeOfPeak{k, j}]);
-            resultsTempGrp.riseTime{k, i} = nansum([resultsTempGrp.riseTime{k, i}; resultsTemp.riseTime{k, j}]);
-            resultsTempGrp.decayTime{k, i} = nansum([resultsTempGrp.decayTime{k, i}; resultsTemp.decayTime{k, j}]);
-            resultsTempGrp.riseSlope{k, i} = nansum([resultsTempGrp.riseSlope{k, i}; resultsTemp.riseSlope{k, j}]);
-            resultsTempGrp.decaySlope{k, i} = nansum([resultsTempGrp.decaySlope{k, i}; resultsTemp.decaySlope{k, j}]);
-            resultsTempGrp.area{k, i} = nansum([resultsTempGrp.area{k, i}; resultsTemp.area{k, j}]);
-            resultsTempGrp.mean{k, i} = nansum([resultsTempGrp.mean{k, i}; resultsTemp.mean{k, j}]);
-            %}
-            %{
+            resultsTempGrp.baseline{i} = resultsTempGrp.baseline{i} + resultsTemp.baseline{j};
+        end
+        resultsTempGrp.baseline{i} = resultsTempGrp.baseline{i}./length(sweepsInGroup);
+        for k = 1:size(resultsTemp.peak, 1) % this will suffice
+            nanSweepCount = 0;
+            resultsTempGrp.peak{k, i} = zeros(size(resultsTemp.peak{1}));
+            resultsTempGrp.timeOfPeak{k, i} = zeros(size(resultsTemp.timeOfPeak{1}));
+            resultsTempGrp.riseTime{k, i} = zeros(size(resultsTemp.riseTime{1}));
+            resultsTempGrp.decayTime{k, i} = zeros(size(resultsTemp.decayTime{1}));
+            resultsTempGrp.riseSlope{k, i} = zeros(size(resultsTemp.riseSlope{1}));
+            resultsTempGrp.decaySlope{k, i} = zeros(size(resultsTemp.decaySlope{1}));
+            resultsTempGrp.area{k, i} = zeros(size(resultsTemp.area{1}));
+            resultsTempGrp.mean{k, i} = zeros(size(resultsTemp.mean{1}));
+            for j = sweepsInGroup
+                %nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
+                if all(isnan(resultsTemp.peak{k, j}))
+                    nanSweepCount = nanSweepCount + 1;
+                end
+                %%{
+                resultsTempGrp.peak{k, i} = nansum([resultsTempGrp.peak{k, i}; resultsTemp.peak{k, j}]);
+                resultsTempGrp.timeOfPeak{k, i} = nansum([resultsTempGrp.timeOfPeak{k, i}; resultsTemp.timeOfPeak{k, j}]);
+                resultsTempGrp.riseTime{k, i} = nansum([resultsTempGrp.riseTime{k, i}; resultsTemp.riseTime{k, j}]);
+                resultsTempGrp.decayTime{k, i} = nansum([resultsTempGrp.decayTime{k, i}; resultsTemp.decayTime{k, j}]);
+                resultsTempGrp.riseSlope{k, i} = nansum([resultsTempGrp.riseSlope{k, i}; resultsTemp.riseSlope{k, j}]);
+                resultsTempGrp.decaySlope{k, i} = nansum([resultsTempGrp.decaySlope{k, i}; resultsTemp.decaySlope{k, j}]);
+                resultsTempGrp.area{k, i} = nansum([resultsTempGrp.area{k, i}; resultsTemp.area{k, j}]);
+                resultsTempGrp.mean{k, i} = nansum([resultsTempGrp.mean{k, i}; resultsTemp.mean{k, j}]);
+                %}
+                %{
             resultsTempGrp.peak{k, i} = resultsTempGrp.peak{k, i} + resultsTemp.peak{k, j};
             resultsTempGrp.timeOfPeak{k, i} = resultsTempGrp.timeOfPeak{k, i} + resultsTemp.timeOfPeak{k, j};
             resultsTempGrp.riseTime{k, i} = resultsTempGrp.riseTime{k, i} + resultsTemp.riseTime{k, j};
@@ -8706,64 +8711,65 @@ for i = 1:length(groups)
             resultsTempGrp.decaySlope{k, i} = resultsTempGrp.decaySlope{k, i} + resultsTemp.decaySlope{k, j};
             resultsTempGrp.area{k, i} = resultsTempGrp.area{k, i} + resultsTemp.area{k, j};
             resultsTempGrp.mean{k, i} = resultsTempGrp.mean{k, i} + resultsTemp.mean{k, j};
-            %}
-        end
-        resultsTempGrp.peak{k, i} = resultsTempGrp.peak{k, i}./(length(sweepsInGroup) - nanSweepCount);
-        resultsTempGrp.timeOfPeak{k, i} = resultsTempGrp.timeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
-        resultsTempGrp.riseTime{k, i} = resultsTempGrp.riseTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
-        resultsTempGrp.decayTime{k, i} = resultsTempGrp.decayTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
-        resultsTempGrp.riseSlope{k, i} = resultsTempGrp.riseSlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
-        resultsTempGrp.decaySlope{k, i} = resultsTempGrp.decaySlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
-        resultsTempGrp.area{k, i} = resultsTempGrp.area{k, i}./(length(sweepsInGroup) - nanSweepCount);
-        resultsTempGrp.mean{k, i} = resultsTempGrp.mean{k, i}./(length(sweepsInGroup) - nanSweepCount);
-    end
-end
-try
-    groups = h.exp.data.groupIdx{expIdx};
-    resultsTemp2Grp = resultsTemp2; % easier way to initialize; overwrite afterwards
-    resultsTemp2Grp.peak = cell(size(resultsTemp2.peak, 1), length(groups));
-    resultsTemp2Grp.timeOfPeak = cell(size(resultsTemp2.timeOfPeak, 1), length(groups));
-    resultsTemp2Grp.riseTime = cell(size(resultsTemp2.riseTime, 1), length(groups));
-    resultsTemp2Grp.decayTime = cell(size(resultsTemp2.decayTime, 1), length(groups));
-    resultsTemp2Grp.riseSlope = cell(size(resultsTemp2.riseSlope, 1), length(groups));
-    resultsTemp2Grp.decaySlope = cell(size(resultsTemp2.decaySlope, 1), length(groups));
-    resultsTemp2Grp.area = cell(size(resultsTemp2.area, 1), length(groups));
-    resultsTemp2Grp.mean = cell(size(resultsTemp2.mean, 1), length(groups));
-    nanSweepCount = 0; % only a failsafe, shouldn't be necessary
-    for i = 1:length(groups)
-        sweepsInGroup = groups{i};
-        %  converting to absolute indices from ordinal indices on sweep list
-        sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
-        sweepsInGroup = find(sweepsInGroup == 1); % find their indices
-        for j = sweepsInGroup
-            resultsTemp2Grp.baseline{i} = resultsTemp2Grp.baseline{i} + resultsTemp2.baseline{j};
-        end
-        resultsTemp2Grp.baseline{i} = resultsTemp2Grp.baseline{i}./length(sweepsInGroup);       
-        for k = 1:size(resultsTemp2.peak, 1) % this will suffice
-            resultsTemp2Grp.peak{k, i} = zeros(size(resultsTemp2.peak{1}));
-            resultsTemp2Grp.timeOfPeak{k, i} = zeros(size(resultsTemp2.timeOfPeak{1}));
-            resultsTemp2Grp.riseTime{k, i} = zeros(size(resultsTemp2.riseTime{1}));
-            resultsTemp2Grp.decayTime{k, i} = zeros(size(resultsTemp2.decayTime{1}));
-            resultsTemp2Grp.riseSlope{k, i} = zeros(size(resultsTemp2.riseSlope{1}));
-            resultsTemp2Grp.decaySlope{k, i} = zeros(size(resultsTemp2.decaySlope{1}));
-            resultsTemp2Grp.area{k, i} = zeros(size(resultsTemp2.area{1}));
-            resultsTemp2Grp.mean{k, i} = zeros(size(resultsTemp2.mean{1}));
-            for j = sweepsInGroup
-                nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
-                if all(isnan(resultsTemp2.peak{k, j}))
-                    nanSweepCount = nanSweepCount + 1;
-                end
-                %%{
-                resultsTemp2Grp.peak{k, i} = nansum([resultsTemp2Grp.peak{k, i}; resultsTemp2.peak{k, j}]);
-                resultsTemp2Grp.timeOfPeak{k, i} = nansum([resultsTemp2Grp.timeOfPeak{k, i}; resultsTemp2.timeOfPeak{k, j}]);
-                resultsTemp2Grp.riseTime{k, i} = nansum([resultsTemp2Grp.riseTime{k, i}; resultsTemp2.riseTime{k, j}]);
-                resultsTemp2Grp.decayTime{k, i} = nansum([resultsTemp2Grp.decayTime{k, i}; resultsTemp2.decayTime{k, j}]);
-                resultsTemp2Grp.riseSlope{k, i} = nansum([resultsTemp2Grp.riseSlope{k, i}; resultsTemp2.riseSlope{k, j}]);
-                resultsTemp2Grp.decaySlope{k, i} = nansum([resultsTemp2Grp.decaySlope{k, i}; resultsTemp2.decaySlope{k, j}]);
-                resultsTemp2Grp.area{k, i} = nansum([resultsTemp2Grp.area{k, i}; resultsTemp2.area{k, j}]);
-                resultsTemp2Grp.mean{k, i} = nansum([resultsTemp2Grp.mean{k, i}; resultsTemp2.mean{k, j}]);
                 %}
-                %{
+            end
+            resultsTempGrp.peak{k, i} = resultsTempGrp.peak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.timeOfPeak{k, i} = resultsTempGrp.timeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.riseTime{k, i} = resultsTempGrp.riseTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.decayTime{k, i} = resultsTempGrp.decayTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.riseSlope{k, i} = resultsTempGrp.riseSlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.decaySlope{k, i} = resultsTempGrp.decaySlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.area{k, i} = resultsTempGrp.area{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.mean{k, i} = resultsTempGrp.mean{k, i}./(length(sweepsInGroup) - nanSweepCount);
+        end
+    end
+    try
+        groups = h.exp.data.groupIdx{expIdx};
+        resultsTemp2Grp = resultsTemp2; % easier way to initialize; overwrite afterwards
+        resultsTemp2Grp.peak = cell(size(resultsTemp2.peak, 1), length(groups));
+        resultsTemp2Grp.timeOfPeak = cell(size(resultsTemp2.timeOfPeak, 1), length(groups));
+        resultsTemp2Grp.riseTime = cell(size(resultsTemp2.riseTime, 1), length(groups));
+        resultsTemp2Grp.decayTime = cell(size(resultsTemp2.decayTime, 1), length(groups));
+        resultsTemp2Grp.riseSlope = cell(size(resultsTemp2.riseSlope, 1), length(groups));
+        resultsTemp2Grp.decaySlope = cell(size(resultsTemp2.decaySlope, 1), length(groups));
+        resultsTemp2Grp.area = cell(size(resultsTemp2.area, 1), length(groups));
+        resultsTemp2Grp.mean = cell(size(resultsTemp2.mean, 1), length(groups));
+        %nanSweepCount = 0; % only a failsafe, shouldn't be necessary
+        for i = 1:length(groups)
+            sweepsInGroup = groups{i};
+            %  converting to absolute indices from ordinal indices on sweep list
+            sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
+            sweepsInGroup = find(sweepsInGroup == 1); % find their indices
+            for j = sweepsInGroup
+                resultsTemp2Grp.baseline{i} = resultsTemp2Grp.baseline{i} + resultsTemp2.baseline{j};
+            end
+            resultsTemp2Grp.baseline{i} = resultsTemp2Grp.baseline{i}./length(sweepsInGroup);
+            for k = 1:size(resultsTemp2.peak, 1) % this will suffice
+                nanSweepCount = 0;
+                resultsTemp2Grp.peak{k, i} = zeros(size(resultsTemp2.peak{1}));
+                resultsTemp2Grp.timeOfPeak{k, i} = zeros(size(resultsTemp2.timeOfPeak{1}));
+                resultsTemp2Grp.riseTime{k, i} = zeros(size(resultsTemp2.riseTime{1}));
+                resultsTemp2Grp.decayTime{k, i} = zeros(size(resultsTemp2.decayTime{1}));
+                resultsTemp2Grp.riseSlope{k, i} = zeros(size(resultsTemp2.riseSlope{1}));
+                resultsTemp2Grp.decaySlope{k, i} = zeros(size(resultsTemp2.decaySlope{1}));
+                resultsTemp2Grp.area{k, i} = zeros(size(resultsTemp2.area{1}));
+                resultsTemp2Grp.mean{k, i} = zeros(size(resultsTemp2.mean{1}));
+                for j = sweepsInGroup
+                    %nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
+                    if all(isnan(resultsTemp2.peak{k, j}))
+                        nanSweepCount = nanSweepCount + 1;
+                    end
+                    %%{
+                    resultsTemp2Grp.peak{k, i} = nansum([resultsTemp2Grp.peak{k, i}; resultsTemp2.peak{k, j}]);
+                    resultsTemp2Grp.timeOfPeak{k, i} = nansum([resultsTemp2Grp.timeOfPeak{k, i}; resultsTemp2.timeOfPeak{k, j}]);
+                    resultsTemp2Grp.riseTime{k, i} = nansum([resultsTemp2Grp.riseTime{k, i}; resultsTemp2.riseTime{k, j}]);
+                    resultsTemp2Grp.decayTime{k, i} = nansum([resultsTemp2Grp.decayTime{k, i}; resultsTemp2.decayTime{k, j}]);
+                    resultsTemp2Grp.riseSlope{k, i} = nansum([resultsTemp2Grp.riseSlope{k, i}; resultsTemp2.riseSlope{k, j}]);
+                    resultsTemp2Grp.decaySlope{k, i} = nansum([resultsTemp2Grp.decaySlope{k, i}; resultsTemp2.decaySlope{k, j}]);
+                    resultsTemp2Grp.area{k, i} = nansum([resultsTemp2Grp.area{k, i}; resultsTemp2.area{k, j}]);
+                    resultsTemp2Grp.mean{k, i} = nansum([resultsTemp2Grp.mean{k, i}; resultsTemp2.mean{k, j}]);
+                    %}
+                    %{
                 resultsTemp2Grp.peak{k, i} = resultsTemp2Grp.peak{k, i} + resultsTemp2.peak{k, j};
                 resultsTemp2Grp.timeOfPeak{k, i} = resultsTemp2Grp.timeOfPeak{k, i} + resultsTemp2.timeOfPeak{k, j};
                 resultsTemp2Grp.riseTime{k, i} = resultsTemp2Grp.riseTime{k, i} + resultsTemp2.riseTime{k, j};
@@ -8772,66 +8778,67 @@ try
                 resultsTemp2Grp.decaySlope{k, i} = resultsTemp2Grp.decaySlope{k, i} + resultsTemp2.decaySlope{k, j};
                 resultsTemp2Grp.area{k, i} = resultsTemp2Grp.area{k, i} + resultsTemp2.area{k, j};
                 resultsTemp2Grp.mean{k, i} = resultsTemp2Grp.mean{k, i} + resultsTemp2.mean{k, j};
-                %}
-            end
-            resultsTemp2Grp.peak{k, i} = resultsTemp2Grp.peak{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp2Grp.timeOfPeak{k, i} = resultsTemp2Grp.timeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp2Grp.riseTime{k, i} = resultsTemp2Grp.riseTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp2Grp.decayTime{k, i} = resultsTemp2Grp.decayTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp2Grp.riseSlope{k, i} = resultsTemp2Grp.riseSlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp2Grp.decaySlope{k, i} = resultsTemp2Grp.decaySlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp2Grp.area{k, i} = resultsTemp2Grp.area{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp2Grp.mean{k, i} = resultsTemp2Grp.mean{k, i}./(length(sweepsInGroup) - nanSweepCount);
-        end
-    end
-catch ME
-end
-try
-    groups = h.exp.data.groupIdx{expIdx};
-    resultsTemp3Grp = resultsTemp3; % easier way to initialize; overwrite afterwards
-    resultsTemp3Grp.peak = cell(size(resultsTemp3.peak, 1), length(groups));
-    resultsTemp3Grp.timeOfPeak = cell(size(resultsTemp3.timeOfPeak, 1), length(groups));
-    resultsTemp3Grp.riseTime = cell(size(resultsTemp3.riseTime, 1), length(groups));
-    resultsTemp3Grp.decayTime = cell(size(resultsTemp3.decayTime, 1), length(groups));
-    resultsTemp3Grp.riseSlope = cell(size(resultsTemp3.riseSlope, 1), length(groups));
-    resultsTemp3Grp.decaySlope = cell(size(resultsTemp3.decaySlope, 1), length(groups));
-    resultsTemp3Grp.area = cell(size(resultsTemp3.area, 1), length(groups));
-    resultsTemp3Grp.mean = cell(size(resultsTemp3.mean, 1), length(groups));
-    nanSweepCount = 0; % only a failsafe, shouldn't be necessary
-    for i = 1:length(groups)
-        sweepsInGroup = groups{i};
-        %  converting to absolute indices from ordinal indices on sweep list
-        sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
-        sweepsInGroup = find(sweepsInGroup == 1); % find their indices
-        for j = sweepsInGroup
-            resultsTemp3Grp.baseline{i} = resultsTemp3Grp.baseline{i} + resultsTemp3.baseline{j};
-        end
-        resultsTemp3Grp.baseline{i} = resultsTemp3Grp.baseline{i}./length(sweepsInGroup);       
-        for k = 1:size(resultsTemp3.peak, 1) % this will suffice
-            resultsTemp3Grp.peak{k, i} = zeros(size(resultsTemp3.peak{1}));
-            resultsTemp3Grp.timeOfPeak{k, i} = zeros(size(resultsTemp3.timeOfPeak{1}));
-            resultsTemp3Grp.riseTime{k, i} = zeros(size(resultsTemp3.riseTime{1}));
-            resultsTemp3Grp.decayTime{k, i} = zeros(size(resultsTemp3.decayTime{1}));
-            resultsTemp3Grp.riseSlope{k, i} = zeros(size(resultsTemp3.riseSlope{1}));
-            resultsTemp3Grp.decaySlope{k, i} = zeros(size(resultsTemp3.decaySlope{1}));
-            resultsTemp3Grp.area{k, i} = zeros(size(resultsTemp3.area{1}));
-            resultsTemp3Grp.mean{k, i} = zeros(size(resultsTemp3.mean{1}));
-            for j = sweepsInGroup
-                nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
-                if all(isnan(resultsTemp3.peak{k, j}))
-                    nanSweepCount = nanSweepCount + 1;
+                    %}
                 end
-                %%{
-                resultsTemp3Grp.peak{k, i} = nansum([resultsTemp3Grp.peak{k, i}; resultsTemp3.peak{k, j}]);
-                resultsTemp3Grp.timeOfPeak{k, i} = nansum([resultsTemp3Grp.timeOfPeak{k, i}; resultsTemp3.timeOfPeak{k, j}]);
-                resultsTemp3Grp.riseTime{k, i} = nansum([resultsTemp3Grp.riseTime{k, i}; resultsTemp3.riseTime{k, j}]);
-                resultsTemp3Grp.decayTime{k, i} = nansum([resultsTemp3Grp.decayTime{k, i}; resultsTemp3.decayTime{k, j}]);
-                resultsTemp3Grp.riseSlope{k, i} = nansum([resultsTemp3Grp.riseSlope{k, i}; resultsTemp3.riseSlope{k, j}]);
-                resultsTemp3Grp.decaySlope{k, i} = nansum([resultsTemp3Grp.decaySlope{k, i}; resultsTemp3.decaySlope{k, j}]);
-                resultsTemp3Grp.area{k, i} = nansum([resultsTemp3Grp.area{k, i}; resultsTemp3.area{k, j}]);
-                resultsTemp3Grp.mean{k, i} = nansum([resultsTemp3Grp.mean{k, i}; resultsTemp3.mean{k, j}]);
-                %}
-                %{
+                resultsTemp2Grp.peak{k, i} = resultsTemp2Grp.peak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.timeOfPeak{k, i} = resultsTemp2Grp.timeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.riseTime{k, i} = resultsTemp2Grp.riseTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.decayTime{k, i} = resultsTemp2Grp.decayTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.riseSlope{k, i} = resultsTemp2Grp.riseSlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.decaySlope{k, i} = resultsTemp2Grp.decaySlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.area{k, i} = resultsTemp2Grp.area{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.mean{k, i} = resultsTemp2Grp.mean{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            end
+        end
+    catch ME
+    end
+    try
+        groups = h.exp.data.groupIdx{expIdx};
+        resultsTemp3Grp = resultsTemp3; % easier way to initialize; overwrite afterwards
+        resultsTemp3Grp.peak = cell(size(resultsTemp3.peak, 1), length(groups));
+        resultsTemp3Grp.timeOfPeak = cell(size(resultsTemp3.timeOfPeak, 1), length(groups));
+        resultsTemp3Grp.riseTime = cell(size(resultsTemp3.riseTime, 1), length(groups));
+        resultsTemp3Grp.decayTime = cell(size(resultsTemp3.decayTime, 1), length(groups));
+        resultsTemp3Grp.riseSlope = cell(size(resultsTemp3.riseSlope, 1), length(groups));
+        resultsTemp3Grp.decaySlope = cell(size(resultsTemp3.decaySlope, 1), length(groups));
+        resultsTemp3Grp.area = cell(size(resultsTemp3.area, 1), length(groups));
+        resultsTemp3Grp.mean = cell(size(resultsTemp3.mean, 1), length(groups));
+        %nanSweepCount = 0; % only a failsafe, shouldn't be necessary
+        for i = 1:length(groups)
+            sweepsInGroup = groups{i};
+            %  converting to absolute indices from ordinal indices on sweep list
+            sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
+            sweepsInGroup = find(sweepsInGroup == 1); % find their indices
+            for j = sweepsInGroup
+                resultsTemp3Grp.baseline{i} = resultsTemp3Grp.baseline{i} + resultsTemp3.baseline{j};
+            end
+            resultsTemp3Grp.baseline{i} = resultsTemp3Grp.baseline{i}./length(sweepsInGroup);
+            for k = 1:size(resultsTemp3.peak, 1) % this will suffice
+                nanSweepCount = 0;
+                resultsTemp3Grp.peak{k, i} = zeros(size(resultsTemp3.peak{1}));
+                resultsTemp3Grp.timeOfPeak{k, i} = zeros(size(resultsTemp3.timeOfPeak{1}));
+                resultsTemp3Grp.riseTime{k, i} = zeros(size(resultsTemp3.riseTime{1}));
+                resultsTemp3Grp.decayTime{k, i} = zeros(size(resultsTemp3.decayTime{1}));
+                resultsTemp3Grp.riseSlope{k, i} = zeros(size(resultsTemp3.riseSlope{1}));
+                resultsTemp3Grp.decaySlope{k, i} = zeros(size(resultsTemp3.decaySlope{1}));
+                resultsTemp3Grp.area{k, i} = zeros(size(resultsTemp3.area{1}));
+                resultsTemp3Grp.mean{k, i} = zeros(size(resultsTemp3.mean{1}));
+                for j = sweepsInGroup
+                    %nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
+                    if all(isnan(resultsTemp3.peak{k, j}))
+                        nanSweepCount = nanSweepCount + 1;
+                    end
+                    %%{
+                    resultsTemp3Grp.peak{k, i} = nansum([resultsTemp3Grp.peak{k, i}; resultsTemp3.peak{k, j}]);
+                    resultsTemp3Grp.timeOfPeak{k, i} = nansum([resultsTemp3Grp.timeOfPeak{k, i}; resultsTemp3.timeOfPeak{k, j}]);
+                    resultsTemp3Grp.riseTime{k, i} = nansum([resultsTemp3Grp.riseTime{k, i}; resultsTemp3.riseTime{k, j}]);
+                    resultsTemp3Grp.decayTime{k, i} = nansum([resultsTemp3Grp.decayTime{k, i}; resultsTemp3.decayTime{k, j}]);
+                    resultsTemp3Grp.riseSlope{k, i} = nansum([resultsTemp3Grp.riseSlope{k, i}; resultsTemp3.riseSlope{k, j}]);
+                    resultsTemp3Grp.decaySlope{k, i} = nansum([resultsTemp3Grp.decaySlope{k, i}; resultsTemp3.decaySlope{k, j}]);
+                    resultsTemp3Grp.area{k, i} = nansum([resultsTemp3Grp.area{k, i}; resultsTemp3.area{k, j}]);
+                    resultsTemp3Grp.mean{k, i} = nansum([resultsTemp3Grp.mean{k, i}; resultsTemp3.mean{k, j}]);
+                    %}
+                    %{
                 resultsTemp3Grp.peak{k, i} = resultsTemp3Grp.peak{k, i} + resultsTemp3.peak{k, j};
                 resultsTemp3Grp.timeOfPeak{k, i} = resultsTemp3Grp.timeOfPeak{k, i} + resultsTemp3.timeOfPeak{k, j};
                 resultsTemp3Grp.riseTime{k, i} = resultsTemp3Grp.riseTime{k, i} + resultsTemp3.riseTime{k, j};
@@ -8840,20 +8847,209 @@ try
                 resultsTemp3Grp.decaySlope{k, i} = resultsTemp3Grp.decaySlope{k, i} + resultsTemp3.decaySlope{k, j};
                 resultsTemp3Grp.area{k, i} = resultsTemp3Grp.area{k, i} + resultsTemp3.area{k, j};
                 resultsTemp3Grp.mean{k, i} = resultsTemp3Grp.mean{k, i} + resultsTemp3.mean{k, j};
-                %}
+                    %}
+                end
+                resultsTemp3Grp.peak{k, i} = resultsTemp3Grp.peak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.timeOfPeak{k, i} = resultsTemp3Grp.timeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.riseTime{k, i} = resultsTemp3Grp.riseTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.decayTime{k, i} = resultsTemp3Grp.decayTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.riseSlope{k, i} = resultsTemp3Grp.riseSlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.decaySlope{k, i} = resultsTemp3Grp.decaySlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.area{k, i} = resultsTemp3Grp.area{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.mean{k, i} = resultsTemp3Grp.mean{k, i}./(length(sweepsInGroup) - nanSweepCount);
             end
-            resultsTemp3Grp.peak{k, i} = resultsTemp3Grp.peak{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp3Grp.timeOfPeak{k, i} = resultsTemp3Grp.timeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp3Grp.riseTime{k, i} = resultsTemp3Grp.riseTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp3Grp.decayTime{k, i} = resultsTemp3Grp.decayTime{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp3Grp.riseSlope{k, i} = resultsTemp3Grp.riseSlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp3Grp.decaySlope{k, i} = resultsTemp3Grp.decaySlope{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp3Grp.area{k, i} = resultsTemp3Grp.area{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTemp3Grp.mean{k, i} = resultsTemp3Grp.mean{k, i}./(length(sweepsInGroup) - nanSweepCount);
         end
+    catch ME
+    end
+elseif analysisType1Idx == 3
+elseif analysisType1Idx == 4
+    groups = h.exp.data.groupIdx{expIdx};
+    resultsTempGrp = resultsTemp; % easier way to initialize; overwrite afterwards
+    resultsTempGrp.vDvdt = cell(size(resultsTemp.vDvdt, 1), length(groups));
+    resultsTempGrp.rmp = cell(size(resultsTemp.rmp, 1), length(groups));
+    resultsTempGrp.apThreshold = cell(size(resultsTemp.apThreshold, 1), length(groups));
+    resultsTempGrp.apAmplitude = cell(size(resultsTemp.apAmplitude, 1), length(groups));
+    resultsTempGrp.apTimeOfPeak = cell(size(resultsTemp.apTimeOfPeak, 1), length(groups));
+    resultsTempGrp.apHalfWidth = cell(size(resultsTemp.apHalfWidth, 1), length(groups));
+    resultsTempGrp.maxDepol = cell(size(resultsTemp.maxDepol, 1), length(groups));
+    resultsTempGrp.maxRepol = cell(size(resultsTemp.maxRepol, 1), length(groups));
+    %nanSweepCount = 0; % only a failsafe, shouldn't be necessary
+    for i = 1:length(groups)
+        sweepsInGroup = groups{i};
+        %  converting to absolute indices from ordinal indices on sweep list
+        sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
+        sweepsInGroup = find(sweepsInGroup == 1); % find their indices
+        for k = 1:size(resultsTemp.rmp, 1) % this will suffice
+            nanSweepCount = 0;
+            resultsTempGrp.vDvdt{k, i} = nan(size(resultsTemp.vDvdt{1}));
+            resultsTempGrp.rmp{k, i} = nan(size(resultsTemp.rmp{1}));
+            resultsTempGrp.apThreshold{k, i} = nan(size(resultsTemp.apThreshold{1}));
+            resultsTempGrp.apAmplitude{k, i} = nan(size(resultsTemp.apAmplitude{1}));
+            resultsTempGrp.apTimeOfPeak{k, i} = nan(size(resultsTemp.apTimeOfPeak{1}));
+            resultsTempGrp.apHalfWidth{k, i} = nan(size(resultsTemp.apHalfWidth{1}));
+            resultsTempGrp.maxDepol{k, i} = nan(size(resultsTemp.maxDepol{1}));
+            resultsTempGrp.maxRepol{k, i} = nan(size(resultsTemp.maxRepol{1}));
+            for j = sweepsInGroup
+                %nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
+                if isnan(resultsTemp.apAmplitude{k, j})
+                    nanSweepCount = nanSweepCount + 1;
+                end
+                resultsTempGrp.vDvdt{k, i} = nansum([resultsTempGrp.vDvdt{k, i}; resultsTemp.vDvdt{k, j}]);
+                resultsTempGrp.rmp{k, i} = nansum([resultsTempGrp.rmp{k, i}; resultsTemp.rmp{k, j}]);
+                resultsTempGrp.apThreshold{k, i} = nansum([resultsTempGrp.apThreshold{k, i}; resultsTemp.apThreshold{k, j}]);
+                resultsTempGrp.apAmplitude{k, i} = nansum([resultsTempGrp.apAmplitude{k, i}; resultsTemp.apAmplitude{k, j}]);
+                resultsTempGrp.apTimeOfPeak{k, i} = nansum([resultsTempGrp.apTimeOfPeak{k, i}; resultsTemp.apTimeOfPeak{k, j}]);
+                resultsTempGrp.apHalfWidth{k, i} = nansum([resultsTempGrp.apHalfWidth{k, i}; resultsTemp.apHalfWidth{k, j}]);
+                resultsTempGrp.maxDepol{k, i} = nansum([resultsTempGrp.maxDepol{k, i}; resultsTemp.maxDepol{k, j}]);
+                resultsTempGrp.maxRepol{k, i} = nansum([resultsTempGrp.maxRepol{k, i}; resultsTemp.maxRepol{k, j}]);
+            end
+            resultsTempGrp.vDvdt{k, i} = resultsTempGrp.vDvdt{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.rmp{k, i} = resultsTempGrp.rmp{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.apThreshold{k, i} = resultsTempGrp.apThreshold{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.apAmplitude{k, i} = resultsTempGrp.apAmplitude{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.apTimeOfPeak{k, i} = resultsTempGrp.apTimeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.apHalfWidth{k, i} = resultsTempGrp.apHalfWidth{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.maxDepol{k, i} = resultsTempGrp.maxDepol{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.maxRepol{k, i} = resultsTempGrp.maxRepol{k, i}./(length(sweepsInGroup) - nanSweepCount);
+        end
+    end
+    try
+        groups = h.exp.data.groupIdx{expIdx};
+        resultsTemp2Grp = resultsTemp2; % easier way to initialize; overwrite afterwards
+        resultsTemp2Grp.vDvdt = cell(size(resultsTemp2.vDvdt, 1), length(groups));
+        resultsTemp2Grp.rmp = cell(size(resultsTemp2.rmp, 1), length(groups));
+        resultsTemp2Grp.apThreshold = cell(size(resultsTemp2.apThreshold, 1), length(groups));
+        resultsTemp2Grp.apAmplitude = cell(size(resultsTemp2.apAmplitude, 1), length(groups));
+        resultsTemp2Grp.apTimeOfPeak = cell(size(resultsTemp2.apTimeOfPeak, 1), length(groups));
+        resultsTemp2Grp.apHalfWidth = cell(size(resultsTemp2.apHalfWidth, 1), length(groups));
+        resultsTemp2Grp.maxDepol = cell(size(resultsTemp2.maxDepol, 1), length(groups));
+        resultsTemp2Grp.maxRepol = cell(size(resultsTemp2.maxRepol, 1), length(groups));
+        %nanSweepCount = 0; % only a failsafe, shouldn't be necessary
+        for i = 1:length(groups)
+            sweepsInGroup = groups{i};
+            %  converting to absolute indices from ordinal indices on sweep list
+            sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
+            sweepsInGroup = find(sweepsInGroup == 1); % find their indices
+            for k = 1:size(resultsTemp2.rmp, 1) % this will suffice
+                nanSweepCount = 0;
+                resultsTemp2Grp.vDvdt{k, i} = nan(size(resultsTemp2.vDvdt{1}));
+                resultsTemp2Grp.rmp{k, i} = nan(size(resultsTemp2.rmp{1}));
+                resultsTemp2Grp.apThreshold{k, i} = nan(size(resultsTemp2.apThreshold{1}));
+                resultsTemp2Grp.apAmplitude{k, i} = nan(size(resultsTemp2.apAmplitude{1}));
+                resultsTemp2Grp.apTimeOfPeak{k, i} = nan(size(resultsTemp2.apTimeOfPeak{1}));
+                resultsTemp2Grp.apHalfWidth{k, i} = nan(size(resultsTemp2.apHalfWidth{1}));
+                resultsTemp2Grp.maxDepol{k, i} = nan(size(resultsTemp2.maxDepol{1}));
+                resultsTemp2Grp.maxRepol{k, i} = nan(size(resultsTemp2.maxRepol{1}));
+                for j = sweepsInGroup
+                    %nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
+                    if isnan(resultsTemp2.apAmplitude{k, j})
+                        nanSweepCount = nanSweepCount + 1;
+                    end
+                    %%{
+                    resultsTemp2Grp.vDvdt{k, i} = nansum([resultsTemp2Grp.vDvdt{k, i}; resultsTemp2.vDvdt{k, j}]);
+                    resultsTemp2Grp.rmp{k, i} = nansum([resultsTemp2Grp.rmp{k, i}; resultsTemp2.rmp{k, j}]);
+                    resultsTemp2Grp.apThreshold{k, i} = nansum([resultsTemp2Grp.apThreshold{k, i}; resultsTemp2.apThreshold{k, j}]);
+                    resultsTemp2Grp.apAmplitude{k, i} = nansum([resultsTemp2Grp.apAmplitude{k, i}; resultsTemp2.apAmplitude{k, j}]);
+                    resultsTemp2Grp.apTimeOfPeak{k, i} = nansum([resultsTemp2Grp.apTimeOfPeak{k, i}; resultsTemp2.apTimeOfPeak{k, j}]);
+                    resultsTemp2Grp.apHalfWidth{k, i} = nansum([resultsTemp2Grp.apHalfWidth{k, i}; resultsTemp2.apHalfWidth{k, j}]);
+                    resultsTemp2Grp.maxDepol{k, i} = nansum([resultsTemp2Grp.maxDepol{k, i}; resultsTemp2.maxDepol{k, j}]);
+                    resultsTemp2Grp.maxRepol{k, i} = nansum([resultsTemp2Grp.maxRepol{k, i}; resultsTemp2.maxRepol{k, j}]);
+                end
+                resultsTemp2Grp.vDvdt{k, i} = resultsTemp2Grp.vDvdt{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.rmp{k, i} = resultsTemp2Grp.rmp{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.apThreshold{k, i} = resultsTemp2Grp.apThreshold{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.apAmplitude{k, i} = resultsTemp2Grp.apAmplitude{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.apTimeOfPeak{k, i} = resultsTemp2Grp.apTimeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.apHalfWidth{k, i} = resultsTemp2Grp.apHalfWidth{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.maxDepol{k, i} = resultsTemp2Grp.maxDepol{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.maxRepol{k, i} = resultsTemp2Grp.maxRepol{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            end
+        end
+    catch ME
+    end
+    try
+        groups = h.exp.data.groupIdx{expIdx};
+        resultsTemp3Grp = resultsTemp3; % easier way to initialize; overwrite afterwards
+        resultsTemp3Grp.vDvdt = cell(size(resultsTemp3.vDvdt, 1), length(groups));
+        resultsTemp3Grp.rmp = cell(size(resultsTemp3.rmp, 1), length(groups));
+        resultsTemp3Grp.apThreshold = cell(size(resultsTemp3.apThreshold, 1), length(groups));
+        resultsTemp3Grp.apAmplitude = cell(size(resultsTemp3.apAmplitude, 1), length(groups));
+        resultsTemp3Grp.apTimeOfPeak = cell(size(resultsTemp3.apTimeOfPeak, 1), length(groups));
+        resultsTemp3Grp.apHalfWidth = cell(size(resultsTemp3.apHalfWidth, 1), length(groups));        
+        resultsTemp3Grp.maxDepol = cell(size(resultsTemp3.maxDepol, 1), length(groups));
+        resultsTemp3Grp.maxRepol = cell(size(resultsTemp3.maxRepol, 1), length(groups));
+        %nanSweepCount = 0; % only a failsafe, shouldn't be necessary
+        for i = 1:length(groups)
+            sweepsInGroup = groups{i};
+            %  converting to absolute indices from ordinal indices on sweep list
+            sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
+            sweepsInGroup = find(sweepsInGroup == 1); % find their indices
+            for k = 1:size(resultsTemp3.rmp, 1) % this will suffice
+                nanSweepCount = 0;
+                resultsTemp3Grp.vDvdt{k, i} = nan(size(resultsTemp3.vDvdt{1}));
+                resultsTemp3Grp.rmp{k, i} = nan(size(resultsTemp3.rmp{1}));
+                resultsTemp3Grp.apThreshold{k, i} = nan(size(resultsTemp3.apThreshold{1}));
+                resultsTemp3Grp.apAmplitude{k, i} = nan(size(resultsTemp3.apAmplitude{1}));
+                resultsTemp3Grp.apTimeOfPeak{k, i} = nan(size(resultsTemp3.apTimeOfPeak{1}));
+                resultsTemp3Grp.apHalfWidth{k, i} = nan(size(resultsTemp3.apHalfWidth{1}));
+                resultsTemp3Grp.maxDepol{k, i} = nan(size(resultsTemp3.maxDepol{1}));
+                resultsTemp3Grp.maxRepol{k, i} = nan(size(resultsTemp3.maxRepol{1}));
+                for j = sweepsInGroup
+                    %nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
+                    if isnan(resultsTemp3.apAmplitude{k, j})
+                        nanSweepCount = nanSweepCount + 1;
+                    end
+                    resultsTemp3Grp.vDvdt{k, i} = nansum([resultsTemp3Grp.vDvdt{k, i}; resultsTemp3.vDvdt{k, j}]);
+                    resultsTemp3Grp.rmp{k, i} = nansum([resultsTemp3Grp.rmp{k, i}; resultsTemp3.rmp{k, j}]);
+                    resultsTemp3Grp.apThreshold{k, i} = nansum([resultsTemp3Grp.apThreshold{k, i}; resultsTemp3.apThreshold{k, j}]);
+                    resultsTemp3Grp.apAmplitude{k, i} = nansum([resultsTemp3Grp.apAmplitude{k, i}; resultsTemp3.apAmplitude{k, j}]);
+                    resultsTemp3Grp.apTimeOfPeak{k, i} = nansum([resultsTemp3Grp.apTimeOfPeak{k, i}; resultsTemp3.apTimeOfPeak{k, j}]);
+                    resultsTemp3Grp.apHalfWidth{k, i} = nansum([resultsTemp3Grp.apHalfWidth{k, i}; resultsTemp3.apHalfWidth{k, j}]);
+                    resultsTemp3Grp.maxDepol{k, i} = nansum([resultsTemp3Grp.maxDepol{k, i}; resultsTemp3.maxDepol{k, j}]);
+                    resultsTemp3Grp.maxRepol{k, i} = nansum([resultsTemp3Grp.maxRepol{k, i}; resultsTemp3.maxRepol{k, j}]);
+                end
+                resultsTemp3Grp.vDvdt{k, i} = resultsTemp3Grp.vDvdt{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.rmp{k, i} = resultsTemp3Grp.rmp{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.apThreshold{k, i} = resultsTemp3Grp.apThreshold{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.apAmplitude{k, i} = resultsTemp3Grp.apAmplitude{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.apTimeOfPeak{k, i} = resultsTemp3Grp.apTimeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.apHalfWidth{k, i} = resultsTemp3Grp.apHalfWidth{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.maxDepol{k, i} = resultsTemp3Grp.maxDepol{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.maxRepol{k, i} = resultsTemp3Grp.maxRepol{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            end
+        end
+    catch ME
+    end
+end
+
+
+% save - moved from end
+resultsTemp.analysisTypeIdx = analysisTypeIdx;
+resultsCurrentExp.VRec.sweepResults = resultsTemp;
+resultsCurrentExp.VRec.groupResults = resultsTempGrp; 
+results{expIdx} = resultsCurrentExp;
+try
+    if signal2Type ~= 3 % i, V, F
+        resultsTemp2.analysisTypeIdx = analysisTypeIdx;
+        resultsCurrentExp.VRec2.sweepResults = resultsTemp2;
+        resultsCurrentExp.VRec2.groupResults = resultsTemp2Grp;
+        results{expIdx} = resultsCurrentExp;
+    else
+        resultsCurrentExp.VRec2 = struct();
+        results{expIdx} = resultsCurrentExp;
     end
 catch ME
 end
+try
+    resultsTemp3.analysisTypeIdx = analysisTypeIdx;
+    resultsCurrentExp.dff.sweepResults = resultsTemp3;
+    resultsCurrentExp.dff.groupResults = resultsTemp3Grp;
+    results{expIdx} = resultsCurrentExp;
+catch ME
+end
+h.params = params;
+h.results = results;
+
 
 % color scheme - %%% no longer used and no idea what it was for
 colorMapX = 1;
@@ -8879,6 +9075,12 @@ switch peakDirToPlot % converting to column indices for old code
         peakDirToPlot = 2; % default to absolute if not available
 end
 dataX = 1:length(resultsTempGrp.groups); % group number - will plot by groups
+
+if analysisType1Idx == 2
+else
+    return
+end
+
 dataY = resultsTempGrp.peak; % grouped results, peak
 dataY = dataY(winToPlot, :); % analysis window 1
 dataYNew = nan(length(dataY), 1); % initialize
@@ -9079,6 +9281,7 @@ hold off;
 h.ui.analysisPlot2 = targetPlot;
 %}
 
+%{
 % save
 resultsTemp.analysisTypeIdx = analysisTypeIdx;
 resultsCurrentExp.VRec.sweepResults = resultsTemp;
@@ -9105,6 +9308,7 @@ catch ME
 end
 h.params = params;
 h.results = results;
+%}
 
 end
 
@@ -11620,11 +11824,210 @@ fprintf(errorMessage);
 end
 
 
-function resultsTemp = analysisAPWaveform(resultsTemp, params, VRecData, window, analysisColumn)
+function results = analysisAPWaveform(results, params, VRecData, window, analysisColumn)
 
-errorMessage = 'Error: Feature currently unavailable, under development';
-fprintf(errorMessage);
-%resultsTemp = [];
+try % try-catch for reverse compatibility
+    timeStampColumn = params.actualParams.timeColumn;
+catch ME
+    timeStampColumn = 1; % bo
+    params.actualParams.timeColumn = timeStampColumn;
+    params.defaultParams.timeColumn = timeStampColumn;
+end
+try % ditto
+    signal1Type = params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = params.actualParams.signal2Type; % current, voltage, fluorescence
+    signal1Channel = params.actualParams.signal1Channel; % corresponding to data column, but mind timestamp availability
+    signal2Channel = params.actualParams.signal2Channel; % corresponding to data column, but mind timestamp availability
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 1; % current, voltage, fluorescence - defaulting to current
+    try % additional layer of safety
+        signal1Channel = params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = params.actualParams.lineScanChannel; % defaulting to fluorescence - is this still useful? i think so...? %%% fixlater
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+        params.actualParams.signal1Channel = signal1Channel;
+        params.actualParams.signal2Channel = signal2Channel;
+        params.defaultParams.signal1Channel = signal1Channel;
+        params.defaultParams.signal2Channel = signal2Channel;
+    end
+end
+
+%timeStampColumn = 1;
+%voltageColumn = 2;
+apThresholdDvdt = 10; % (V/s)
+apDetectionThreshold = -5; % (mV); this will be used for peak detection
+apDetectionRearm = -15; % (mV); re-arm peak detection
+%rmpWindow = 100; % (ms)
+interpolate = 0; % (Boolean)
+oneStepAhead = 1; % (Boolean)
+
+%%% fixlater
+voltageColumn = 2;
+baselineWindowStart = window(1,1);
+baselineWindowEnd = window(1,2);
+windowCount = 2; % bo
+
+% initialize output
+%vDvdt = cell(1, experimentCount); % V, dV/dt
+%  NB. the result will be 1 data point shorter than the original recording,
+%      as it calculates dV; to force same length as input (for whatever
+%      reason), set the following variable to 1 instead of 0
+appendNan = 0; % can't think of when it can be actually useful, but meh
+
+% initialize
+vRecTemp = VRecData; %%% fixlater - ditto
+sweepCount = size(vRecTemp, 2);
+vDvdt = cell(windowCount, sweepCount);
+rmp = cell(windowCount, sweepCount);
+apThreshold = cell(windowCount, sweepCount);
+apAmplitude = cell(windowCount, sweepCount);
+apTimeOfPeak = cell(windowCount, sweepCount);
+apHalfWidth = cell(windowCount, sweepCount);
+maxDepol = cell(windowCount, sweepCount);
+maxRepol = cell(windowCount, sweepCount);
+
+for w = 1:windowCount
+
+    windowStart = window(1 + w,1); % row 1 is baseline
+    windowEnd = window(1 + w,2);
+
+    for j = 1:sweepCount
+
+        % set windows
+        vRecTempTemp = vRecTemp{j};
+        si = vRecTempTemp(2, timeStampColumn) - vRecTempTemp(1, timeStampColumn); % (ms); this will do
+        baselineStartActual = baselineWindowStart/si;
+        baselineEndActual = baselineWindowEnd/si;
+        windowStartActual = windowStart/si;
+        windowEndActual = windowEnd/si;
+        if baselineStartActual == 0
+            baselineStartActual = 1;
+        end
+        if windowStartActual == 0
+            windowStartActual = 1;
+        end
+
+        % get RMP from the baseline window
+        try
+            %rmpWindowPoints = rmpWindow/si; % converting ms to points
+            rmpTempTemp = nanmean(vRecTempTemp(baselineStartActual:baselineEndActual, voltageColumn));
+            rmp{w, j} = rmpTempTemp;
+        catch ME
+            rmp{w, j} = nan;
+            apThreshold{w, j} = nan;
+            apAmplitude{w, j} = nan;
+            apTimeOfPeak{w, j} = nan;
+            apHalfWidth{w, j} = nan;
+            maxDepol{w, j} = nan;
+            maxRepol{w, j} = nan;
+            continue
+        end
+
+        % get dV/dt
+        vRecTempTemp = vRecTempTemp(windowStartActual:windowEndActual, :);
+        [v, dvdt] = getDvdt(vRecTempTemp, timeStampColumn, voltageColumn);
+        vDvdtTemp = [v, dvdt];
+        vDvdt{j} = vDvdtTemp;
+
+        % get AP threshold
+        vDvdtTempTemp = vDvdtTemp;
+        dvdtTemp = vDvdtTempTemp(:, 2); % dVdt was saved in column 2 by getDvdt()
+        if interpolate
+            try
+                apThresholdTime = find(dvdtTemp >= apThresholdDvdt, 1);
+                apThresholdTempHigh = vDvdtTempTemp(apThresholdTime, 1);
+                apThresholdTempLow = vDvdtTempTemp(apThresholdTime - 1, 1);
+                apThresholdTempHighDvdt = vDvdtTempTemp(apThresholdTime, 2);
+                apThresholdTempLowDvdt = vDvdtTempTemp(apThresholdTime - 1, 2);
+                apThresholdTempGiusto = apThresholdTempLow + (apThresholdTempHigh - apThresholdTempLow) * ((apThresholdDvdt - apThresholdTempLowDvdt) / (apThresholdTempHighDvdt - apThresholdTempLowDvdt));
+                apThreshold{w, j} = apThresholdTempGiusto;
+            catch ME
+                apThreshold{w, j} = NaN;
+            end
+        elseif oneStepAhead
+            try
+                apThresholdTime = find(dvdtTemp >= apThresholdDvdt, 1);
+                apThresholdTime = apThresholdTime - 1; % one step ahead
+                apThreshold{w, j} = vDvdtTempTemp(apThresholdTime, 1);
+            catch ME
+                apThreshold{w, j} = NaN;
+            end
+        else
+            try
+                apThresholdTime = find(dvdtTemp >= apThresholdDvdt, 1);
+                apThreshold{w, j} = vDvdtTempTemp(apThresholdTime, 1);
+            catch ME
+                apThreshold{w, j} = NaN;
+            end
+        end
+
+        try
+            % get AP peak and time of peak
+            vRecTempTempTemp = vRecTempTemp(:, voltageColumn);
+            apPeakDetectionStart = find(vRecTempTempTemp >= apDetectionThreshold, 1);
+            apPeakDetectionEnd = find(vRecTempTempTemp(apPeakDetectionStart:end) <= apDetectionRearm, 1);
+            apPeakDetectionEnd = apPeakDetectionStart + apPeakDetectionEnd; % because the search started after position apPeakDetectionStart
+            apPeakTempTemp = max(vRecTempTempTemp(apPeakDetectionStart:apPeakDetectionEnd));
+            apAmplitudeTempTemp = apPeakTempTemp - rmpTempTemp;
+            apAmplitude{w, j} = apAmplitudeTempTemp;
+            apPeakTempIndex = find(vRecTempTempTemp(apPeakDetectionStart:apPeakDetectionEnd) == apPeakTempTemp);
+            apPeakTempIndex = apPeakDetectionStart + apPeakTempIndex(1); % because the search started after position apPeakDetectionStart; just use the 1st entry in case there are duplicates
+            apTimeOfPeak{w, j} = vRecTempTemp(apPeakTempIndex, timeStampColumn);
+
+            % get AP half-width
+            apHalfPeakStart = find(vRecTempTempTemp(apThresholdTime:apPeakTempIndex) >= rmpTempTemp + 0.5*apAmplitudeTempTemp, 1); % just use the 1st entry in case there are duplicates
+            apHalfPeakStart = apThresholdTime + apHalfPeakStart;
+            apHalfPeakEnd = find(vRecTempTempTemp(apPeakTempIndex:end) <= rmpTempTemp + 0.5*apAmplitudeTempTemp, 1); % just use the last entry in case there are duplicates
+            apHalfPeakEnd = apPeakTempIndex + apHalfPeakEnd;
+            apHalfWidthTempTemp = apHalfPeakEnd - apHalfPeakStart; % later half not really necessary but just because of OCD
+            apHalfWidth{w, j} = apHalfWidthTempTemp*si; % converting from points to ms
+
+            % get dVdt min/max
+            maxDepolTempTemp = max(dvdt(apThresholdTime:apPeakTempIndex));
+            maxRepolTempTemp = min(dvdt(apPeakTempIndex:apPeakTempIndex + 2*(apHalfPeakEnd-apPeakTempIndex))); % stupid, but will work without trouble
+            maxDepol{w, j} = maxDepolTempTemp;
+            maxRepol{w, j} = maxRepolTempTemp;
+
+        catch ME
+            apThreshold{w, j} = NaN; % to exclude artifacts
+            apAmplitude{w, j} = NaN;
+            apTimeOfPeak{w, j} = NaN;
+            apHalfWidth{w, j} = NaN;
+            maxDepol{w, j} = NaN;
+            maxRepol{w, j} = NaN;
+            continue
+        end
+
+    end
+
+end
+
+results.vDvdt = vDvdt;
+results.rmp = rmp;
+results.apThreshold = apThreshold;
+results.apAmplitude = apAmplitude;
+results.apTimeOfPeak = apTimeOfPeak;
+results.apHalfWidth = apHalfWidth;
+results.maxDepol = maxDepol;
+results.maxRepol = maxRepol;
+
+% actually doing stuff here
+    function [v, dvdt] = getDvdt(inputArray, tColumn, vColumn)
+        % calculate dV/dt from an (n*m) array
+        % take time and voltage columns as arguments
+        % disregard other columns in the array
+
+        t = inputArray(:, tColumn);
+        v = inputArray(:, vColumn);
+        dvdt = v; % initializing
+        dvdt = diff(dvdt); % NB. first row is lost here from using diff()
+        dt = diff(t); % ditto
+        dvdt = dvdt ./ dt;
+        v = v(2:end); % to match with dvdt
+
+    end
 
 end
 
@@ -11646,11 +12049,13 @@ switch h.ui.analysisType1.Value
         fprintf(errorMessage);
         h.ui.analysisType1.Value = 1;
         return
+        %{
     case 4
         errorMessage = sprintf('\nSelection aborted: Feature underway - use pvbs_as_apkinetics.m in the meantime\n');
         fprintf(errorMessage);
         h.ui.analysisType1.Value = 1;
         return
+        %}
 end
 switch h.ui.analysisType2.Value
     case 3
@@ -11658,11 +12063,13 @@ switch h.ui.analysisType2.Value
         fprintf(errorMessage);
         h.ui.analysisType2.Value = 1;
         return
+        %{
     case 4
         errorMessage = sprintf('\nSelection aborted: Feature underway - use pvbs_as_apkinetics.m in the meantime\n');
         fprintf(errorMessage);
         h.ui.analysisType2.Value = 1;
         return
+        %}
 end
 
 % analysis types
