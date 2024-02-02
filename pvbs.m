@@ -11908,6 +11908,9 @@ for w = 1:windowCount
         if windowStartActual == 0
             windowStartActual = 1;
         end
+        if isnan(windowStartActual)
+            continue
+        end
 
         % get RMP from the baseline window
         try
