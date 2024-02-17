@@ -103,7 +103,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2024.02.02';
+pvbsLastMod = '2024.02.15';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -396,7 +396,7 @@ ui.downsamplingText = uicontrol('Style', 'text', 'string', 'x', 'horizontalalign
 ui.lowPassFilterButton = uicontrol('Style', 'checkbox', 'min', 0, 'max', 1, 'string', 'Bessel LP: ', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.016, 0.212, 0.09, 0.03],  'Callback', @downsamplingBesselButton, 'interruptible', 'off');
 ui.lowPassFilterInput = uicontrol('Style', 'edit', 'string', num2str(params.actualParams.besselFreq2), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.08, 0.212, 0.016, 0.026], 'Callback', @downsamplingBesselInput, 'interruptible', 'off');
 ui.lowPassFilterText = uicontrol('Style', 'text', 'string', '(kHz)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.096, 0.212, 0.02, 0.02]);
-ui.stimArtifactButton = uicontrol('Style', 'checkbox', 'enable', 'off', 'min', 0, 'max', 1, 'string', 'Remove artifact: ', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.016, 0.18, 0.09, 0.03],  'Callback', @stimArtifactButton, 'interruptible', 'off');
+ui.stimArtifactButton = uicontrol('Style', 'checkbox', 'enable', 'on', 'min', 0, 'max', 1, 'string', 'Remove artifact: ', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.016, 0.18, 0.09, 0.03],  'Callback', @stimArtifactButton, 'interruptible', 'off');
 ui.stimArtifactInput = uicontrol('Style', 'edit', 'string', num2str(params.actualParams.artifactLength), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.08, 0.182, 0.016, 0.026], 'Callback', @stimArtifactLength, 'interruptible', 'off');
 ui.stimArtifactText = uicontrol('Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.096, 0.182, 0.03, 0.02]);
 ui.stimArtifactText2 = uicontrol('Style', 'text', 'string', 'from', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.152, 0.02, 0.02]);
@@ -571,9 +571,11 @@ pvbsCurrentCorrectionDataPoints = 50; % this many points at the beginning will b
 
 % data downsampling
 boxcarLength1 = 0; % boxcar length for Ch. 1 (e.g. V); 0 to disable by default
-boxcarLength2 = 4; % boxcar length for Ch. 2 (e.g. dF/F); 0 to disable by default
+%boxcarLength2 = 4; % boxcar length for Ch. 2 (e.g. dF/F); 0 to disable by default
+boxcarLength2 = 0; % boxcar length for Ch. 2 (e.g. dF/F); 0 to disable by default
 besselFreq1 = 0; % (kHz); Bessel filter cutoff frequency for Ch. 1; 0 to disable by default
-besselFreq2 = 1; % (kHz); Bessel filter cutoff frequency for Ch. 2; 0 to disable by default
+%besselFreq2 = 1; % (kHz); Bessel filter cutoff frequency for Ch. 2; 0 to disable by default
+besselFreq2 = 0; % (kHz); Bessel filter cutoff frequency for Ch. 2; 0 to disable by default
 besselOrder1 = 4; % reverse Bessel polynomial order for Ch. 1
 besselOrder2 = 4; % reverse Bessel polynomial order for Ch. 2
 
@@ -11817,9 +11819,175 @@ end
 
 function resultsTemp = analysisThresholdDetection(resultsTemp, params, VRecData, window, analysisColumn)
 
-errorMessage = 'Error: Feature currently unavailable, under development';
-fprintf(errorMessage);
-%resultsTemp = [];
+try % try-catch for reverse compatibility
+    timeStampColumn = params.actualParams.timeColumn;
+catch ME
+    timeStampColumn = 1; % bo
+    params.actualParams.timeColumn = timeStampColumn;
+    params.defaultParams.timeColumn = timeStampColumn;
+end
+try % ditto
+    signal1Type = params.actualParams.signal1Type; % current, voltage, fluorescence
+    signal2Type = params.actualParams.signal2Type; % current, voltage, fluorescence
+    signal1Channel = params.actualParams.signal1Channel; % corresponding to data column, but mind timestamp availability
+    signal2Channel = params.actualParams.signal2Channel; % corresponding to data column, but mind timestamp availability
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 1; % current, voltage, fluorescence - defaulting to current
+    try % additional layer of safety
+        signal1Channel = params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = params.actualParams.lineScanChannel; % defaulting to fluorescence - is this still useful? i think so...? %%% fixlater
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+        params.actualParams.signal1Channel = signal1Channel;
+        params.actualParams.signal2Channel = signal2Channel;
+        params.defaultParams.signal1Channel = signal1Channel;
+        params.defaultParams.signal2Channel = signal2Channel;
+    end
+end
+
+%timeStampColumn = 1;
+%voltageColumn = 2;
+%apThresholdDvdt = 10; % (V/s)
+apDetectionThreshold = -5; % (mV); this will be used for peak detection
+apDetectionRearm = -15; % (mV); re-arm peak detection
+%rmpWindow = 100; % (ms)
+%interpolate = 0; % (Boolean)
+%oneStepAhead = 1; % (Boolean)
+eventDirectionSwitch = 1; % -1 (negative), 0 (either), 1 (positive) - see below for the reason for the weird variable name
+
+%%% fixlater
+voltageColumn = 2;
+baselineWindowStart = window(1,1);
+baselineWindowEnd = window(1,2);
+windowCount = 2; % bo
+
+% initialize output
+%vDvdt = cell(1, experimentCount); % V, dV/dt
+%  NB. the result will be 1 data point shorter than the original recording,
+%      as it calculates dV; to force same length as input (for whatever
+%      reason), set the following variable to 1 instead of 0
+appendNan = 0; % can't think of when it can be actually useful, but meh
+
+% initialize
+vRecTemp = VRecData; %%% fixlater - ditto
+sweepCount = size(vRecTemp, 2);
+
+eventBaseline = cell(windowCount, sweepCount);
+eventCount = cell(windowCount, sweepCount);
+eventAmplitude = cell(windowCount, sweepCount);
+eventTimeOfPeak = cell(windowCount, sweepCount);
+eventPeakValue = cell(windowCount, sweepCount);
+eventDirection = cell(windowCount, sweepCount); % confusing name
+
+for w = 1:windowCount
+
+    windowStart = window(1 + w,1); % row 1 is baseline
+    windowEnd = window(1 + w,2);
+
+    for j = 1:sweepCount
+
+        % set windows
+        vRecTempTemp = vRecTemp{j};
+        si = vRecTempTemp(2, timeStampColumn) - vRecTempTemp(1, timeStampColumn); % (ms); this will do
+        baselineStartActual = baselineWindowStart/si;
+        baselineEndActual = baselineWindowEnd/si;
+        windowStartActual = windowStart/si;
+        windowEndActual = windowEnd/si;
+        if baselineStartActual == 0
+            baselineStartActual = 1;
+        end
+        if windowStartActual == 0
+            windowStartActual = 1;
+        end
+        if isnan(windowStartActual)
+            continue
+        end
+
+        % get baseline from the... baseline window
+        try
+            baselineTempTemp = nanmean(vRecTempTemp(baselineStartActual:baselineEndActual, voltageColumn));
+            eventBaseline{w, j} = baselineTempTemp;
+        catch ME
+            eventBaseline{w, j} = nan;
+            eventCount{w, j} = nan;
+            eventAmplitude{w, j} = nan;
+            eventTimeOfPeak{w, j} = nan;
+            eventPeakValue{w, j} = nan;
+            eventDirection{w, j} = nan;
+            continue
+        end
+
+        try
+            % get peak and time of peak
+            vRecTempTempTemp = vRecTempTemp(:, voltageColumn);
+            if eventDirectionSwitch == 0
+            elseif eventDirectionSwitch > 0
+            elseif eventDirectionSwitch < 0
+            end
+            apPeakDetectionStart = find(vRecTempTempTemp >= apDetectionThreshold, 1);
+            apPeakDetectionEnd = find(vRecTempTempTemp(apPeakDetectionStart:end) <= apDetectionRearm, 1);
+            apPeakDetectionEnd = apPeakDetectionStart + apPeakDetectionEnd; % because the search started after position apPeakDetectionStart
+            apPeakTempTemp = max(vRecTempTempTemp(apPeakDetectionStart:apPeakDetectionEnd));
+            apAmplitudeTempTemp = apPeakTempTemp - baselineTempTemp;
+            apAmplitude{w, j} = apAmplitudeTempTemp;
+            apPeakTempIndex = find(vRecTempTempTemp(apPeakDetectionStart:apPeakDetectionEnd) == apPeakTempTemp);
+            apPeakTempIndex = apPeakDetectionStart + apPeakTempIndex(1); % because the search started after position apPeakDetectionStart; just use the 1st entry in case there are duplicates
+            apTimeOfPeak{w, j} = vRecTempTemp(apPeakTempIndex, timeStampColumn);
+
+            % get AP half-width
+            apHalfPeakStart = find(vRecTempTempTemp(apThresholdTime:apPeakTempIndex) >= baselineTempTemp + 0.5*apAmplitudeTempTemp, 1); % just use the 1st entry in case there are duplicates
+            apHalfPeakStart = apThresholdTime + apHalfPeakStart;
+            apHalfPeakEnd = find(vRecTempTempTemp(apPeakTempIndex:end) <= baselineTempTemp + 0.5*apAmplitudeTempTemp, 1); % just use the last entry in case there are duplicates
+            apHalfPeakEnd = apPeakTempIndex + apHalfPeakEnd;
+            apHalfWidthTempTemp = apHalfPeakEnd - apHalfPeakStart; % later half not really necessary but just because of OCD
+            apHalfWidth{w, j} = apHalfWidthTempTemp*si; % converting from points to ms
+
+            % get dVdt min/max
+            maxDepolTempTemp = max(dvdt(apThresholdTime:apPeakTempIndex));
+            maxRepolTempTemp = min(dvdt(apPeakTempIndex:apPeakTempIndex + 2*(apHalfPeakEnd-apPeakTempIndex))); % stupid, but will work without trouble
+            maxDepol{w, j} = maxDepolTempTemp;
+            maxRepol{w, j} = maxRepolTempTemp;
+
+        catch ME
+            apThreshold{w, j} = NaN; % to exclude artifacts
+            apAmplitude{w, j} = NaN;
+            apTimeOfPeak{w, j} = NaN;
+            apHalfWidth{w, j} = NaN;
+            maxDepol{w, j} = NaN;
+            maxRepol{w, j} = NaN;
+            continue
+        end
+
+    end
+
+end
+
+results.vDvdt = vDvdt;
+results.rmp = rmp;
+results.apThreshold = apThreshold;
+results.apAmplitude = apAmplitude;
+results.apTimeOfPeak = apTimeOfPeak;
+results.apHalfWidth = apHalfWidth;
+results.maxDepol = maxDepol;
+results.maxRepol = maxRepol;
+
+% actually doing stuff here
+    function [v, dvdt] = getDvdt(inputArray, tColumn, vColumn)
+        % calculate dV/dt from an (n*m) array
+        % take time and voltage columns as arguments
+        % disregard other columns in the array
+
+        t = inputArray(:, tColumn);
+        v = inputArray(:, vColumn);
+        dvdt = v; % initializing
+        dvdt = diff(dvdt); % NB. first row is lost here from using diff()
+        dt = diff(t); % ditto
+        dvdt = dvdt ./ dt;
+        v = v(2:end); % to match with dvdt
+
+    end
 
 end
 
@@ -13365,6 +13533,29 @@ h.ui.cellListDisplay.Value = expIdx;
 targetSignal = h.ui.traceProcessingTarget.Value;
 targetSignal = targetSignal - 1;
 
+artifactRemoval = h.exp.data.artifactRemoval{expIdx};
+if isempty(artifactRemoval)
+    h.ui.stimArtifactButton.Value = 0;
+else
+    artifactRemoval = artifactRemoval(targetSignal, :);
+    artifactRemovalFlag = artifactRemoval(1);
+    artifactRemovalLength = artifactRemoval(2);
+    artifactRemovalStart = artifactRemoval(3);
+    artifactRemovalCount = artifactRemoval(4);
+    artifactRemovalFreq = artifactRemoval(5);
+    h.ui.stimArtifactButton.Value = artifactRemovalFlag;
+    h.ui.stimArtifactInput.String = num2str(artifactRemovalLength);
+    h.ui.stimArtifactInput2.String = num2str(artifactRemovalStart);
+    h.ui.stimArtifactInput3.String = num2str(artifactRemovalCount);
+    h.ui.stimArtifactInput4.String = num2str(artifactRemovalFreq);
+    %{
+    if artifactRemovalLength*artifactRemovalCount == 0
+        h.ui.stimArtifactButton.Value = 0;
+    else
+    end
+    %}
+end
+
 postprocessing = h.exp.data.postprocessing{expIdx};
 postprocessing = postprocessing(targetSignal, :);
 boxcarLength = postprocessing(1);
@@ -13491,21 +13682,23 @@ end
 expIdx = h.ui.cellListDisplay.Value;
 expIdx = expIdx(1); % force single selection
 h.ui.cellListDisplay.Value = expIdx;
-timeColumn = h.params.actualParams.timeColumn;
 
 boxcarCheck = h.ui.downsamplingButton.Value;
 besselCheck = h.ui.lowPassFilterButton.Value;
 targetSignal = h.ui.traceProcessingTarget.Value;
 targetSignal = targetSignal - 1;
+if targetSignal == 0
+    return
+end
+
+signal1Type = h.params.actualParams.signal1Type;
+signal2Type = h.params.actualParams.signal2Type;
+signal1Channel = h.params.actualParams.signal1Channel; % not to be confused with targetSignal
+signal2Channel = h.params.actualParams.signal2Channel; % ditto
+
+timeColumn = h.params.actualParams.timeColumn;
 
 %%{
-expIdx = h.ui.cellListDisplay.Value;
-expIdx = expIdx(1); % force single selection
-h.ui.cellListDisplay.Value = expIdx;
-
-targetSignal = h.ui.traceProcessingTarget.Value;
-targetSignal = targetSignal - 1;
-
 postprocessingNew = h.exp.data.postprocessing{expIdx};
 postprocessingTemp = postprocessingNew(targetSignal, :);
 
@@ -13521,17 +13714,38 @@ postprocessingNew(targetSignal, :) = postprocessingTemp;
 h.exp.data.postprocessing{expIdx} = postprocessingNew;
 %}
 
-postprocessing = h.exp.data.postprocessing{expIdx};
+%postprocessing = h.exp.data.postprocessing{expIdx};
+postprocessing = postprocessingNew; % wtf??? %%% fixlater
 postprocessing = postprocessing(targetSignal, :);
 boxcarLength = postprocessing(1);
 besselFreq = postprocessing(2);
 besselFreq = 1000*besselFreq; % converting to Hz from kHz
 besselOrder = postprocessing(3);
 
-if targetSignal == 1
-    originalSignal = h.exp.data.VRecOriginal{expIdx};
+if targetSignal == 1 %%% fixlater - currently problematic, in case of dual v-c or i-c recordings there won't be input channel-specific boxcar/bessel LP postprocessing
+    workingChannel = signal1Channel;
+    switch signal1Type % i, V, F
+        case 1
+            originalSignal = h.exp.data.VRecOriginal{expIdx};
+        case 2
+            originalSignal = h.exp.data.VRecOriginal{expIdx};
+        case 3
+            originalSignal = h.exp.data.lineScanDFFOriginal{expIdx};
+        otherwise % shouldn't happen
+            originalSignal = h.exp.data.VRecOriginal{expIdx};
+    end
 elseif targetSignal == 2
-    originalSignal = h.exp.data.lineScanDFFOriginal{expIdx};
+    workingChannel = signal2Channel;
+    switch signal2Type % i, V, F
+        case 1
+            originalSignal = h.exp.data.VRecOriginal{expIdx};
+        case 2
+            originalSignal = h.exp.data.VRecOriginal{expIdx};
+        case 3
+            originalSignal = h.exp.data.lineScanDFFOriginal{expIdx};
+        otherwise % shouldn't happen
+            originalSignal = h.exp.data.VRecOriginal{expIdx};
+    end
 end
 newSignal = originalSignal;
 
@@ -13604,19 +13818,228 @@ h = cellListClick2(h, expIdx);
 end
 
 
-function stimArtifactButton(src, ~)
+function stimArtifactButton(src, event)
+
+h = guidata(src);
+
+checked = event.Source.Value;
+artifactRemovalFlag = h.ui.stimArtifactButton.Value;
+
+if isempty(h.ui.cellListDisplay.String)
+    return
+end
+expIdx = h.ui.cellListDisplay.Value;
+expIdx = expIdx(1); % force single selection
+h.ui.cellListDisplay.Value = expIdx;
+
+targetSignal = h.ui.traceProcessingTarget.Value;
+targetSignal = targetSignal - 1;
+if targetSignal == 0
+    return
+end
+
+signal1Type = h.params.actualParams.signal1Type;
+signal2Type = h.params.actualParams.signal2Type;
+signal1Channel = h.params.actualParams.signal1Channel; % not to be confused with targetSignal
+signal2Channel = h.params.actualParams.signal2Channel; % ditto
+
+timeColumn = h.params.actualParams.timeColumn;
+
+artifactRemovalLength = h.ui.stimArtifactInput.String;
+artifactRemovalStart = h.ui.stimArtifactInput2.String;
+artifactRemovalCount = h.ui.stimArtifactInput3.String;
+artifactRemovalFreq = h.ui.stimArtifactInput4.String;
+artifactRemovalLength = str2num(artifactRemovalLength);
+artifactRemovalStart = str2num(artifactRemovalStart);
+artifactRemovalCount = str2num(artifactRemovalCount);
+artifactRemovalFreq = str2num(artifactRemovalFreq);
+
+try
+    if isempty(h.exp.data.artifactRemoval{expIdx})
+        artifactRemovalTemp = [0, artifactRemovalLength, artifactRemovalStart, artifactRemovalCount, artifactRemovalFreq]; %%% fixlater
+        artifactRemovalNew = [artifactRemovalTemp; artifactRemovalTemp]; % signals 1 & 2 %%% fixlater
+        artifactRemovalNew(targetSignal, 1) = artifactRemovalFlag;
+        h.exp.data.artifactRemoval{expIdx} = artifactRemovalNew;
+    else
+        artifactRemovalNew = h.exp.data.artifactRemoval{expIdx};
+        artifactRemovalNew(targetSignal, 1) = artifactRemovalFlag;
+        artifactRemovalNew(targetSignal, 2) = artifactRemovalLength;
+        artifactRemovalNew(targetSignal, 3) = artifactRemovalStart;
+        artifactRemovalNew(targetSignal, 4) = artifactRemovalCount;
+        artifactRemovalNew(targetSignal, 5) = artifactRemovalFreq;
+        h.exp.data.artifactRemoval{expIdx} = artifactRemovalNew;
+    end
+catch ME
+    artifactRemovalTemp = [0, artifactRemovalLength, artifactRemovalStart, artifactRemovalCount, artifactRemovalFreq]; %%% fixlater
+    artifactRemovalNew = [artifactRemovalTemp; artifactRemovalTemp]; % signals 1 & 2 %%% fixlater
+    artifactRemovalNew(targetSignal, 1) = artifactRemovalFlag;
+    h.exp.data.artifactRemoval{expIdx} = artifactRemovalNew;
+end
+
+artifactRemovalCount = floor(artifactRemovalCount);
+if artifactRemovalCount < 1
+    return
+else
+end
+if artifactRemovalLength <= 0
+    return
+else
+end
+
+try
+    VRecTemp = h.exp.data.VRec{expIdx};
+    %{
+    if isempty(VRecTemp)
+        return
+    else
+    end
+    %}
+    si = VRecTemp{1}; % this will do, unless different sampling rates were used between sweeps
+    si = si(:, timeColumn);
+    si = si(2) - si(1);
+catch ME
+    return
+end
+
+artifactRemovalLength = artifactRemovalLength/si; % converting to points from ms
+artifactRemovalStart = artifactRemovalStart/si; % converting to points from ms
+if artifactRemovalFreq == 0
+    artifactRemovalInterval = 0;
+else
+    artifactRemovalInterval = 1/artifactRemovalFreq; % converting to s from Hz
+    artifactRemovalInterval = 1000*artifactRemovalInterval; % converting to ms from s
+    artifactRemovalInterval = artifactRemovalInterval/si; % converting to points from ms
+end
+
+artifactRemovalStartPoints = 0:artifactRemovalInterval:artifactRemovalInterval*(artifactRemovalCount - 1);
+artifactRemovalStartPoints = artifactRemovalStartPoints + artifactRemovalStart;
+
+if targetSignal == 1
+    targetColumn = signal1Channel;
+    switch signal1Type % i, V, F
+        case 1
+            oldSignal = h.exp.data.VRec{expIdx};
+            oldSignalOriginal = h.exp.data.VRecOriginal{expIdx};
+            newSignal = artifactRemovalActual();
+            h.exp.data.VRec{expIdx} = newSignal;
+        case 2
+            oldSignal = h.exp.data.VRec{expIdx};
+            oldSignalOriginal = h.exp.data.VRecOriginal{expIdx};
+            newSignal = artifactRemovalActual();
+            h.exp.data.VRec{expIdx} = newSignal;
+        case 3 % unexpected, could be inappropriate %%% fixlater
+            oldSignal = h.exp.data.lineScanDFF{expIdx};
+            oldSignalOriginal = h.exp.data.lineScanDFFOriginal{expIdx};
+            newSignal = artifactRemovalActual();
+            h.exp.data.lineScanDFF{expIdx} = newSignal;
+        otherwise
+            return
+    end
+elseif targetSignal == 2
+    targetColumn = signal2Channel;
+    switch signal2Type % i, V, F
+        case 1
+            oldSignal = h.exp.data.VRec{expIdx};
+            oldSignalOriginal = h.exp.data.VRecOriginal{expIdx};
+            newSignal = artifactRemovalActual();
+            h.exp.data.VRec{expIdx} = newSignal;
+        case 2
+            oldSignal = h.exp.data.VRec{expIdx};
+            oldSignalOriginal = h.exp.data.VRecOriginal{expIdx};
+            newSignal = artifactRemovalActual();
+            h.exp.data.VRec{expIdx} = newSignal;
+        case 3 % unexpected, could be inappropriate %%% fixlater
+            oldSignal = h.exp.data.lineScanDFF{expIdx};
+            oldSignalOriginal = h.exp.data.lineScanDFFOriginal{expIdx};
+            newSignal = artifactRemovalActual();
+            h.exp.data.lineScanDFF{expIdx} = newSignal;
+        otherwise
+            return
+    end
+end
+
+axes(h.ui.traceDisplay); % absolutely necessary - bring focus to main display, since other functions might have brought it to another axes
+%displayTrace(h, expIdx);
+h = cellListClick2(h, expIdx);
+
+h.ui.traceProcessingTarget.Value = targetSignal + 1; % cuz cellListClick2() resets the list %%% fixlater
+guidata(src, h);
+
+    function newSignal = artifactRemovalActual() %%% fixlater - currently overrides boxcar/bessel LP postprocessing
+        newSignal = oldSignal; % initializing
+        if artifactRemovalFlag
+            for i = 1:length(newSignal)
+                if iscell(newSignal)
+                    try % in case sweeps are missing, which can happen especially for dF/F
+                        newSignalTemp = newSignal{i};
+                        oldSignalOriginalTemp = oldSignalOriginal{i};
+                        newSignalTemp(:, targetColumn) = oldSignalOriginalTemp(:, targetColumn);
+                        for j = artifactRemovalStartPoints
+                            newSignalTemp(j:j + artifactRemovalLength, targetColumn) = nan;
+                        end
+                        newSignal{i} = newSignalTemp;
+                    catch ME
+                        newSignal{i} = [];
+                    end
+                else
+                    try % in case sweeps are missing, which can happen especially for dF/F
+                        newSignalTemp = newSignal;
+                        oldSignalOriginalTemp = oldSignalOriginal
+                        newSignalTemp(:, targetColumn) = oldSignalOriginalTemp(:, targetColumn);
+                        for j = artifactRemovalStartPoints
+                            newSignalTemp(j:j + artifactRemovalLength, targetColumn) = nan;
+                        end
+                        newSignal = newSignalTemp;
+                    catch ME
+                        newSignal = [];
+                    end
+                end
+            end
+        else
+            for i = 1:length(newSignal)
+                if iscell(newSignal)
+                    try % in case sweeps are missing, which can happen especially for dF/F
+                        newSignalTemp = newSignal{i};
+                        oldSignalOriginalTemp = oldSignalOriginal{i};
+                        for j = artifactRemovalStartPoints
+                            newSignalTemp(j:j + artifactRemovalLength, targetColumn) = oldSignalOriginalTemp(j:j + artifactRemovalLength, targetColumn);
+                        end
+                        newSignal{i} = newSignalTemp;
+                    catch ME
+                        newSignal{i} = [];
+                    end
+                else
+                    try % in case sweeps are missing, which can happen especially for dF/F
+                        newSignalTemp = newSignal;
+                        oldSignalOriginalTemp = oldSignalOriginal;
+                        for j = artifactRemovalStartPoints
+                            newSignalTemp(j:j + artifactRemovalLength, targetColumn) = oldSignalOriginalTemp(j:j + artifactRemovalLength, targetColumn);
+                        end
+                        newSignal = newSignalTemp;
+                    catch ME
+                        newSignal = [];
+                    end
+                end
+            end
+        end
+    end
+
 end
 
 function stimArtifactLength(src, ~)
+
 end
 
 function stimArtifactStart(src, ~)
+
 end
 
 function stimArtifactCount(src, ~)
+
 end
 
 function stimArtifactFreq(src, ~)
+
 end
 
 
