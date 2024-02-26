@@ -103,7 +103,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2024.02.15';
+pvbsLastMod = '2024.02.26';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -13588,7 +13588,11 @@ function downsamplingBoxcarButton(src, event)
 h = guidata(src);
 checked = event.Source.Value;
 besselChecked = h.ui.lowPassFilterButton.Value;
+
+warning('off','all');
 h = downsamplingBesselAndBoxcar(h);
+warning('on','all');
+
 h.ui.downsamplingButton.Value = checked;
 h.ui.lowPassFilterButton.Value = besselChecked;
 
@@ -13608,6 +13612,10 @@ h.ui.cellListDisplay.Value = expIdx;
 targetSignal = h.ui.traceProcessingTarget.Value;
 targetSignal = targetSignal - 1;
 
+if targetSignal == 0
+    return
+end
+
 postprocessingNew = h.exp.data.postprocessing{expIdx};
 postprocessingTemp = postprocessingNew(targetSignal, :);
 
@@ -13620,7 +13628,9 @@ h.exp.data.postprocessing{expIdx} = postprocessingNew;
 
 boxcarCheck = h.ui.downsamplingButton.Value;
 if boxcarCheck
+    warning('off','all');
     h = downsamplingBesselAndBoxcar(h);
+    warning('on','all');
 end
 
 guidata(src, h);
@@ -13633,7 +13643,11 @@ function downsamplingBesselButton(src, event)
 h = guidata(src);
 checked = event.Source.Value;
 boxcarChecked = h.ui.downsamplingButton.Value;
+
+warning('off','all');
 h = downsamplingBesselAndBoxcar(h);
+warning('on','all');
+
 h.ui.lowPassFilterButton.Value = checked;
 h.ui.downsamplingButton.Value = boxcarChecked;
 
@@ -13665,7 +13679,9 @@ h.exp.data.postprocessing{expIdx} = postprocessingNew;
 
 besselCheck = h.ui.lowPassFilterButton.Value;
 if besselCheck
+    warning('off','all');
     h = downsamplingBesselAndBoxcar(h);
+    warning('on','all');
 end
 
 guidata(src, h);
@@ -13691,12 +13707,19 @@ if targetSignal == 0
     return
 end
 
-signal1Type = h.params.actualParams.signal1Type;
-signal2Type = h.params.actualParams.signal2Type;
-signal1Channel = h.params.actualParams.signal1Channel; % not to be confused with targetSignal
-signal2Channel = h.params.actualParams.signal2Channel; % ditto
-
-timeColumn = h.params.actualParams.timeColumn;
+try
+    signal1Type = h.params.actualParams.signal1Type;
+    signal2Type = h.params.actualParams.signal2Type;
+    signal1Channel = h.params.actualParams.signal1Channel; % not to be confused with targetSignal
+    signal2Channel = h.params.actualParams.signal2Channel; % ditto
+    timeColumn = h.params.actualParams.timeColumn;
+catch ME
+    signal1Type = 2; % i, V, F - older version of PVBS was developed with this assumption (perche' 46)
+    signal2Type = 3; % i, V, F - older version of PVBS was developed with this assumption (perche' 46)
+    signal1Channel = 2; % pvbsVoltageColumn
+    signal2Channel = 2; % lineScanChannel
+    timeColumn = 1; % sensible
+end
 
 %%{
 postprocessingNew = h.exp.data.postprocessing{expIdx};
@@ -13723,7 +13746,7 @@ besselFreq = 1000*besselFreq; % converting to Hz from kHz
 besselOrder = postprocessing(3);
 
 if targetSignal == 1 %%% fixlater - currently problematic, in case of dual v-c or i-c recordings there won't be input channel-specific boxcar/bessel LP postprocessing
-    workingChannel = signal1Channel;
+    workingColumn = signal1Channel;
     switch signal1Type % i, V, F
         case 1
             originalSignal = h.exp.data.VRecOriginal{expIdx};
@@ -13735,7 +13758,7 @@ if targetSignal == 1 %%% fixlater - currently problematic, in case of dual v-c o
             originalSignal = h.exp.data.VRecOriginal{expIdx};
     end
 elseif targetSignal == 2
-    workingChannel = signal2Channel;
+    workingColumn = signal2Channel;
     switch signal2Type % i, V, F
         case 1
             originalSignal = h.exp.data.VRecOriginal{expIdx};
@@ -13744,8 +13767,10 @@ elseif targetSignal == 2
         case 3
             originalSignal = h.exp.data.lineScanDFFOriginal{expIdx};
         otherwise % shouldn't happen
-            originalSignal = h.exp.data.VRecOriginal{expIdx};
+            originalSignal = h.exp.data.lineScanDFFOriginal{expIdx};
     end
+else
+    error('Target signal definition incompatible with data');
 end
 newSignal = originalSignal;
 
@@ -13759,6 +13784,14 @@ if besselCheck
                     samplingInterval = samplingInterval/1000; % sampling interval (s)
                     samplingRate = 1/samplingInterval; % sampling rate (Hz)
                     newSignalTemp = besselLowpass(newSignalTemp, besselOrder, besselFreq, samplingRate);
+                    %{
+                    newSignalTempTemp = newSignalTemp(:, timeColumn);
+                    newSignalTempTemp = besselLowpass(newSignalTempTemp, besselOrder, besselFreq, samplingRate);
+                    newSignalTemp(:, timeColumn) = newSignalTempTemp;
+                    newSignalTempTemp = newSignalTemp(:, workingColumn);
+                    newSignalTempTemp = besselLowpass(newSignalTempTemp, besselOrder, besselFreq, samplingRate);
+                    newSignalTemp(:, workingColumn) = newSignalTempTemp;
+                    %}
                     newSignal{i} = newSignalTemp;
                 catch ME
                     newSignal{i} = [];
@@ -13770,6 +13803,14 @@ if besselCheck
                     samplingInterval = samplingInterval/1000; % sampling interval (s)
                     samplingRate = 1/samplingInterval; % sampling rate (Hz)
                     newSignalTemp = besselLowpass(newSignalTemp, besselOrder, besselFreq, samplingRate);
+                    %{
+                    newSignalTempTemp = newSignalTemp(:, timeColumn);
+                    newSignalTempTemp = besselLowpass(newSignalTempTemp, besselOrder, besselFreq, samplingRate);
+                    newSignalTemp(:, timeColumn) = newSignalTempTemp;
+                    newSignalTempTemp = newSignalTemp(:, workingColumn);
+                    newSignalTempTemp = besselLowpass(newSignalTempTemp, besselOrder, besselFreq, samplingRate);
+                    newSignalTemp(:, workingColumn) = newSignalTempTemp;
+                    %}
                     newSignal = newSignalTemp;
                 catch ME
                     newSignal = [];
@@ -13787,6 +13828,14 @@ if boxcarCheck
                 try % in case sweeps are missing, which can happen especially for dF/F
                     newSignalTemp = newSignal{i};
                     newSignalTemp = boxcarAverage(newSignalTemp, boxcarLength);
+                    %{
+                    newSignalTempTemp = newSignalTemp(:, timeColumn);
+                    newSignalTempTemp = boxcarAverage(newSignalTempTemp, boxcarLength);
+                    newSignalTemp(:, timeColumn) = newSignalTempTemp;
+                    newSignalTempTemp = newSignalTemp(:, workingColumn);
+                    newSignalTempTemp = boxcarAverage(newSignalTempTemp, boxcarLength);
+                    newSignalTemp(:, workingColumn) = newSignalTempTemp;
+                    %}
                     newSignal{i} = newSignalTemp;
                 catch ME
                     newSignal{i} = [];
@@ -13795,6 +13844,14 @@ if boxcarCheck
                 try % in case sweeps are missing, which can happen especially for dF/F
                     newSignalTemp = newSignal;
                     newSignalTemp = boxcarAverage(newSignalTemp, boxcarLength);
+                    %{
+                    newSignalTempTemp = newSignalTemp(:, timeColumn);
+                    newSignalTempTemp = boxcarAverage(newSignalTempTemp, boxcarLength);
+                    newSignalTemp(:, timeColumn) = newSignalTempTemp;
+                    newSignalTempTemp = newSignalTemp(:, workingColumn);
+                    newSignalTempTemp = boxcarAverage(newSignalTempTemp, boxcarLength);
+                    newSignalTemp(:, workingColumn) = newSignalTempTemp;
+                    %}
                     newSignal = newSignalTemp;
                 catch ME
                     newSignal = [];
@@ -13838,12 +13895,19 @@ if targetSignal == 0
     return
 end
 
-signal1Type = h.params.actualParams.signal1Type;
-signal2Type = h.params.actualParams.signal2Type;
-signal1Channel = h.params.actualParams.signal1Channel; % not to be confused with targetSignal
-signal2Channel = h.params.actualParams.signal2Channel; % ditto
-
-timeColumn = h.params.actualParams.timeColumn;
+try
+    signal1Type = h.params.actualParams.signal1Type;
+    signal2Type = h.params.actualParams.signal2Type;
+    signal1Channel = h.params.actualParams.signal1Channel; % not to be confused with targetSignal
+    signal2Channel = h.params.actualParams.signal2Channel; % ditto
+    timeColumn = h.params.actualParams.timeColumn;
+catch ME
+    signal1Type = 2; % i, V, F - older version of PVBS was developed with this assumption (perche' 46)
+    signal2Type = 3; % i, V, F - older version of PVBS was developed with this assumption (perche' 46)
+    signal1Channel = 2; % pvbsVoltageColumn
+    signal2Channel = 2; % lineScanChannel
+    timeColumn = 1; % sensible
+end
 
 artifactRemovalLength = h.ui.stimArtifactInput.String;
 artifactRemovalStart = h.ui.stimArtifactInput2.String;
@@ -13886,51 +13950,35 @@ if artifactRemovalLength <= 0
 else
 end
 
-try
-    VRecTemp = h.exp.data.VRec{expIdx};
-    %{
-    if isempty(VRecTemp)
-        return
-    else
-    end
-    %}
-    si = VRecTemp{1}; % this will do, unless different sampling rates were used between sweeps
-    si = si(:, timeColumn);
-    si = si(2) - si(1);
-catch ME
-    return
-end
-
-artifactRemovalLength = artifactRemovalLength/si; % converting to points from ms
-artifactRemovalStart = artifactRemovalStart/si; % converting to points from ms
-if artifactRemovalFreq == 0
-    artifactRemovalInterval = 0;
-else
-    artifactRemovalInterval = 1/artifactRemovalFreq; % converting to s from Hz
-    artifactRemovalInterval = 1000*artifactRemovalInterval; % converting to ms from s
-    artifactRemovalInterval = artifactRemovalInterval/si; % converting to points from ms
-end
-
-artifactRemovalStartPoints = 0:artifactRemovalInterval:artifactRemovalInterval*(artifactRemovalCount - 1);
-artifactRemovalStartPoints = artifactRemovalStartPoints + artifactRemovalStart;
-
 if targetSignal == 1
     targetColumn = signal1Channel;
     switch signal1Type % i, V, F
         case 1
-            oldSignal = h.exp.data.VRec{expIdx};
+            %oldSignal = h.exp.data.VRec{expIdx};
+            oldSignal = h.exp.data.VRecOriginal{expIdx};
             oldSignalOriginal = h.exp.data.VRecOriginal{expIdx};
+            [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signal1Type);
+            warning('off','all');
             newSignal = artifactRemovalActual();
+            warning('on','all');
             h.exp.data.VRec{expIdx} = newSignal;
         case 2
-            oldSignal = h.exp.data.VRec{expIdx};
+            %oldSignal = h.exp.data.VRec{expIdx};
+            oldSignal = h.exp.data.VRecOriginal{expIdx};
             oldSignalOriginal = h.exp.data.VRecOriginal{expIdx};
+            [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signal1Type);
+            warning('off','all');
             newSignal = artifactRemovalActual();
+            warning('on','all');
             h.exp.data.VRec{expIdx} = newSignal;
         case 3 % unexpected, could be inappropriate %%% fixlater
-            oldSignal = h.exp.data.lineScanDFF{expIdx};
+            %oldSignal = h.exp.data.lineScanDFF{expIdx};
+            oldSignal = h.exp.data.lineScanDFFOriginal{expIdx};
             oldSignalOriginal = h.exp.data.lineScanDFFOriginal{expIdx};
+            [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signal1Type);
+            warning('off','all');
             newSignal = artifactRemovalActual();
+            warning('on','all');
             h.exp.data.lineScanDFF{expIdx} = newSignal;
         otherwise
             return
@@ -13939,23 +13987,37 @@ elseif targetSignal == 2
     targetColumn = signal2Channel;
     switch signal2Type % i, V, F
         case 1
-            oldSignal = h.exp.data.VRec{expIdx};
+            %oldSignal = h.exp.data.VRec{expIdx};
+            oldSignal = h.exp.data.VRecOriginal{expIdx};
             oldSignalOriginal = h.exp.data.VRecOriginal{expIdx};
+            [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signal2Type);
+            warning('off','all');
             newSignal = artifactRemovalActual();
+            warning('on','all');
             h.exp.data.VRec{expIdx} = newSignal;
         case 2
-            oldSignal = h.exp.data.VRec{expIdx};
+            %oldSignal = h.exp.data.VRec{expIdx};
+            oldSignal = h.exp.data.VRecOriginal{expIdx};
             oldSignalOriginal = h.exp.data.VRecOriginal{expIdx};
+            [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signal2Type);
+            warning('off','all');
             newSignal = artifactRemovalActual();
+            warning('on','all');
             h.exp.data.VRec{expIdx} = newSignal;
         case 3 % unexpected, could be inappropriate %%% fixlater
-            oldSignal = h.exp.data.lineScanDFF{expIdx};
+            %oldSignal = h.exp.data.lineScanDFF{expIdx};
+            oldSignal = h.exp.data.lineScanDFFOriginal{expIdx};
             oldSignalOriginal = h.exp.data.lineScanDFFOriginal{expIdx};
+            [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signal2Type);
+            warning('off','all');
             newSignal = artifactRemovalActual();
+            warning('on','all');
             h.exp.data.lineScanDFF{expIdx} = newSignal;
         otherwise
             return
     end
+else
+    error('Target signal definition incompatible with data\n\n');
 end
 
 axes(h.ui.traceDisplay); % absolutely necessary - bring focus to main display, since other functions might have brought it to another axes
@@ -13963,7 +14025,74 @@ axes(h.ui.traceDisplay); % absolutely necessary - bring focus to main display, s
 h = cellListClick2(h, expIdx);
 
 h.ui.traceProcessingTarget.Value = targetSignal + 1; % cuz cellListClick2() resets the list %%% fixlater
+
+boxcarCheck = h.ui.downsamplingButton.Value;
+besselCheck = h.ui.lowPassFilterButton.Value;
+if boxcarCheck || besselCheck
+    fprintf('Warning: stimulus artifact removal resets Boxcar downsampling and/or Bessel LP filter - re-apply if necessary\n');
+    boxcarCheck = 0;
+    besselCheck = 0;
+    h.ui.downsamplingButton.Value = boxcarCheck;
+    h.ui.lowPassFilterButton.Value = besselCheck;
+end
+
 guidata(src, h);
+
+    function [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signalType)
+
+        si = oldSignal{1}; % this will do, unless different sampling rates were used between sweeps
+        si = si(:, timeColumn);
+        si = si(2) - si(1);
+
+        %si = round(si); % no!
+
+        artifactRemovalLength = artifactRemovalLength/si; % converting to points from ms
+        artifactRemovalStart = artifactRemovalStart/si; % converting to points from ms
+
+        if artifactRemovalFreq == 0
+            artifactRemovalInterval = 0;
+        else
+            artifactRemovalInterval = 1/artifactRemovalFreq; % converting to s from Hz
+            artifactRemovalInterval = 1000*artifactRemovalInterval; % converting to ms from s
+            artifactRemovalInterval = artifactRemovalInterval/si; % converting to points from ms
+        end
+
+        %{
+        switch signalType % i, V, F
+            case 1
+            case 2
+            case 3
+                artifactRemovalLength = floor(artifactRemovalLength) - ceil(si);
+                if artifactRemovalLength <= 0
+                    return
+                else
+                end
+                artifactRemovalStart = ceil(artifactRemovalStart) + ceil(si);
+                artifactRemovalInterval = round(artifactRemovalInterval);
+                if artifactRemovalInterval <= 0
+                    return
+                else
+                end
+            otherwise
+                error('Artifact removal parameters incompatible with data shape'); % shouldn't be necessary, would've been dealt with upstream
+        end
+        %}
+
+        artifactRemovalLength = floor(artifactRemovalLength) - ceil(si);
+        if artifactRemovalLength <= 0
+            return
+        else
+        end
+        artifactRemovalStart = ceil(artifactRemovalStart) + ceil(si);
+        artifactRemovalInterval = round(artifactRemovalInterval);
+        if artifactRemovalInterval <= 0
+            return
+        else
+        end
+
+        artifactRemovalStartPoints = 0:artifactRemovalInterval:artifactRemovalInterval*(artifactRemovalCount - 1);
+        artifactRemovalStartPoints = artifactRemovalStartPoints + artifactRemovalStart;
+    end
 
     function newSignal = artifactRemovalActual() %%% fixlater - currently overrides boxcar/bessel LP postprocessing
         newSignal = oldSignal; % initializing
