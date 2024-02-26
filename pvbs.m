@@ -261,15 +261,15 @@ ui.cellListMerge = uicontrol('Style', 'pushbutton', 'String', 'Merge', 'Units', 
 ui.cellListDuplicate = uicontrol('Style', 'pushbutton', 'String', 'Duplicate', 'Units', 'normalized', 'Position', [0.08, 0.51, 0.035, 0.03], 'Callback', @cellListDuplicate, 'interruptible', 'off');
 ui.cellListDel = uicontrol('Style', 'pushbutton', 'String', 'X', 'Units', 'normalized', 'Position', [0.1155, 0.51, 0.02, 0.03], 'Callback', @cellListDel, 'interruptible', 'off');
 %  main trace display window
-ui.traceDisplayTitle = uicontrol('Style', 'text', 'string', 'Traces', 'fontweight', 'bold', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.15, 0.955, 0.09, 0.02]);
+ui.traceDisplayTitle = uicontrol('Style', 'text', 'string', 'Traces', 'fontweight', 'bold', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.15, 0.955, 0.04, 0.02]);
 ui.traceDisplay = axes('Units', 'Normalized', 'Position', [0.19, 0.42, 0.57, 0.53], 'xminortick', 'on', 'yminortick', 'on', 'box', 'on');
 ui.traceDisplaySignalsButton = uicontrol('Style', 'pushbutton', 'enable', 'on', 'String', 'S#', 'backgroundcolor', [0.99, 0.99, 0.99], 'Units', 'normalized', 'Position', [0.735, 0.905, 0.015, 0.03], 'Callback', @traceDisplaySignals, 'interruptible', 'off');
 ui.traceDisplayXZoomIn = uicontrol('Style', 'pushbutton', 'String', '+', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.5245, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXZoomIn, 'interruptible', 'off');
 ui.traceDisplayXZoomOut = uicontrol('Style', 'pushbutton', 'String', '-', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.4115, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXZoomOut, 'interruptible', 'off');
-ui.traceDisplayXMoveRight = uicontrol('Style', 'pushbutton', 'String', '>', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.71, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveRight, 'interruptible', 'off');
-ui.traceDisplayXMoveLeft = uicontrol('Style', 'pushbutton', 'String', '<', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.226, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveLeft, 'interruptible', 'off');
-ui.traceDisplayXMoveToStart = uicontrol('Style', 'pushbutton', 'String', '<<', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.197, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveToStart, 'interruptible', 'off');
-ui.traceDisplayXMoveToEnd = uicontrol('Style', 'pushbutton', 'String', '>>', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.739, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveToEnd, 'interruptible', 'off');
+ui.traceDisplayXMoveRight = uicontrol('Style', 'pushbutton', 'String', '>', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.695, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveRight, 'interruptible', 'off');
+ui.traceDisplayXMoveLeft = uicontrol('Style', 'pushbutton', 'String', '<', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.241, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveLeft, 'interruptible', 'off');
+ui.traceDisplayXMoveToStart = uicontrol('Style', 'pushbutton', 'String', '<<', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.212, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveToStart, 'interruptible', 'off');
+ui.traceDisplayXMoveToEnd = uicontrol('Style', 'pushbutton', 'String', '>>', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.724, 0.361, 0.015, 0.03], 'Callback', @traceDisplayXMoveToEnd, 'interruptible', 'off');
 ui.traceDisplayYZoomIn = uicontrol('Style', 'pushbutton', 'String', '+', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.15, 0.76, 0.015, 0.03], 'Callback', @traceDisplayYZoomIn, 'interruptible', 'off');
 ui.traceDisplayYZoomOut = uicontrol('Style', 'pushbutton', 'String', '-', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.15, 0.58, 0.015, 0.03], 'Callback', @traceDisplayYZoomOut, 'interruptible', 'off');
 ui.traceDisplayYMoveUp = uicontrol('Style', 'pushbutton', 'String', '^', 'fontweight', 'bold', 'Units', 'normalized', 'Position', [0.15, 0.89, 0.015, 0.03], 'Callback', @traceDisplayYMoveUp, 'interruptible', 'off');
@@ -479,8 +479,13 @@ axes(ui.analysisPlot2);
 axes(ui.traceDisplay); % move focus to main display panel
 set(gca, 'layer', 'top');
 xlabel('t (ms)');
+%{
 yyaxis left; ylabel('V_m (mV)', 'color', 'k'); ylim(params.yRange); set(gca, 'ycolor', 'k', 'yminortick', 'on');
 yyaxis right; ylabel('dF/F', 'color', 'g'); ylim(params.y2Range); set(gca, 'ycolor', [0, 0.5, 0], 'yminortick', 'on');
+%}
+xlabel(' ', 'color', 'k'); xlim([-1, 0]);
+yyaxis left; ylabel(' ', 'color', 'k'); ylim([-10000, 10000]); set(gca, 'ycolor', 'k');
+yyaxis right; ylabel(' ', 'color', 'g'); ylim([-10000, 10000]); set(gca, 'ycolor', [0, 0.5, 0]);
 yyaxis left; % move focus back to left y axis to be safe
 
 % save
@@ -3177,6 +3182,7 @@ groupStr = h.exp.data.groupStr{itemSelected};
 
 % do display
 axes(traceDisplay);
+%xlabel('t (ms)', 'color', 'k');
 
 try % use try-catch here
     workingAxis = 1;
@@ -3281,6 +3287,17 @@ end
     function displayTraceV(axisIdx)
         axes(traceDisplay);
         
+        xlabel('t (ms)');
+        if isempty(h.ui.traceDisplayXRange) % if displaying for the first time, display full range and save
+            traceDisplayXRange = xlim(traceDisplay);
+            h.ui.traceDisplayXRange = traceDisplayXRange;
+            xlim(traceDisplayXRange);
+            set(h.ui.traceDisplayXMoveLeft, 'enable', 'off'); % disable "move x left" button, since it will start from zero
+        else % otherwise retain x range
+            xlim(traceDisplayXRange);
+        end
+        %xticks(0:1000:600000); xticklabels(0:1000:600000); % x ticks in 1000 ms up to 600000 ms (600 s)
+
         if axisIdx == 2
             columnToDisplay = signal2Channel;
             traceColor = params.trace2ColorInactive;
@@ -3344,17 +3361,6 @@ end
             h.ui.trace = trace;
             ylim(traceDisplayYRange);
         end
-
-        xlabel('t (ms)');
-        if isempty(h.ui.traceDisplayXRange) % if displaying for the first time, display full range and save
-            traceDisplayXRange = xlim(traceDisplay);
-            h.ui.traceDisplayXRange = traceDisplayXRange;
-            xlim(traceDisplayXRange);
-            set(h.ui.traceDisplayXMoveLeft, 'enable', 'off'); % disable "move x left" button, since it will start from zero
-        else % otherwise retain x range
-            xlim(traceDisplayXRange);
-        end
-        %xticks(0:1000:600000); xticklabels(0:1000:600000); % x ticks in 1000 ms up to 600000 ms (600 s)
 
         hold off;
         yyaxis left; % return to y axis (left), just to be safe
@@ -3518,6 +3524,7 @@ groupStr = h.exp.data.groupStr{itemSelected};
 
 % do display
 axes(traceDisplay);
+%xlabel('t (ms)', 'color', 'k');
 
 try % use try-catch here
     if displayFlag(1)
@@ -3621,6 +3628,15 @@ end
     function displayTraceV2(axisIdx)
         axes(traceDisplay);
         
+        xlabel('t (ms)');
+        if isempty(h.ui.traceDisplayXRange) % if displaying for the first time, display full range and save
+            traceDisplayXRange = xlim(traceDisplay);
+            xlim(traceDisplayXRange);
+        else % otherwise retain x range
+            xlim(traceDisplayXRange);
+        end
+        %xticks(0:1000:600000); xticklabels(0:1000:600000); % x ticks in 1000 ms up to 600000 ms (600 s)
+
         if axisIdx == 2
             columnToDisplay = signal2Channel;
             traceColor = params.trace2ColorInactive;
@@ -3681,15 +3697,6 @@ end
             ylim(traceDisplayYRange);
         end
 
-        xlabel('t (ms)');
-        if isempty(h.ui.traceDisplayXRange) % if displaying for the first time, display full range and save
-            traceDisplayXRange = xlim(traceDisplay);
-            xlim(traceDisplayXRange);
-        else % otherwise retain x range
-            xlim(traceDisplayXRange);
-        end
-        %xticks(0:1000:600000); xticklabels(0:1000:600000); % x ticks in 1000 ms up to 600000 ms (600 s)
-        
         hold off;
         yyaxis left; % return to y axis (left), just to be safe
 
