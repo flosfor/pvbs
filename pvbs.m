@@ -13952,6 +13952,10 @@ end
 
 if targetSignal == 1
     targetColumn = signal1Channel;
+    otherSignal = 2; % lol
+    otherColumn = signal2Channel; % lolol
+    artifactRemovalParams = h.exp.data.artifactRemoval{expIdx};
+    otherFlag = artifactRemovalParams(otherSignal, 1);
     switch signal1Type % i, V, F
         case 1
             %oldSignal = h.exp.data.VRec{expIdx};
@@ -13969,6 +13973,34 @@ if targetSignal == 1
             warning('off','all');
             newSignal = artifactRemovalActual();
             warning('on','all');
+            
+            switch signal2Type % i, V, F
+                case 1 % match - do something
+                case 2 % match - do something
+                case 3 % mismatch - do nothing
+                    otherFlag = 0;
+            end
+            while otherFlag
+                otherOldSignal = h.exp.data.VRec{expIdx}; % postprocessed signal
+                try
+                    if iscell(newSignal)
+                        for i = 1:length(newSignal)
+                            newSignalTemp = newSignal{i};
+                            otherOldSignalTemp = otherOldSignal{i};
+                            newSignalTemp(:, otherColumn) = otherOldSignalTemp(:, otherColumn);
+                            newSignal{i} = newSignalTemp;
+                        end
+                    else
+                        for i = 1:length(newSignal)
+                            newSignal(:, otherColumn) = otherOldSignal(:, otherColumn);
+                        end
+                    end
+                catch ME % can fail due to dimension mismatch, e.g. if the other signal had been boxcar downsampled
+                    artifactRemovalParams(otherOldSignal, 1) = 0;
+                    h.exp.data.artifactRemoval{expIdx} = artifactRemovalParams;
+                end
+                otherFlag = 0;
+            end
             h.exp.data.VRec{expIdx} = newSignal;
         case 2
             %oldSignal = h.exp.data.VRec{expIdx};
@@ -13986,6 +14018,34 @@ if targetSignal == 1
             warning('off','all');
             newSignal = artifactRemovalActual();
             warning('on','all');
+
+            switch signal2Type % i, V, F
+                case 1 % match - do something
+                case 2 % match - do something
+                case 3 % mismatch - do nothing
+                    otherFlag = 0;
+            end
+            while otherFlag
+                otherOldSignal = h.exp.data.VRec{expIdx}; % postprocessed signal
+                try
+                    if iscell(newSignal)
+                        for i = 1:length(newSignal)
+                            newSignalTemp = newSignal{i};
+                            otherOldSignalTemp = otherOldSignal{i};
+                            newSignalTemp(:, otherColumn) = otherOldSignalTemp(:, otherColumn);
+                            newSignal{i} = newSignalTemp;
+                        end
+                    else
+                        for i = 1:length(newSignal)
+                            newSignal(:, otherColumn) = otherOldSignal(:, otherColumn);
+                        end
+                    end
+                catch ME % can fail due to dimension mismatch, e.g. if the other signal had been boxcar downsampled
+                    artifactRemovalParams(otherOldSignal, 1) = 0;
+                    h.exp.data.artifactRemoval{expIdx} = artifactRemovalParams;
+                end
+                otherFlag = 0;
+            end
             h.exp.data.VRec{expIdx} = newSignal;
         case 3 % unexpected, could be inappropriate %%% fixlater
             %oldSignal = h.exp.data.lineScanDFF{expIdx};
@@ -14003,12 +14063,45 @@ if targetSignal == 1
             warning('off','all');
             newSignal = artifactRemovalActual();
             warning('on','all');
+            
+            switch signal2Type % i, V, F
+                case 1 % mismatch - do nothing
+                    otherFlag = 0;
+                case 2 % mismatch - do nothing
+                    otherFlag = 0;
+                case 3 % match - do something
+            end
+            while otherFlag
+                otherOldSignal = h.exp.data.lineScanDFF{expIdx}; % postprocessed signal
+                try
+                    if iscell(newSignal)
+                        for i = 1:length(newSignal)
+                            newSignalTemp = newSignal{i};
+                            otherOldSignalTemp = otherOldSignal{i};
+                            newSignalTemp(:, otherColumn) = otherOldSignalTemp(:, otherColumn);
+                            newSignal{i} = newSignalTemp;
+                        end
+                    else
+                        for i = 1:length(newSignal)
+                            newSignal(:, otherColumn) = otherOldSignal(:, otherColumn);
+                        end
+                    end
+                catch ME % can fail due to dimension mismatch, e.g. if the other signal had been boxcar downsampled
+                    artifactRemovalParams(otherSignal, 1) = 0;
+                    h.exp.data.artifactRemoval{expIdx} = artifactRemovalParams;
+                end
+                otherFlag = 0;
+            end
             h.exp.data.lineScanDFF{expIdx} = newSignal;
         otherwise
             return
     end
 elseif targetSignal == 2
     targetColumn = signal2Channel;
+    otherSignal = 1; % lol
+    otherColumn = signal1Channel; % lolol
+    artifactRemovalParams = h.exp.data.artifactRemoval{expIdx};
+    otherFlag = artifactRemovalParams(otherSignal, 1);
     switch signal2Type % i, V, F
         case 1
             %oldSignal = h.exp.data.VRec{expIdx};
@@ -14026,6 +14119,34 @@ elseif targetSignal == 2
             warning('off','all');
             newSignal = artifactRemovalActual();
             warning('on','all');
+
+            switch signal1Type % i, V, F
+                case 1 % match - do something
+                case 2 % match - do something
+                case 3 % mismatch - do nothing
+                    otherFlag = 0;
+            end
+            while otherFlag
+                otherOldSignal = h.exp.data.VRec{expIdx}; % postprocessed signal
+                try
+                    if iscell(newSignal)
+                        for i = 1:length(newSignal)
+                            newSignalTemp = newSignal{i};
+                            otherOldSignalTemp = otherOldSignal{i};
+                            newSignalTemp(:, otherColumn) = otherOldSignalTemp(:, otherColumn);
+                            newSignal{i} = newSignalTemp;
+                        end
+                    else
+                        for i = 1:length(newSignal)
+                            newSignal(:, otherColumn) = otherOldSignal(:, otherColumn);
+                        end
+                    end
+                catch ME % can fail due to dimension mismatch, e.g. if the other signal had been boxcar downsampled
+                    artifactRemovalParams(otherOldSignal, 1) = 0;
+                    h.exp.data.artifactRemoval{expIdx} = artifactRemovalParams;
+                end
+                otherFlag = 0;
+            end
             h.exp.data.VRec{expIdx} = newSignal;
         case 2
             %oldSignal = h.exp.data.VRec{expIdx};
@@ -14043,6 +14164,34 @@ elseif targetSignal == 2
             warning('off','all');
             newSignal = artifactRemovalActual();
             warning('on','all');
+            
+            switch signal1Type % i, V, F
+                case 1 % match - do something
+                case 2 % match - do something
+                case 3 % mismatch - do nothing
+                    otherFlag = 0;
+            end
+            while otherFlag
+                otherOldSignal = h.exp.data.VRec{expIdx}; % postprocessed signal
+                try
+                    if iscell(newSignal)
+                        for i = 1:length(newSignal)
+                            newSignalTemp = newSignal{i};
+                            otherOldSignalTemp = otherOldSignal{i};
+                            newSignalTemp(:, otherColumn) = otherOldSignalTemp(:, otherColumn);
+                            newSignal{i} = newSignalTemp;
+                        end
+                    else
+                        for i = 1:length(newSignal)
+                            newSignal(:, otherColumn) = otherOldSignal(:, otherColumn);
+                        end
+                    end
+                catch ME % can fail due to dimension mismatch, e.g. if the other signal had been boxcar downsampled
+                    artifactRemovalParams(otherOldSignal, 1) = 0;
+                    h.exp.data.artifactRemoval{expIdx} = artifactRemovalParams;
+                end
+                otherFlag = 0;
+            end
             h.exp.data.VRec{expIdx} = newSignal;
         case 3 % unexpected, could be inappropriate %%% fixlater
             %oldSignal = h.exp.data.lineScanDFF{expIdx};
@@ -14060,6 +14209,35 @@ elseif targetSignal == 2
             warning('off','all');
             newSignal = artifactRemovalActual();
             warning('on','all');
+            
+            switch signal1Type % i, V, F
+                case 1 % mismatch - do nothing
+                    otherFlag = 0;
+                case 2 % mismatch - do nothing
+                    otherFlag = 0;
+                case 3 % match - do something
+            end
+            while otherFlag
+                otherOldSignal = h.exp.data.lineScanDFF{expIdx}; % postprocessed signal
+                try
+                    if iscell(newSignal)
+                        for i = 1:length(newSignal)
+                            newSignalTemp = newSignal{i};
+                            otherOldSignalTemp = otherOldSignal{i};
+                            newSignalTemp(:, otherColumn) = otherOldSignalTemp(:, otherColumn);
+                            newSignal{i} = newSignalTemp;
+                        end
+                    else
+                        for i = 1:length(newSignal)
+                            newSignal(:, otherColumn) = otherOldSignal(:, otherColumn);
+                        end
+                    end
+                catch ME % can fail due to dimension mismatch, e.g. if the other signal had been boxcar downsampled
+                    artifactRemovalParams(otherSignal, 1) = 0;
+                    h.exp.data.artifactRemoval{expIdx} = artifactRemovalParams;
+                end
+                otherFlag = 0;
+            end
             h.exp.data.lineScanDFF{expIdx} = newSignal;
         otherwise
             return
@@ -14077,7 +14255,7 @@ h.ui.traceProcessingTarget.Value = targetSignal + 1; % cuz cellListClick2() rese
 boxcarCheck = h.ui.downsamplingButton.Value;
 besselCheck = h.ui.lowPassFilterButton.Value;
 if boxcarCheck || besselCheck
-    fprintf('Warning: stimulus artifact removal resets Boxcar downsampling and/or Bessel LP filter - re-apply if necessary\n');
+    fprintf('Warning: stimulus artifact removal resets boxcar downsampling and/or bessel LP filter - re-apply if necessary\n');
 end
 % may look counterintuitive but do this after the preceding if block
 %%{
@@ -14156,54 +14334,74 @@ guidata(src, h);
         if artifactRemovalFlag
             for i = 1:length(newSignal)
                 if iscell(newSignal)
-                    try % in case sweeps are missing, which can happen especially for dF/F
+                    try % in case sweeps are missing, which can happen especially for dF/F - or points exceed data range
                         newSignalTemp = newSignal{i};
                         oldSignalOriginalTemp = oldSignalOriginal{i};
                         newSignalTemp(:, targetColumn) = oldSignalOriginalTemp(:, targetColumn);
+                        artifactRemovalStartPoints = artifactRemovalStartPoints(artifactRemovalStartPoints < size(newSignalTemp, 1) - artifactRemovalLength);
                         for j = artifactRemovalStartPoints
                             newSignalTemp(j:j + artifactRemovalLength, targetColumn) = nan;
                         end
                         newSignal{i} = newSignalTemp;
                     catch ME
-                        newSignal{i} = [];
+                        try
+                            newSignal{i} = oldSignalOriginalTemp;
+                        catch ME
+                            newSignal{i} = [];
+                        end
                     end
                 else
-                    try % in case sweeps are missing, which can happen especially for dF/F
+                    try % in case sweeps are missing, which can happen especially for dF/F - or points exceed data range
                         newSignalTemp = newSignal;
                         oldSignalOriginalTemp = oldSignalOriginal
                         newSignalTemp(:, targetColumn) = oldSignalOriginalTemp(:, targetColumn);
+                        artifactRemovalStartPoints = artifactRemovalStartPoints(artifactRemovalStartPoints < size(newSignalTemp, 1) - artifactRemovalLength);
                         for j = artifactRemovalStartPoints
                             newSignalTemp(j:j + artifactRemovalLength, targetColumn) = nan;
                         end
                         newSignal = newSignalTemp;
                     catch ME
-                        newSignal = [];
+                        try
+                            newSignal{i} = oldSignalOriginalTemp;
+                        catch ME
+                            newSignal{i} = [];
+                        end
                     end
                 end
             end
         else
             for i = 1:length(newSignal)
                 if iscell(newSignal)
-                    try % in case sweeps are missing, which can happen especially for dF/F
+                    try % in case sweeps are missing, which can happen especially for dF/F - or points exceed data range
                         newSignalTemp = newSignal{i};
                         oldSignalOriginalTemp = oldSignalOriginal{i};
+                        artifactRemovalStartPoints = artifactRemovalStartPoints(artifactRemovalStartPoints < size(newSignalTemp, 1) - artifactRemovalLength);
                         for j = artifactRemovalStartPoints
                             newSignalTemp(j:j + artifactRemovalLength, targetColumn) = oldSignalOriginalTemp(j:j + artifactRemovalLength, targetColumn);
                         end
                         newSignal{i} = newSignalTemp;
                     catch ME
-                        newSignal{i} = [];
+                        try
+                            newSignal{i} = oldSignalOriginalTemp;
+                        catch ME
+                            newSignal{i} = [];
+                        end
                     end
                 else
-                    try % in case sweeps are missing, which can happen especially for dF/F
+                    try % in case sweeps are missing, which can happen especially for dF/F - or points exceed data range
                         newSignalTemp = newSignal;
                         oldSignalOriginalTemp = oldSignalOriginal;
+                        artifactRemovalStartPoints = artifactRemovalStartPoints(artifactRemovalStartPoints < size(newSignalTemp, 1) - artifactRemovalLength);
                         for j = artifactRemovalStartPoints
                             newSignalTemp(j:j + artifactRemovalLength, targetColumn) = oldSignalOriginalTemp(j:j + artifactRemovalLength, targetColumn);
                         end
                         newSignal = newSignalTemp;
                     catch ME
-                        newSignal = [];
+                        try
+                            newSignal{i} = oldSignalOriginalTemp;
+                        catch ME
+                            newSignal{i} = [];
+                        end
                     end
                 end
             end
