@@ -13958,6 +13958,14 @@ if targetSignal == 1
             oldSignal = h.exp.data.VRecOriginal{expIdx};
             oldSignalOriginal = h.exp.data.VRecOriginal{expIdx};
             [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signal1Type);
+            if artifactRemovalLength <= 0
+                return
+            else
+            end
+            if artifactRemovalInterval <= 0
+                return
+            else
+            end
             warning('off','all');
             newSignal = artifactRemovalActual();
             warning('on','all');
@@ -13967,6 +13975,14 @@ if targetSignal == 1
             oldSignal = h.exp.data.VRecOriginal{expIdx};
             oldSignalOriginal = h.exp.data.VRecOriginal{expIdx};
             [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signal1Type);
+            if artifactRemovalLength <= 0
+                return
+            else
+            end
+            if artifactRemovalInterval <= 0
+                return
+            else
+            end
             warning('off','all');
             newSignal = artifactRemovalActual();
             warning('on','all');
@@ -13976,6 +13992,14 @@ if targetSignal == 1
             oldSignal = h.exp.data.lineScanDFFOriginal{expIdx};
             oldSignalOriginal = h.exp.data.lineScanDFFOriginal{expIdx};
             [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signal1Type);
+            if artifactRemovalLength <= 0
+                return
+            else
+            end
+            if artifactRemovalInterval <= 0
+                return
+            else
+            end
             warning('off','all');
             newSignal = artifactRemovalActual();
             warning('on','all');
@@ -13991,6 +14015,14 @@ elseif targetSignal == 2
             oldSignal = h.exp.data.VRecOriginal{expIdx};
             oldSignalOriginal = h.exp.data.VRecOriginal{expIdx};
             [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signal2Type);
+            if artifactRemovalLength <= 0
+                return
+            else
+            end
+            if artifactRemovalInterval <= 0
+                return
+            else
+            end
             warning('off','all');
             newSignal = artifactRemovalActual();
             warning('on','all');
@@ -14000,6 +14032,14 @@ elseif targetSignal == 2
             oldSignal = h.exp.data.VRecOriginal{expIdx};
             oldSignalOriginal = h.exp.data.VRecOriginal{expIdx};
             [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signal2Type);
+            if artifactRemovalLength <= 0
+                return
+            else
+            end
+            if artifactRemovalInterval <= 0
+                return
+            else
+            end
             warning('off','all');
             newSignal = artifactRemovalActual();
             warning('on','all');
@@ -14009,6 +14049,14 @@ elseif targetSignal == 2
             oldSignal = h.exp.data.lineScanDFFOriginal{expIdx};
             oldSignalOriginal = h.exp.data.lineScanDFFOriginal{expIdx};
             [si, artifactRemovalLength, artifactRemovalStart, artifactRemovalInterval, artifactRemovalStartPoints] = setArtifactRemovalPoints(oldSignal, timeColumn, artifactRemovalLength, artifactRemovalStart, artifactRemovalFreq, signal2Type);
+            if artifactRemovalLength <= 0
+                return
+            else
+            end
+            if artifactRemovalInterval <= 0
+                return
+            else
+            end
             warning('off','all');
             newSignal = artifactRemovalActual();
             warning('on','all');
@@ -14030,11 +14078,28 @@ boxcarCheck = h.ui.downsamplingButton.Value;
 besselCheck = h.ui.lowPassFilterButton.Value;
 if boxcarCheck || besselCheck
     fprintf('Warning: stimulus artifact removal resets Boxcar downsampling and/or Bessel LP filter - re-apply if necessary\n');
-    boxcarCheck = 0;
-    besselCheck = 0;
-    h.ui.downsamplingButton.Value = boxcarCheck;
-    h.ui.lowPassFilterButton.Value = besselCheck;
 end
+% may look counterintuitive but do this after the preceding if block
+%%{
+boxcarCheck = 0;
+besselCheck = 0;
+if targetSignal == 1
+    h.params.actualParams.boxcarLength1 = 0;
+    h.params.actualParams.besselFreq1 = 0;
+elseif targetSignal == 2
+    h.params.actualParams.boxcarLength2 = 0;
+    h.params.actualParams.besselFreq2 = 0;
+else
+end
+postprocessing = h.exp.data.postprocessing{expIdx};
+postprocessing(targetSignal, 1) = 0; % boxcarLength
+postprocessing(targetSignal, 2) = 0; % besselFreq
+h.exp.data.postprocessing{expIdx} = postprocessing;
+h.ui.downsamplingInput.String = '0';
+h.ui.lowPassFilterInput.String = '0';
+h.ui.downsamplingButton.Value = boxcarCheck;
+h.ui.lowPassFilterButton.Value = besselCheck;
+%}
 
 guidata(src, h);
 
@@ -14062,7 +14127,7 @@ guidata(src, h);
             case 1
             case 2
             case 3
-                artifactRemovalLength = floor(artifactRemovalLength) - ceil(si);
+                artifactRemovalLength = floor(artifactRemovalLength);
                 if artifactRemovalLength <= 0
                     return
                 else
@@ -14078,17 +14143,9 @@ guidata(src, h);
         end
         %}
 
-        artifactRemovalLength = floor(artifactRemovalLength) - ceil(si);
-        if artifactRemovalLength <= 0
-            return
-        else
-        end
+        artifactRemovalLength = floor(artifactRemovalLength);
         artifactRemovalStart = ceil(artifactRemovalStart) + ceil(si);
         artifactRemovalInterval = round(artifactRemovalInterval);
-        if artifactRemovalInterval <= 0
-            return
-        else
-        end
 
         artifactRemovalStartPoints = 0:artifactRemovalInterval:artifactRemovalInterval*(artifactRemovalCount - 1);
         artifactRemovalStartPoints = artifactRemovalStartPoints + artifactRemovalStart;
