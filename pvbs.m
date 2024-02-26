@@ -2816,7 +2816,7 @@ try
     end
     %}
 
-    for i = 1:abfSignals
+    for i = 1:abfSignals %%% fixlater - che puzza, this is being overwritten for every experiment loaded
 
         try % ditto; but should be irrelevant because this feature was missing
             if i == 1
@@ -2863,6 +2863,7 @@ try
         catch ME
         end
     end
+
 catch ME
 end
 %}
