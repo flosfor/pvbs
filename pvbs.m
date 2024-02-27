@@ -103,7 +103,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2024.02.26';
+pvbsLastMod = '2024.02.27';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -11430,6 +11430,15 @@ for j = 2:size(windows, 1)
         if j == size(windows, 1) % if at last window, do not add another row
             continue % move onto next window - since nonexistent, loop will end
         else
+            % resize to allow cell(s) corresponding to subsequent window(s) to be appended
+            peakWin = cell(1, size(data, 2)); % NB. 1st dimension not windowNum
+            timeOfPeakWin = cell(1, size(data, 2)); % NB. not time to peak
+            riseTimeWin = cell(1, size(data, 2));
+            riseSlopeWin = cell(1, size(data, 2));
+            decayTimeWin = cell(1, size(data, 2));
+            decaySlopeWin = cell(1, size(data, 2));
+            areaWin = cell(1, size(data, 2));
+            meanWin = cell(1, size(data, 2));
             peak = [peak; peakWin];
             timeOfPeak = [timeOfPeak; timeOfPeakWin]; % NB. not time to peak
             riseTime = [riseTime; riseTimeWin];
@@ -12207,6 +12216,9 @@ results.maxRepol = maxRepol;
         v = v(2:end); % to match with dvdt
 
     end
+
+% display results
+
 
 end
 
@@ -18368,6 +18380,17 @@ end
         catch ME
             signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
             signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+            try % additional layer of safety
+                signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+                signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+            catch ME
+                signal1Channel = 2;
+                signal2Channel = 2;
+                h.params.actualParams.signal1Channel = signal1Channel;
+                h.params.actualParams.signal2Channel = signal2Channel;
+                h.params.defaultParams.signal1Channel = signal1Channel;
+                h.params.defaultParams.signal2Channel = signal2Channel;
+            end
         end
 
         switch targetSignal % signal
@@ -19237,6 +19260,17 @@ try % try-catch for reverse compatibility
 catch ME
     signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
     signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
+    end
 end
 
 switch signal1Type % i, V, F
@@ -19287,6 +19321,17 @@ try % try-catch for reverse compatibility
 catch ME
     signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
     signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
+    end
 end
 
 switch signal1Type % i, V, F
@@ -19337,6 +19382,17 @@ try % try-catch for reverse compatibility
 catch ME
     signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
     signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
+    end
 end
 
 switch signal1Type % i, V, F
@@ -19388,6 +19444,17 @@ try % try-catch for reverse compatibility
 catch ME
     signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
     signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
+    end
 end
 
 switch signal1Type % i, V, F
@@ -19439,6 +19506,17 @@ try % try-catch for reverse compatibility
 catch ME
     signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
     signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
+    end
 end
 
 switch signal1Type % i, V, F
@@ -19492,6 +19570,17 @@ try % try-catch for reverse compatibility
 catch ME
     signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
     signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
+    end
 end
 
 switch signal1Type % i, V, F
@@ -19549,6 +19638,17 @@ try % try-catch for reverse compatibility
 catch ME
     signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
     signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
+    end
 end
 
 switch signal1Type % i, V, F
@@ -19603,6 +19703,17 @@ try % try-catch for reverse compatibility
 catch ME
     signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
     signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
+    end
 end
 
 switch signal1Type % i, V, F
@@ -19677,6 +19788,17 @@ catch ME
     else
         signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
         signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+        try % additional layer of safety
+            signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+            signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+        catch ME
+            signal1Channel = 2;
+            signal2Channel = 2;
+            h.params.actualParams.signal1Channel = signal1Channel;
+            h.params.actualParams.signal2Channel = signal2Channel;
+            h.params.defaultParams.signal1Channel = signal1Channel;
+            h.params.defaultParams.signal2Channel = signal2Channel;
+        end
     end
 end
 
@@ -19804,6 +19926,17 @@ catch ME
     else
         signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
         signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+        try % additional layer of safety
+            signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+            signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+        catch ME
+            signal1Channel = 2;
+            signal2Channel = 2;
+            h.params.actualParams.signal1Channel = signal1Channel;
+            h.params.actualParams.signal2Channel = signal2Channel;
+            h.params.defaultParams.signal1Channel = signal1Channel;
+            h.params.defaultParams.signal2Channel = signal2Channel;
+        end
     end
 end
 
@@ -19938,6 +20071,17 @@ try % try-catch for reverse compatibility
 catch ME
     signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
     signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = h.params.actualParams.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = h.params.actualParams.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
+    end
 end
 
 switch signal1Type % i, V, F
