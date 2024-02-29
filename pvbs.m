@@ -103,7 +103,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2024.02.27';
+pvbsLastMod = '2024.02.29';
 pvbsStage = '(b)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
@@ -8390,13 +8390,18 @@ resultsTemp2.window2 = window2;
 % analysis type
 %  window 1
 analysisType1 = h.ui.analysisType1;
-analysisType1String = h.ui.analysisType1.String;
 analysisType1Idx = h.ui.analysisType1.Value;
-analysisTypeIdx = [analysisTypeIdx , analysisType1Idx];
+analysisType1String = h.ui.analysisType1.String;
+analysisType1String = analysisType1String{analysisType1Idx};
 %  window 2
 analysisType2 = h.ui.analysisType2;
-analysisType2String = h.ui.analysisType2.String;
 analysisType2Idx = h.ui.analysisType2.Value;
+analysisType2String = h.ui.analysisType2.String;
+analysisType2String = analysisType2String{analysisType2Idx};
+%  recordkeeping
+analysisType = {};
+analysisType{end + 1} = analysisType1String;
+analysisType{end + 1} = analysisType2String;
 analysisTypeIdx = [analysisTypeIdx , analysisType2Idx];
 
 try % try-catch for reverse compatibility
@@ -8664,7 +8669,7 @@ catch ME
     %ME
 end
 
-% group results
+% group results %%% this is the worst coding ever
 if analysisType1Idx == 1
 elseif analysisType1Idx == 2
     groups = h.exp.data.groupIdx{expIdx};
@@ -8871,7 +8876,140 @@ elseif analysisType1Idx == 2
         end
     catch ME
     end
-elseif analysisType1Idx == 3
+elseif analysisType1Idx == 3 %%% fixlater - not grouped properly as it is, although not even sure if grouping should really be applicable for this case
+    groups = h.exp.data.groupIdx{expIdx};
+    resultsTempGrp = resultsTemp; % easier way to initialize; overwrite afterwards
+    resultsTempGrp.eventBaseline = cell(size(resultsTemp.eventBaseline, 1), length(groups));
+    resultsTempGrp.eventCount = cell(size(resultsTemp.eventCount, 1), length(groups));
+    resultsTempGrp.eventAmplitude = cell(size(resultsTemp.eventAmplitude, 1), length(groups));
+    resultsTempGrp.eventTimeOfPeak = cell(size(resultsTemp.eventTimeOfPeak, 1), length(groups));
+    resultsTempGrp.eventPeakValue = cell(size(resultsTemp.eventPeakValue, 1), length(groups));
+    resultsTempGrp.eventDirection = cell(size(resultsTemp.eventDirection, 1), length(groups));
+    %nanSweepCount = 0; % only a failsafe, shouldn't be necessary
+    for i = 1:length(groups)
+        sweepsInGroup = groups{i};
+        %  converting to absolute indices from ordinal indices on sweep list
+        sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
+        sweepsInGroup = find(sweepsInGroup == 1); % find their indices
+        for k = 1:size(resultsTemp.eventDirection, 1) % this will suffice
+            nanSweepCount = 0;
+            resultsTempGrp.eventBaseline{k, i} = nan(size(resultsTemp.eventBaseline{1}));
+            resultsTempGrp.eventCount{k, i} = nan(size(resultsTemp.eventCount{1}));
+            resultsTempGrp.eventAmplitude{k, i} = nan(size(resultsTemp.eventAmplitude{1}));
+            resultsTempGrp.eventTimeOfPeak{k, i} = nan(size(resultsTemp.eventTimeOfPeak{1}));
+            resultsTempGrp.eventPeakValue{k, i} = nan(size(resultsTemp.eventPeakValue{1}));
+            resultsTempGrp.eventDirection{k, i} = nan(size(resultsTemp.eventDirection{1}));
+            for j = sweepsInGroup
+                %nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
+                if isnan(resultsTemp.eventPeakValue{k, j})
+                    nanSweepCount = nanSweepCount + 1;
+                end
+                resultsTempGrp.eventBaseline{k, i} = nansum([resultsTempGrp.eventBaseline{k, i}; resultsTemp.eventBaseline{k, j}]);
+                resultsTempGrp.eventCount{k, i} = nansum([resultsTempGrp.eventCount{k, i}; resultsTemp.eventCount{k, j}]);
+                resultsTempGrp.eventAmplitude{k, i} = nansum([resultsTempGrp.eventAmplitude{k, i}; resultsTemp.eventAmplitude{k, j}]);
+                resultsTempGrp.eventTimeOfPeak{k, i} = nansum([resultsTempGrp.eventTimeOfPeak{k, i}; resultsTemp.eventTimeOfPeak{k, j}]);
+                resultsTempGrp.eventPeakValue{k, i} = nansum([resultsTempGrp.eventPeakValue{k, i}; resultsTemp.eventPeakValue{k, j}]);
+                resultsTempGrp.eventDirection{k, i} = nansum([resultsTempGrp.eventDirection{k, i}; resultsTemp.eventDirection{k, j}]);
+            end
+            resultsTempGrp.eventBaseline{k, i} = resultsTempGrp.eventBaseline{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.eventCount{k, i} = resultsTempGrp.eventCount{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.eventAmplitude{k, i} = resultsTempGrp.eventAmplitude{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.eventTimeOfPeak{k, i} = resultsTempGrp.eventTimeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.eventPeakValue{k, i} = resultsTempGrp.eventPeakValue{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.eventDirection{k, i} = resultsTempGrp.eventDirection{k, i}./(length(sweepsInGroup) - nanSweepCount);
+        end
+    end
+    try
+        groups = h.exp.data.groupIdx{expIdx};
+        resultsTemp2Grp = resultsTemp2; % easier way to initialize; overwrite afterwards
+        resultsTemp2Grp.eventBaseline = cell(size(resultsTemp2.eventBaseline, 1), length(groups));
+        resultsTemp2Grp.eventCount = cell(size(resultsTemp2.eventCount, 1), length(groups));
+        resultsTemp2Grp.eventAmplitude = cell(size(resultsTemp2.eventAmplitude, 1), length(groups));
+        resultsTemp2Grp.eventTimeOfPeak = cell(size(resultsTemp2.eventTimeOfPeak, 1), length(groups));
+        resultsTemp2Grp.eventPeakValue = cell(size(resultsTemp2.eventPeakValue, 1), length(groups));
+        resultsTemp2Grp.eventDirection = cell(size(resultsTemp2.eventDirection, 1), length(groups));
+        %nanSweepCount = 0; % only a failsafe, shouldn't be necessary
+        for i = 1:length(groups)
+            sweepsInGroup = groups{i};
+            %  converting to absolute indices from ordinal indices on sweep list
+            sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
+            sweepsInGroup = find(sweepsInGroup == 1); % find their indices
+            for k = 1:size(resultsTemp2.eventDirection, 1) % this will suffice
+                nanSweepCount = 0;
+                resultsTemp2Grp.eventBaseline{k, i} = nan(size(resultsTemp2.eventBaseline{1}));
+                resultsTemp2Grp.eventCount{k, i} = nan(size(resultsTemp2.eventCount{1}));
+                resultsTemp2Grp.eventAmplitude{k, i} = nan(size(resultsTemp2.eventAmplitude{1}));
+                resultsTemp2Grp.eventTimeOfPeak{k, i} = nan(size(resultsTemp2.eventTimeOfPeak{1}));
+                resultsTemp2Grp.eventPeakValue{k, i} = nan(size(resultsTemp2.eventPeakValue{1}));
+                resultsTemp2Grp.eventDirection{k, i} = nan(size(resultsTemp2.eventDirection{1}));
+                for j = sweepsInGroup
+                    %nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
+                    if isnan(resultsTemp2.eventPeakValue{k, j})
+                        nanSweepCount = nanSweepCount + 1;
+                    end
+                    %%{
+                    resultsTemp2Grp.eventBaseline{k, i} = nansum([resultsTemp2Grp.eventBaseline{k, i}; resultsTemp2.eventBaseline{k, j}]);
+                    resultsTemp2Grp.eventCount{k, i} = nansum([resultsTemp2Grp.eventCount{k, i}; resultsTemp2.eventCount{k, j}]);
+                    resultsTemp2Grp.eventAmplitude{k, i} = nansum([resultsTemp2Grp.eventAmplitude{k, i}; resultsTemp2.eventAmplitude{k, j}]);
+                    resultsTemp2Grp.eventTimeOfPeak{k, i} = nansum([resultsTemp2Grp.eventTimeOfPeak{k, i}; resultsTemp2.eventTimeOfPeak{k, j}]);
+                    resultsTemp2Grp.eventPeakValue{k, i} = nansum([resultsTemp2Grp.eventPeakValue{k, i}; resultsTemp2.eventPeakValue{k, j}]);
+                    resultsTemp2Grp.eventDirection{k, i} = nansum([resultsTemp2Grp.eventDirection{k, i}; resultsTemp2.eventDirection{k, j}]);
+                end
+                resultsTemp2Grp.eventBaseline{k, i} = resultsTemp2Grp.eventBaseline{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.eventCount{k, i} = resultsTemp2Grp.eventCount{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.eventAmplitude{k, i} = resultsTemp2Grp.eventAmplitude{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.eventTimeOfPeak{k, i} = resultsTemp2Grp.eventTimeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.eventPeakValue{k, i} = resultsTemp2Grp.eventPeakValue{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp2Grp.eventDirection{k, i} = resultsTemp2Grp.eventDirection{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            end
+        end
+    catch ME
+    end
+    try
+        groups = h.exp.data.groupIdx{expIdx};
+        resultsTemp3Grp = resultsTemp3; % easier way to initialize; overwrite afterwards
+        resultsTemp3Grp.eventBaseline = cell(size(resultsTemp3.eventBaseline, 1), length(groups));
+        resultsTemp3Grp.eventCount = cell(size(resultsTemp3.eventCount, 1), length(groups));
+        resultsTemp3Grp.eventAmplitude = cell(size(resultsTemp3.eventAmplitude, 1), length(groups));
+        resultsTemp3Grp.eventTimeOfPeak = cell(size(resultsTemp3.eventTimeOfPeak, 1), length(groups));
+        resultsTemp3Grp.eventPeakValue = cell(size(resultsTemp3.eventPeakValue, 1), length(groups));
+        resultsTemp3Grp.eventDirection = cell(size(resultsTemp3.eventDirection, 1), length(groups));
+        %nanSweepCount = 0; % only a failsafe, shouldn't be necessary
+        for i = 1:length(groups)
+            sweepsInGroup = groups{i};
+            %  converting to absolute indices from ordinal indices on sweep list
+            sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
+            sweepsInGroup = find(sweepsInGroup == 1); % find their indices
+            for k = 1:size(resultsTemp3.eventDirection, 1) % this will suffice
+                nanSweepCount = 0;
+                resultsTemp3Grp.eventBaseline{k, i} = nan(size(resultsTemp3.eventBaseline{1}));
+                resultsTemp3Grp.eventCount{k, i} = nan(size(resultsTemp3.eventCount{1}));
+                resultsTemp3Grp.eventAmplitude{k, i} = nan(size(resultsTemp3.eventAmplitude{1}));
+                resultsTemp3Grp.eventTimeOfPeak{k, i} = nan(size(resultsTemp3.eventTimeOfPeak{1}));
+                resultsTemp3Grp.eventPeakValue{k, i} = nan(size(resultsTemp3.eventPeakValue{1}));
+                resultsTemp3Grp.eventDirection{k, i} = nan(size(resultsTemp3.eventDirection{1}));
+                for j = sweepsInGroup
+                    %nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
+                    if isnan(resultsTemp3.eventPeakValue{k, j})
+                        nanSweepCount = nanSweepCount + 1;
+                    end
+                    resultsTemp3Grp.eventBaseline{k, i} = nansum([resultsTemp3Grp.eventBaseline{k, i}; resultsTemp3.eventBaseline{k, j}]);
+                    resultsTemp3Grp.eventCount{k, i} = nansum([resultsTemp3Grp.eventCount{k, i}; resultsTemp3.eventCount{k, j}]);
+                    resultsTemp3Grp.eventAmplitude{k, i} = nansum([resultsTemp3Grp.eventAmplitude{k, i}; resultsTemp3.eventAmplitude{k, j}]);
+                    resultsTemp3Grp.eventTimeOfPeak{k, i} = nansum([resultsTemp3Grp.eventTimeOfPeak{k, i}; resultsTemp3.eventTimeOfPeak{k, j}]);
+                    resultsTemp3Grp.eventPeakValue{k, i} = nansum([resultsTemp3Grp.eventPeakValue{k, i}; resultsTemp3.eventPeakValue{k, j}]);
+                    resultsTemp3Grp.eventDirection{k, i} = nansum([resultsTemp3Grp.eventDirection{k, i}; resultsTemp3.eventDirection{k, j}]);
+                end
+                resultsTemp3Grp.eventBaseline{k, i} = resultsTemp3Grp.eventBaseline{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.eventCount{k, i} = resultsTemp3Grp.eventCount{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.eventAmplitude{k, i} = resultsTemp3Grp.eventAmplitude{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.eventTimeOfPeak{k, i} = resultsTemp3Grp.eventTimeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.eventPeakValue{k, i} = resultsTemp3Grp.eventPeakValue{k, i}./(length(sweepsInGroup) - nanSweepCount);
+                resultsTemp3Grp.eventDirection{k, i} = resultsTemp3Grp.eventDirection{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            end
+        end
+    catch ME
+    end
 elseif analysisType1Idx == 4
     groups = h.exp.data.groupIdx{expIdx};
     resultsTempGrp = resultsTemp; % easier way to initialize; overwrite afterwards
@@ -9034,6 +9172,7 @@ end
 
 
 % save - moved from end
+resultsTemp.analysisType = analysisType;
 resultsTemp.analysisTypeIdx = analysisTypeIdx;
 resultsCurrentExp.VRec.sweepResults = resultsTemp;
 resultsCurrentExp.VRec.groupResults = resultsTempGrp; 
@@ -11339,6 +11478,7 @@ end
 function results = analysisPeak(results, params, data, windows, analysisColumn)
 % peak analysis - also calculate area and mean
 % code as old as time
+% comment doesn't rhyme
 
 %%% fixlater - quick and dirty fix as usual for single-channel (not ion channel; input channel) recordings
 if isnan(analysisColumn)
@@ -11427,9 +11567,11 @@ for j = 2:size(windows, 1)
     % if window is unavailable, leave cells empty and move onto next row for writing
     checkWin = sum(isnan(windows(j,:)));
     if checkWin ~= 0
+        %{
         if j == size(windows, 1) % if at last window, do not add another row
             continue % move onto next window - since nonexistent, loop will end
         else
+        %}
             % resize to allow cell(s) corresponding to subsequent window(s) to be appended
             peakWin = cell(1, size(data, 2)); % NB. 1st dimension not windowNum
             timeOfPeakWin = cell(1, size(data, 2)); % NB. not time to peak
@@ -11448,7 +11590,7 @@ for j = 2:size(windows, 1)
             area = [area; areaWin];
             mean = [mean; meanWin];
             continue % move onto next window
-        end
+        %end
     end
     
     % iterate for sweeps
@@ -11834,7 +11976,7 @@ results.decaySlope = decaySlope;
 end
 
 
-function resultsTemp = analysisThresholdDetection(resultsTemp, params, VRecData, window, analysisColumn)
+function results = analysisThresholdDetection(results, params, VRecData, window, analysisColumn)
 
 try % try-catch for reverse compatibility
     timeStampColumn = params.actualParams.timeColumn;
@@ -11864,28 +12006,14 @@ catch ME
     end
 end
 
-%timeStampColumn = 1;
-%voltageColumn = 2;
-%apThresholdDvdt = 10; % (V/s)
-apDetectionThreshold = -5; % (mV); this will be used for peak detection
-apDetectionRearm = -15; % (mV); re-arm peak detection
-%rmpWindow = 100; % (ms)
-%interpolate = 0; % (Boolean)
-%oneStepAhead = 1; % (Boolean)
-eventDirectionSwitch = 1; % -1 (negative), 0 (either), 1 (positive) - see below for the reason for the weird variable name
-
-%%% fixlater
+% analysis parameters - %%% fixlater
+eventDetectionThreshold = 0; % (mV); this will be used for peak detection
+eventDetectionRearm = -20; % (mV); re-arm peak detection
+eventDirectionSwitch = 1; % -1 (negative), 1 (positive) - don't rename it to eventDirection! see below
 voltageColumn = 2;
 baselineWindowStart = window(1,1);
 baselineWindowEnd = window(1,2);
-windowCount = 2; % bo
-
-% initialize output
-%vDvdt = cell(1, experimentCount); % V, dV/dt
-%  NB. the result will be 1 data point shorter than the original recording,
-%      as it calculates dV; to force same length as input (for whatever
-%      reason), set the following variable to 1 instead of 0
-appendNan = 0; % can't think of when it can be actually useful, but meh
+windowCount = size(window, 1) - 1; % row 1 is baseline
 
 % initialize
 vRecTemp = VRecData; %%% fixlater - ditto
@@ -11900,8 +12028,22 @@ eventDirection = cell(windowCount, sweepCount); % confusing name
 
 for w = 1:windowCount
 
-    windowStart = window(1 + w,1); % row 1 is baseline
-    windowEnd = window(1 + w,2);
+    windowStart = window(1 + w, 1); % row 1 is baseline
+    windowEnd = window(1 + w, 2);
+
+    checkWin = sum(isnan(window(1 + w,:)));
+    if checkWin ~= 0
+        % resize to allow cell(s) corresponding to subsequent window(s) to be appended
+        for j = 1:sweepCount
+            eventBaseline{w, j} = nan;
+            eventCount{w, j} = nan;
+            eventAmplitude{w, j} = nan;
+            eventTimeOfPeak{w, j} = nan;
+            eventPeakValue{w, j} = nan;
+            eventDirection{w, j} = nan;
+        end
+        continue % move onto next window
+    end
 
     for j = 1:sweepCount
 
@@ -11928,52 +12070,115 @@ for w = 1:windowCount
             eventBaseline{w, j} = baselineTempTemp;
         catch ME
             eventBaseline{w, j} = nan;
-            eventCount{w, j} = nan;
-            eventAmplitude{w, j} = nan;
-            eventTimeOfPeak{w, j} = nan;
-            eventPeakValue{w, j} = nan;
+            eventCount{w, j} = [];
+            eventAmplitude{w, j} = [];
+            eventTimeOfPeak{w, j} = [];
+            eventPeakValue{w, j} = [];
             eventDirection{w, j} = nan;
             continue
         end
 
         try
-            % get peak and time of peak
             vRecTempTempTemp = vRecTempTemp(:, voltageColumn);
-            if eventDirectionSwitch == 0
-            elseif eventDirectionSwitch > 0
+            detectionArmed = 1; % initializing
+            eventCountTemp = 0; % ditto
+            peakTemp = []; % ditto
+            peakIndexTemp = []; % ditto
+
+            if eventDirectionSwitch > 0
+                for k = windowStartActual:windowEndActual
+                    if detectionArmed % seeking for events
+                        if vRecTempTempTemp(k) >= eventDetectionThreshold % event in progress
+                            eventCountTemp = eventCountTemp + 1;
+                            peakIndexTemp(end + 1) = k; % NB. this will only mark the starting point of the event
+                            detectionArmed = 0;
+                        end
+                    elseif vRecTempTempTemp(k) <= eventDetectionRearm % rearm
+                        detectionArmed = 1;
+                    end
+                end
+
+                if isempty(peakIndexTemp)
+                elseif length(peakIndexTemp) == 1
+                    startIndex = peakIndexTemp(end);
+                    %endIndex = peakIndexTemp(end);
+                    peakTempTemp = nanmax(vRecTempTempTemp(startIndex:end));
+                    peakIndexTempTemp = find(vRecTempTempTemp(startIndex:end) == peakTempTemp, 1);
+                    peakIndexTemp(end) = peakIndexTemp(end) + peakIndexTempTemp; % updating with correct index at peak
+                    peakTemp(end + 1) = peakTempTemp;
+                else
+                    for k = 1:length(peakIndexTemp) - 1
+                        startIndex = peakIndexTemp(k);
+                        endIndex = peakIndexTemp(k + 1);
+                        peakTempTemp = nanmax(vRecTempTempTemp(startIndex:endIndex));
+                        peakIndexTempTemp = find(vRecTempTempTemp(startIndex:endIndex) == peakTempTemp, 1);
+                        peakIndexTemp(k) = peakIndexTemp(k) + peakIndexTempTemp; % updating with correct index at peak
+                        peakTemp(end + 1) = peakTempTemp;
+                    end
+                    startIndex = peakIndexTemp(end);
+                    endIndex = peakIndexTemp(end);
+                    peakTempTemp = nanmax(vRecTempTempTemp(startIndex:endIndex));
+                    peakIndexTempTemp = find(vRecTempTempTemp(startIndex:endIndex) == peakTempTemp, 1);
+                    peakIndexTemp(end) = peakIndexTemp(end) + peakIndexTempTemp; % updating with correct index at peak
+                    peakTemp(end + 1) = peakTempTemp;
+                end
+
             elseif eventDirectionSwitch < 0
+                for k = windowStartActual:windowEndActual
+                    if detectionArmed % seeking for events
+                        if vRecTempTempTemp(k) <= eventDetectionThreshold % event in progress
+                            eventCountTemp = eventCountTemp + 1;
+                            peakIndexTemp(end + 1) = k; % NB. this will only mark the starting point of the event
+                            detectionArmed = 0;
+                        end
+                    elseif vRecTempTempTemp(k) >= eventDetectionRearm % rearm
+                        detectionArmed = 1;
+                    end
+                end
+
+                if isempty(peakIndexTemp)
+                elseif length(peakIndexTemp) == 1
+                    startIndex = peakIndexTemp(end);
+                    %endIndex = peakIndexTemp(end);
+                    peakTempTemp = nanmin(vRecTempTempTemp(startIndex:end));
+                    peakIndexTempTemp = find(vRecTempTempTemp(startIndex:end) == peakTempTemp, 1);
+                    peakIndexTemp(end) = peakIndexTemp(end) + peakIndexTempTemp; % updating with correct index at peak
+                    peakTemp(end + 1) = peakTempTemp;
+                else
+                    for k = 1:length(peakIndexTemp) - 1
+                        startIndex = peakIndexTemp(k);
+                        endIndex = peakIndexTemp(k + 1);
+                        peakTempTemp = nanmin(vRecTempTempTemp(startIndex:endIndex));
+                        peakIndexTempTemp = find(vRecTempTempTemp(startIndex:endIndex) == peakTempTemp, 1);
+                        peakIndexTemp(k) = peakIndexTemp(k) + peakIndexTempTemp; % updating with correct index at peak
+                        peakTemp(end + 1) = peakTempTemp;
+                    end
+                    startIndex = peakIndexTemp(end);
+                    endIndex = peakIndexTemp(end);
+                    peakTempTemp = nanmin(vRecTempTempTemp(startIndex:endIndex));
+                    peakIndexTempTemp = find(vRecTempTempTemp(startIndex:endIndex) == peakTempTemp, 1);
+                    peakIndexTemp(end) = peakIndexTemp(end) + peakIndexTempTemp; % updating with correct index at peak
+                    peakTemp(end + 1) = peakTempTemp;
+                end
+
             end
-            apPeakDetectionStart = find(vRecTempTempTemp >= apDetectionThreshold, 1);
-            apPeakDetectionEnd = find(vRecTempTempTemp(apPeakDetectionStart:end) <= apDetectionRearm, 1);
-            apPeakDetectionEnd = apPeakDetectionStart + apPeakDetectionEnd; % because the search started after position apPeakDetectionStart
-            apPeakTempTemp = max(vRecTempTempTemp(apPeakDetectionStart:apPeakDetectionEnd));
-            apAmplitudeTempTemp = apPeakTempTemp - baselineTempTemp;
-            apAmplitude{w, j} = apAmplitudeTempTemp;
-            apPeakTempIndex = find(vRecTempTempTemp(apPeakDetectionStart:apPeakDetectionEnd) == apPeakTempTemp);
-            apPeakTempIndex = apPeakDetectionStart + apPeakTempIndex(1); % because the search started after position apPeakDetectionStart; just use the 1st entry in case there are duplicates
-            apTimeOfPeak{w, j} = vRecTempTemp(apPeakTempIndex, timeStampColumn);
+            
+            amplitudeTemp = peakTemp - baselineTempTemp; % this will preserve sign (peak direction) if done correctly
+            eventTimeOfPeakTemp = peakIndexTemp .* si;
 
-            % get AP half-width
-            apHalfPeakStart = find(vRecTempTempTemp(apThresholdTime:apPeakTempIndex) >= baselineTempTemp + 0.5*apAmplitudeTempTemp, 1); % just use the 1st entry in case there are duplicates
-            apHalfPeakStart = apThresholdTime + apHalfPeakStart;
-            apHalfPeakEnd = find(vRecTempTempTemp(apPeakTempIndex:end) <= baselineTempTemp + 0.5*apAmplitudeTempTemp, 1); % just use the last entry in case there are duplicates
-            apHalfPeakEnd = apPeakTempIndex + apHalfPeakEnd;
-            apHalfWidthTempTemp = apHalfPeakEnd - apHalfPeakStart; % later half not really necessary but just because of OCD
-            apHalfWidth{w, j} = apHalfWidthTempTemp*si; % converting from points to ms
-
-            % get dVdt min/max
-            maxDepolTempTemp = max(dvdt(apThresholdTime:apPeakTempIndex));
-            maxRepolTempTemp = min(dvdt(apPeakTempIndex:apPeakTempIndex + 2*(apHalfPeakEnd-apPeakTempIndex))); % stupid, but will work without trouble
-            maxDepol{w, j} = maxDepolTempTemp;
-            maxRepol{w, j} = maxRepolTempTemp;
+            eventCount{w, j} = eventCountTemp;
+            eventAmplitude{w, j} = amplitudeTemp;
+            eventTimeOfPeak{w, j} = eventTimeOfPeakTemp;
+            eventPeakValue{w, j} = peakTemp;
+            eventDirection{w, j} = eventDirectionSwitch;
 
         catch ME
-            apThreshold{w, j} = NaN; % to exclude artifacts
-            apAmplitude{w, j} = NaN;
-            apTimeOfPeak{w, j} = NaN;
-            apHalfWidth{w, j} = NaN;
-            maxDepol{w, j} = NaN;
-            maxRepol{w, j} = NaN;
+            eventBaseline{w, j} = nan;
+            eventCount{w, j} = [];
+            eventAmplitude{w, j} = [];
+            eventTimeOfPeak{w, j} = [];
+            eventPeakValue{w, j} = [];
+            eventDirection{w, j} = nan;
             continue
         end
 
@@ -11981,30 +12186,12 @@ for w = 1:windowCount
 
 end
 
-results.vDvdt = vDvdt;
-results.rmp = rmp;
-results.apThreshold = apThreshold;
-results.apAmplitude = apAmplitude;
-results.apTimeOfPeak = apTimeOfPeak;
-results.apHalfWidth = apHalfWidth;
-results.maxDepol = maxDepol;
-results.maxRepol = maxRepol;
-
-% actually doing stuff here
-    function [v, dvdt] = getDvdt(inputArray, tColumn, vColumn)
-        % calculate dV/dt from an (n*m) array
-        % take time and voltage columns as arguments
-        % disregard other columns in the array
-
-        t = inputArray(:, tColumn);
-        v = inputArray(:, vColumn);
-        dvdt = v; % initializing
-        dvdt = diff(dvdt); % NB. first row is lost here from using diff()
-        dt = diff(t); % ditto
-        dvdt = dvdt ./ dt;
-        v = v(2:end); % to match with dvdt
-
-    end
+results.eventBaseline = eventBaseline;
+results.eventCount = eventCount;
+results.eventAmplitude = eventAmplitude;
+results.eventTimeOfPeak = eventTimeOfPeak;
+results.eventPeakValue = eventPeakValue;
+results.eventDirection = eventDirection;
 
 end
 
@@ -12039,20 +12226,17 @@ catch ME
     end
 end
 
-%timeStampColumn = 1;
-%voltageColumn = 2;
+% analysis parameters - %%% fixlater
 apThresholdDvdt = 10; % (V/s)
 apDetectionThreshold = -5; % (mV); this will be used for peak detection
 apDetectionRearm = -15; % (mV); re-arm peak detection
 %rmpWindow = 100; % (ms)
 interpolate = 0; % (Boolean)
 oneStepAhead = 1; % (Boolean)
-
-%%% fixlater
 voltageColumn = 2;
 baselineWindowStart = window(1,1);
 baselineWindowEnd = window(1,2);
-windowCount = 2; % bo
+windowCount = size(window, 1) - 1; % row 1 is baseline
 
 % initialize output
 %vDvdt = cell(1, experimentCount); % V, dV/dt
@@ -12075,8 +12259,23 @@ maxRepol = cell(windowCount, sweepCount);
 
 for w = 1:windowCount
 
-    windowStart = window(1 + w,1); % row 1 is baseline
-    windowEnd = window(1 + w,2);
+    windowStart = window(1 + w, 1); % row 1 is baseline
+    windowEnd = window(1 + w, 2);
+
+    checkWin = sum(isnan(window(1 + w,:)));
+    if checkWin ~= 0
+        % resize to allow cell(s) corresponding to subsequent window(s) to be appended
+        for j = 1:sweepCount
+            rmp{w, j} = nan;
+            apThreshold{w, j} = nan;
+            apAmplitude{w, j} = nan;
+            apTimeOfPeak{w, j} = nan;
+            apHalfWidth{w, j} = nan;
+            maxDepol{w, j} = nan;
+            maxRepol{w, j} = nan;
+        end
+        continue % move onto next window
+    end
 
     for j = 1:sweepCount
 
@@ -12214,7 +12413,6 @@ results.maxRepol = maxRepol;
         dt = diff(t); % ditto
         dvdt = dvdt ./ dt;
         v = v(2:end); % to match with dvdt
-
     end
 
 % display results
@@ -12233,35 +12431,41 @@ function analysisTypeSel(src, event)
 % load
 h = guidata(src);
 
+%{
 % I'm so lazy %%% fixlater
 switch h.ui.analysisType1.Value
+    %{
     case 3
         errorMessage = sprintf('\nSelection aborted: Threshold detection feature unavailable with current version of PVBS\n');
         fprintf(errorMessage);
         h.ui.analysisType1.Value = 1;
         return
-        %{
+    %}
+    %{
     case 4
         errorMessage = sprintf('\nSelection aborted: Feature underway - use pvbs_as_apkinetics.m in the meantime\n');
         fprintf(errorMessage);
         h.ui.analysisType1.Value = 1;
         return
-        %}
+    %}
 end
 switch h.ui.analysisType2.Value
+    %{
     case 3
         errorMessage = sprintf('\nSelection aborted: Threshold detection feature unavailable with current version of PVBS\n');
         fprintf(errorMessage);
         h.ui.analysisType2.Value = 1;
         return
-        %{
+    %}
+    %{
     case 4
         errorMessage = sprintf('\nSelection aborted: Feature underway - use pvbs_as_apkinetics.m in the meantime\n');
         fprintf(errorMessage);
         h.ui.analysisType2.Value = 1;
         return
-        %}
+    %}
 end
+%}
 
 % analysis types
 try
