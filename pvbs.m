@@ -60,14 +60,6 @@
 %   are correct)
 %
 %
-% - Features underway for future versions:
-%   - Threshold detection
-%   - Artifact removal
-%   - Manual linescan ROI selection
-%   - Waveform analysis
-%   - .atf import
-%
-%
 %
 %
 % A problem is a problem only when you have the ability to recognize it.
@@ -83,7 +75,7 @@
 % summarized as the following: it deprives the experimenter of their 
 % ability to perform and assess work in good quality.
 % 
-% PVBS ("Prairie View Browsing Solution") was developed to provide a 
+% PVBS ("Prairie View Browsing Solution" ;) ) was developed to provide a 
 % solution to this problem. The code was written since I was a complete 
 % beginner until eventually becoming a novice, as must be evident from the 
 % way it is written; hence, it is inevitably far from efficient at all. 
@@ -608,6 +600,16 @@ intrinsicPropertiesAnalysis = struct();
 intrinsicPropertiesAnalysisInput = [pvbsVoltageScalingFactor, pvbsCurrentScalingFactor, pvbsCurrentCorrectionFlag];
 intrinsicPropertiesAnalysis = setDefaultParamsIntrinsic(intrinsicPropertiesAnalysis, intrinsicPropertiesAnalysisInput);
 
+% event detection and waveform analysis
+eventAnalysis = struct();
+eventAnalysis.detectionThreshold = 0; % event detection threshold (e.g. 0 mV; do not confuse with AP threshold definition (e.g. 20 V/s))
+eventAnalysis.detectionRearm = -10; % event detection re-arm point (e.g. -10 mV)
+eventAnalysis.detectionDirection = 1; % (-1: negative, 1: positive); don't rename it to eventDirection to avoid confusion with variable with the same name from analysis results
+eventAnalysis.apThresholdDvdt = 20; % definition of AP threshold (e.g. 20 V/s)
+eventAnalysis.apThresholdInterpolate = 1; % interpolate data points to obtain AP threshold (0: no, 1: yes)
+eventAnalysis.apThresholdTakePrecedingPoint = 1; % take one data point preceding AP threshold definition for AP threshold - useful in case of low sampling rates (0: no, 1: yes)
+eventAnalysis.restingStateDuration = 100; % (ms); e.g. for RMP calculation
+
 % uncaging analysis - moved from auto analysis macro (messed up old code)
 uncagingAnalysis = struct();
 uncagingAnalysis.winV = 1; % analysis window for V (NB. do not confuse with signal channel)
@@ -668,6 +670,7 @@ defaultParams.segmentationOffset = segmentationOffset;
 defaultParams.segmentationTruncate = segmentationTruncate;
 defaultParams.segmentationCount = segmentationCount;
 defaultParams.intrinsicPropertiesAnalysis = intrinsicPropertiesAnalysis;
+defaultParams.eventAnalysis = eventAnalysis;
 defaultParams.uncagingAnalysis = uncagingAnalysis;
 
 %h.params.actualParams = actualParams;
@@ -779,6 +782,7 @@ analysisParametersDefault = h.params.defaultParams;
 try
     timeColumnAvailable = analysisParameters.timeColumnAvailable;
 catch ME
+    analysisParameters.timeColumn = 1;
     timeColumnAvailable = 1;
 end
 
@@ -3140,7 +3144,10 @@ end
 try % try-catch for reverse compatibility
     timeColumnAvailable = h.params.actualParams.timeColumnAvailable;
 catch ME
+    timeColumn = 1;
     timeColumnAvailable = 1;
+    h.params.actualParams.timeColumn = timeColumn;
+    h.params.actualParams.timeColumnAvailable = timeColumnAvailable;
 end
 try % ditto
     signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
@@ -3482,7 +3489,10 @@ end
 try % try-catch for reverse compatibility
     timeColumnAvailable = h.params.actualParams.timeColumnAvailable;
 catch ME
+    timeColumn = 1;
     timeColumnAvailable = 1;
+    h.params.actualParams.timeColumnAvailable = timeColumn;
+    h.params.actualParams.timeColumnAvailable = timeColumnAvailable;
 end
 try % ditto
     signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
@@ -3961,7 +3971,10 @@ try % try-catch for reverse compatibility
     timeColumnAvailable = h.params.actualParams.timeColumnAvailable;
     timeColumnAvailableF = 1; % this will always be 1 from PVBS
 catch ME
+    timeColumn = 1;
     timeColumnAvailable = 1;
+    h.params.actualParams.timeColumn = timeColumn;
+    h.params.actualParams.timeColumnAvailable = timeColumnAvailable;
     timeColumnAvailableF = 1; % this will always be 1 from PVBS
 end
 
@@ -8131,6 +8144,53 @@ params = h.params;
 analysisParameters = h.params.actualParams;
 analysisParametersDefault = h.params.defaultParams;
 
+try % try-catch for reverse compatibility
+    timeColumnAvailable = analysisParameters.timeColumnAvailable;
+catch ME
+    timeColumn = 1;
+    timeColumnAvailable = 1;
+    h.params.actualParams.timeColumn = 1;
+    h.params.actualParams.timeColumnAvailable = timeColumnAvailable;
+    guidata(src, h);
+end
+try % ditto
+    signal1Type = analysisParameters.signal1Type; % current, voltage, fluorescence
+    signal2Type = analysisParameters.signal2Type; % current, voltage, fluorescence
+    signal1Channel = analysisParameters.signal1Channel; % corresponding to data column, but mind timestamp availability
+    signal2Channel = analysisParameters.signal2Channel; % corresponding to data column, but mind timestamp availability
+catch ME
+    signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+    signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+    try % additional layer of safety
+        signal1Channel = analysisParameters.pvbsVoltageColumn; % defaulting to voltage
+        signal2Channel = analysisParameters.lineScanChannel; % defaulting to fluorescence
+    catch ME
+        signal1Channel = 2;
+        signal2Channel = 2;
+        h.params.actualParams.signal1Channel = signal1Channel;
+        h.params.actualParams.signal2Channel = signal2Channel;
+        h.params.defaultParams.signal1Channel = signal1Channel;
+        h.params.defaultParams.signal2Channel = signal2Channel;
+        guidata(src, h);
+    end
+end
+
+try
+    eventAnalysisParams = analysisParameters.eventAnalysis;
+    eventAnalysisParamsDefault = analysisParametersDefault.eventAnalysis;
+catch ME
+    eventAnalysisParams = struct();
+    eventAnalysisParams.detectionThreshold = 0; % event detection threshold (e.g. 0 mV; do not confuse with AP threshold definition (e.g. 20 V/s))
+    eventAnalysisParams.detectionRearm = -10; % event detection re-arm point (e.g. -10 mV)
+    eventAnalysisParams.detectionDirection = 1; % (-1: negative, 1: positive); don't rename it to eventDirection to avoid confusion with variable with the same name from analysis results
+    eventAnalysisParams.apThresholdDvdt = 20; % definition of AP threshold (e.g. 20 V/s)
+    eventAnalysisParams.apThresholdInterpolate = 1; % interpolate data points to obtain AP threshold (0: no, 1: yes)
+    eventAnalysisParams.apThresholdTakePrecedingPoint = 1; % take one data point preceding AP threshold definition for AP threshold - useful in case of low sampling rates (0: no, 1: yes)
+    eventAnalysisParams.restingStateDuration = 100; % (ms); e.g. for RMP calculation
+    h.params.actualParams.eventAnalysis = eventAnalysisParams;
+    h.params.defaultParams.eventAnalysis = eventAnalysisParams;
+end
+
 % options
 optionsWin = figure('Name', 'Analysis Options', 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.55, 0.2, 0.25, 0.4], 'DeleteFcn', @winClosed); % use CloseRequestFcn?
 
@@ -8154,6 +8214,12 @@ oWin.t313 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '%', 'hor
 oWin.t321 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', 'Rise / decay high:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.625, 0.4, 0.05]);
 oWin.t322 = uicontrol('Parent', optionsWin, 'Style', 'edit', 'string', num2str(analysisParameters.riseDecay(2)), 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.8, 0.635, 0.1, 0.05], 'callback', @updateAnalysisOptions);
 oWin.t323 = uicontrol('Parent', optionsWin, 'Style', 'text', 'string', '%', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.925, 0.625, 0.1, 0.05]);
+oWin.t411 = uicontrol('Parent', optionsWin, 'visible', 'off', 'Style', 'text', 'string', 'Interpolate:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.05, 0.55, 0.4, 0.05]);
+oWin.t412 = uicontrol('Parent', optionsWin, 'visible', 'off', 'Style', 'checkbox', 'Value', logical(eventAnalysisParams.apThresholdInterpolate), 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.3, 0.56, 0.1, 0.05], 'callback', @updateAnalysisOptions);
+oWin.t413 = uicontrol('Parent', optionsWin, 'visible', 'off', 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.425, 0.55, 0.1, 0.05]);
+oWin.t421 = uicontrol('Parent', optionsWin, 'visible', 'off', 'Style', 'text', 'string', 'Take preceding point:', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.55, 0.55, 0.4, 0.05]);
+oWin.t422 = uicontrol('Parent', optionsWin, 'visible', 'off', 'Style', 'checkbox', 'Value', logical(eventAnalysisParams.apThresholdTakePrecedingPoint), 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.8, 0.56, 0.1, 0.05], 'callback', @updateAnalysisOptions);
+oWin.t423 = uicontrol('Parent', optionsWin, 'visible', 'off', 'Style', 'text', 'string', '', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.925, 0.55, 0.1, 0.05]);
 
 oWin.resetButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Reset to defaults', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.425, 0.05, 0.25, 0.075], 'callback', @resetAnalysisOptions, 'interruptible', 'off');
 oWin.saveButton = uicontrol('Parent', optionsWin, 'Style', 'pushbutton', 'string', 'Save', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.7, 0.05, 0.25, 0.075], 'callback', @saveAnalysisOptions, 'interruptible', 'off');
@@ -8162,6 +8228,12 @@ t112 = str2num(oWin.t112.String);
 t212 = str2num(oWin.t212.String);
 t312 = str2num(oWin.t312.String);
 t322 = str2num(oWin.t322.String);
+t412 = oWin.t412.Value;
+t422 = oWin.t422.Value;
+
+bslnStart = num2str(h.params.analysisBaseline(1));
+bslnEnd = num2str(h.params.analysisBaseline(2));
+bslnStr = [bslnStart, ' - ', bslnEnd];
 
     function winClosed(src, ~)
         set(srcButton, 'enable', 'on');
@@ -8171,43 +8243,139 @@ t322 = str2num(oWin.t322.String);
     function analysisTypeSel(src, ~)
         switch oWin.t102.Value
             case 1
-                oWin.t102.Value = 2;
-                return
-            case 3
-                errorMessage = sprintf('\nSelection aborted: Threshold detection currently unavailable, feature underway\n');
-                fprintf(errorMessage);
-                oWin.t102.Value = 2;
-                return
-                %{
-            case 4
-                errorMessage = sprintf('\nSelection aborted: Feature underway - use pvbs_as_apkinetics.m in the meantime\n');
-                fprintf(errorMessage);
-                oWin.t102.Value = 2;
-                return
-                %}
-        end
-    end
-
-    function updateAnalysisOptions(src, ~)
-        switch oWin.t102.Value
-            case 2
+                oWin.t102.Value = 2; % default to peak analysis
+                oWin.t111.String = 'Win 1 peak direction:';
+                set(oWin.t112, 'enable', 'on');
+                set(oWin.t112, 'string', num2str(analysisParameters.peakDirection1));
+                oWin.t113.String = '(-1: neg, 0: abs, 1:pos)';
+                oWin.t211.String = 'Win 2 peak direction:';
+                set(oWin.t212, 'string', num2str(analysisParameters.peakDirection2));
+                oWin.t213.String = '(-1: neg, 0: abs, 1:pos)';
+                oWin.t311.String = 'Rise / decay low:';
+                set(oWin.t312, 'string', num2str(analysisParameters.riseDecay(1)));
+                set(oWin.t313, 'Position', [0.425, 0.625, 0.1, 0.05]);
+                oWin.t313.String = '%';
+                set(oWin.t321, 'visible', 'on');
+                set(oWin.t322, 'visible', 'on');
+                set(oWin.t323, 'visible', 'on');
+                oWin.t321.String = 'Rise / decay high:';
+                set(oWin.t322, 'string', num2str(analysisParameters.riseDecay(2)));
+                oWin.t323.String = '%';
+                set(oWin.t411, 'visible', 'off');
+                set(oWin.t412, 'visible', 'off');
+                set(oWin.t413, 'visible', 'off');
+                set(oWin.t421, 'visible', 'off');
+                set(oWin.t422, 'visible', 'off');
+                set(oWin.t423, 'visible', 'off');
                 t112 = str2num(oWin.t112.String);
                 t212 = str2num(oWin.t212.String);
                 t312 = str2num(oWin.t312.String);
                 t322 = str2num(oWin.t322.String);
-            otherwise
-                return
+            case 2
+                oWin.t111.String = 'Win 1 peak direction:';
+                set(oWin.t112, 'enable', 'on');
+                set(oWin.t112, 'string', num2str(analysisParameters.peakDirection1));
+                oWin.t113.String = '(-1: neg, 0: abs, 1:pos)';
+                oWin.t211.String = 'Win 2 peak direction:';
+                set(oWin.t212, 'string', num2str(analysisParameters.peakDirection2));
+                oWin.t213.String = '(-1: neg, 0: abs, 1:pos)';
+                oWin.t311.String = 'Rise / decay low:';
+                set(oWin.t312, 'string', num2str(analysisParameters.riseDecay(1)));
+                set(oWin.t313, 'Position', [0.425, 0.625, 0.1, 0.05]);
+                oWin.t313.String = '%';
+                set(oWin.t321, 'visible', 'on');
+                set(oWin.t322, 'visible', 'on');
+                set(oWin.t323, 'visible', 'on');
+                oWin.t321.String = 'Rise / decay high:';
+                set(oWin.t322, 'string', num2str(analysisParameters.riseDecay(2)));
+                oWin.t323.String = '%';
+                set(oWin.t411, 'visible', 'off');
+                set(oWin.t412, 'visible', 'off');
+                set(oWin.t413, 'visible', 'off');
+                set(oWin.t421, 'visible', 'off');
+                set(oWin.t422, 'visible', 'off');
+                set(oWin.t423, 'visible', 'off');
+                t112 = str2num(oWin.t112.String);
+                t212 = str2num(oWin.t212.String);
+                t312 = str2num(oWin.t312.String);
+                t322 = str2num(oWin.t322.String);
+            case 3
+                oWin.t111.String = 'Event direction:';
+                set(oWin.t112, 'enable', 'on');
+                set(oWin.t112, 'string', num2str(eventAnalysisParams.detectionDirection));
+                oWin.t113.String = '(-1: neg, 1: pos)';
+                oWin.t211.String = 'Detection threshold:';
+                set(oWin.t212, 'string', num2str(eventAnalysisParams.detectionThreshold));
+                oWin.t213.String = '(pA, mV, ...)';
+                oWin.t311.String = 'Detection re-arm:';
+                set(oWin.t312, 'string', num2str(eventAnalysisParams.detectionRearm));
+                set(oWin.t313, 'Position', [0.425, 0.625, 0.6, 0.05]);
+                oWin.t313.String = '(pA, mV, ...)';
+                set(oWin.t321, 'visible', 'off');
+                set(oWin.t322, 'visible', 'off');
+                set(oWin.t323, 'visible', 'off');
+                oWin.t321.String = '';
+                oWin.t323.String = '';
+                set(oWin.t411, 'visible', 'off');
+                set(oWin.t412, 'visible', 'off');
+                set(oWin.t413, 'visible', 'off');
+                set(oWin.t421, 'visible', 'off');
+                set(oWin.t422, 'visible', 'off');
+                set(oWin.t423, 'visible', 'off');
+                t112 = str2num(oWin.t112.String);
+                t212 = str2num(oWin.t212.String);
+                t312 = str2num(oWin.t312.String);
+            case 4
+                oWin.t111.String = 'RMP window:';
+                set(oWin.t112, 'enable', 'off');
+                %set(oWin.t112, 'string', num2str(eventAnalysisParams.restingStateDuration));
+                set(oWin.t112, 'string', bslnStr);
+                oWin.t113.String = '(ms);  use baseline window definition';
+                oWin.t211.String = 'AP threshold (onset):';
+                set(oWin.t212, 'string', num2str(eventAnalysisParams.apThresholdDvdt));
+                oWin.t213.String = '(V/s)';
+                oWin.t311.String = 'AP detection arm:';
+                set(oWin.t312, 'string', num2str(eventAnalysisParams.detectionThreshold));
+                set(oWin.t313, 'Position', [0.425, 0.625, 0.1, 0.05]);
+                oWin.t313.String = '(mV)';
+                set(oWin.t321, 'visible', 'on');
+                set(oWin.t322, 'visible', 'on');
+                set(oWin.t323, 'visible', 'on');
+                oWin.t321.String = 'AP detection re-arm:';
+                set(oWin.t322, 'string', num2str(eventAnalysisParams.detectionRearm));
+                oWin.t323.String = '(mV)';
+                set(oWin.t411, 'visible', 'on');
+                set(oWin.t412, 'visible', 'on');
+                set(oWin.t412, 'Value', eventAnalysisParams.apThresholdInterpolate);
+                set(oWin.t413, 'visible', 'on');
+                set(oWin.t421, 'visible', 'on');
+                set(oWin.t422, 'visible', 'on');
+                set(oWin.t422, 'Value', eventAnalysisParams.apThresholdTakePrecedingPoint);
+                set(oWin.t423, 'visible', 'on');
+                t112 = str2num(oWin.t112.String);
+                t212 = str2num(oWin.t212.String);
+                t312 = str2num(oWin.t312.String);
+                t322 = str2num(oWin.t322.String);
+                t412 = oWin.t412.Value;
+                t422 = oWin.t422.Value;
         end
     end
 
     function resetAnalysisOptions(src, ~)
-        %{
-        analysisParametersIntrinsic = analysisParameters.intrinsicPropertiesAnalysis; % salvage this
-        analysisParameters = analysisParametersDefault;
-        analysisParameters.intrinsicPropertiesAnalysis = analysisParametersIntrinsic;
-        %}
-        
         switch oWin.t102.Value
+            case 1
+                analysisParameters.peakDirection1 = analysisParametersDefault.peakDirection1;
+                analysisParameters.peakDirection2 = analysisParametersDefault.peakDirection2;
+                analysisParameters.riseDecay(1) = analysisParametersDefault.riseDecay(1);
+                analysisParameters.riseDecay(2) = analysisParametersDefault.riseDecay(2);
+                oWin.t112.String = num2str(analysisParameters.peakDirection1);
+                oWin.t212.String = num2str(analysisParameters.peakDirection2);
+                oWin.t312.String = num2str(analysisParameters.riseDecay(1));
+                oWin.t322.String = num2str(analysisParameters.riseDecay(2));
+                t112 = str2num(oWin.t112.String);
+                t212 = str2num(oWin.t212.String);
+                t312 = str2num(oWin.t312.String);
+                t322 = str2num(oWin.t322.String);
             case 2
                 analysisParameters.peakDirection1 = analysisParametersDefault.peakDirection1;
                 analysisParameters.peakDirection2 = analysisParametersDefault.peakDirection2;
@@ -8221,6 +8389,32 @@ t322 = str2num(oWin.t322.String);
                 t212 = str2num(oWin.t212.String);
                 t312 = str2num(oWin.t312.String);
                 t322 = str2num(oWin.t322.String);
+            case 3
+                eventAnalysisParams.detectionDirection = eventAnalysisParamsDefault.detectionDirection;
+                eventAnalysisParams.detectionThreshold = eventAnalysisParamsDefault.detectionThreshold;
+                eventAnalysisParams.detectionRearm = eventAnalysisParamsDefault.detectionRearm;
+                oWin.t112.String = num2str(eventAnalysisParams.detectionDirection);
+                oWin.t212.String = num2str(eventAnalysisParams.detectionThreshold);
+                oWin.t312.String = num2str(eventAnalysisParams.detectionRearm);
+                eventAnalysisParams.detectionDirection = t112;
+                eventAnalysisParams.detectionThreshold = t212;
+                eventAnalysisParams.detectionRearm = t312;
+                analysisParameters.eventAnalysis = eventAnalysisParams;
+            case 4
+                eventAnalysisParams.restingStateDuration = eventAnalysisParamsDefault.restingStateDuration;
+                eventAnalysisParams.apThresholdDvdt = eventAnalysisParamsDefault.apThresholdDvdt;
+                eventAnalysisParams.detectionThreshold = eventAnalysisParamsDefault.detectionThreshold;
+                eventAnalysisParams.detectionRearm = eventAnalysisParamsDefault.detectionRearm;
+                eventAnalysisParams.apThresholdInterpolate = eventAnalysisParamsDefault.apThresholdInterpolate;
+                eventAnalysisParams.apThresholdTakePrecedingPoint = eventAnalysisParamsDefault.apThresholdTakePrecedingPoint;
+                bslnStrReset = ''; % lesser evil, don't wanna load h here all over again
+                oWin.t112.String = bslnStrReset;
+                oWin.t212.String = num2str(eventAnalysisParams.apThresholdDvdt);
+                oWin.t312.String = num2str(eventAnalysisParams.detectionThreshold);
+                oWin.t322.String = num2str(eventAnalysisParams.detectionRearm);
+                oWin.t412.Value = logical(eventAnalysisParams.apThresholdInterpolate);
+                oWin.t422.Value = logical(eventAnalysisParams.apThresholdTakePrecedingPoint);
+                analysisParameters.eventAnalysis = eventAnalysisParams;
             otherwise
                 return
         end
@@ -8231,13 +8425,33 @@ t322 = str2num(oWin.t322.String);
     end
 
     function saveAnalysisOptions(src, ~)
-        
+
+        t112 = str2num(oWin.t112.String);
+        t212 = str2num(oWin.t212.String);
+        t312 = str2num(oWin.t312.String);
+        t322 = str2num(oWin.t322.String);
+        t412 = oWin.t412.Value;
+        t422 = oWin.t422.Value;
+
         switch oWin.t102.Value
             case 2
                 analysisParameters.peakDirection1 = t112;
                 analysisParameters.peakDirection2 = t212;
                 analysisParameters.riseDecay(1) = t312;
                 analysisParameters.riseDecay(2) = t322;
+            case 3
+                eventAnalysisParams.detectionDirection = t112;
+                eventAnalysisParams.detectionThreshold = t212;
+                eventAnalysisParams.detectionRearm = t312;
+                analysisParameters.eventAnalysis = eventAnalysisParams;
+            case 4
+                eventAnalysisParams.restingStateDuration = t112;
+                eventAnalysisParams.apThresholdDvdt = t212;
+                eventAnalysisParams.detectionThreshold = t312;
+                eventAnalysisParams.detectionRearm = t322;
+                eventAnalysisParams.apThresholdInterpolate = t412;
+                eventAnalysisParams.apThresholdTakePrecedingPoint = t422;
+                analysisParameters.eventAnalysis = eventAnalysisParams;
             otherwise
                 return
         end
@@ -8245,10 +8459,22 @@ t322 = str2num(oWin.t322.String);
         h.params.actualParams = analysisParameters;
         
         guidata(win1, h);
-        close(optionsWin);
+        %close(optionsWin);
         set(srcButton, 'enable', 'on');
     end
 
+    function updateAnalysisOptions(src, ~) % not needed
+        switch oWin.t102.Value
+            case 2
+
+            case 3
+
+            case 4
+
+            otherwise
+                return
+        end
+    end
 
 % save
 %guidata(src, h);
@@ -8407,7 +8633,10 @@ analysisTypeIdx = [analysisTypeIdx , analysisType2Idx];
 try % try-catch for reverse compatibility
     timeColumnAvailable = h.params.actualParams.timeColumnAvailable;
 catch ME
+    timeColumn = 1;
     timeColumnAvailable = 1;
+    h.params.actualParams.timeColumn = timeColumn;
+    h.params.actualParams.timeColumnAvailable = timeColumnAvailable;
 end
 try % ditto
     signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
@@ -12007,10 +12236,9 @@ catch ME
 end
 
 % analysis parameters - %%% fixlater
-eventDetectionThreshold = 0; % (mV); this will be used for peak detection
-eventDetectionRearm = -20; % (mV); re-arm peak detection
-eventDirectionSwitch = 1; % -1 (negative), 1 (positive) - don't rename it to eventDirection! see below
-voltageColumn = 2;
+eventDetectionThreshold = params.actualParams.eventAnalysis.detectionThreshold; % (mV); this will be used for peak detection
+eventDetectionRearm = params.actualParams.eventAnalysis.detectionRearm; % (mV); re-arm peak detection
+eventDetectionDirection = params.actualParams.eventAnalysis.detectionDirection; % -1 (negative), 1 (positive) - don't rename it to eventDirection! see below
 baselineWindowStart = window(1,1);
 baselineWindowEnd = window(1,2);
 windowCount = size(window, 1) - 1; % row 1 is baseline
@@ -12043,6 +12271,22 @@ for w = 1:windowCount
             eventDirection{w, j} = nan;
         end
         continue % move onto next window
+    end
+
+    % another fuckuppery in this patched-together code
+    if w == 1
+        try
+            voltageColumn = signal1Channel;
+        catch ME
+            voltageColumn = 2;
+        end
+    elseif w == 2
+        try
+            voltageColumn = signal2Channel;
+        catch ME
+            voltageColumn = 2;
+        end
+    else % noonee
     end
 
     for j = 1:sweepCount
@@ -12085,7 +12329,7 @@ for w = 1:windowCount
             peakTemp = []; % ditto
             peakIndexTemp = []; % ditto
 
-            if eventDirectionSwitch > 0
+            if eventDetectionDirection > 0
                 for k = windowStartActual:windowEndActual
                     if detectionArmed % seeking for events
                         if vRecTempTempTemp(k) >= eventDetectionThreshold % event in progress
@@ -12123,7 +12367,7 @@ for w = 1:windowCount
                     peakTemp(end + 1) = peakTempTemp;
                 end
 
-            elseif eventDirectionSwitch < 0
+            elseif eventDetectionDirection < 0
                 for k = windowStartActual:windowEndActual
                     if detectionArmed % seeking for events
                         if vRecTempTempTemp(k) <= eventDetectionThreshold % event in progress
@@ -12170,7 +12414,7 @@ for w = 1:windowCount
             eventAmplitude{w, j} = amplitudeTemp;
             eventTimeOfPeak{w, j} = eventTimeOfPeakTemp;
             eventPeakValue{w, j} = peakTemp;
-            eventDirection{w, j} = eventDirectionSwitch;
+            eventDirection{w, j} = eventDetectionDirection;
 
         catch ME
             eventBaseline{w, j} = nan;
@@ -12227,13 +12471,12 @@ catch ME
 end
 
 % analysis parameters - %%% fixlater
-apThresholdDvdt = 10; % (V/s)
-apDetectionThreshold = -5; % (mV); this will be used for peak detection
-apDetectionRearm = -15; % (mV); re-arm peak detection
-%rmpWindow = 100; % (ms)
-interpolate = 0; % (Boolean)
-oneStepAhead = 1; % (Boolean)
-voltageColumn = 2;
+apThresholdDvdt = params.actualParams.eventAnalysis.apThresholdDvdt; % (V/s)
+apDetectionThreshold = params.actualParams.eventAnalysis.detectionThreshold; % (mV); this will be used for peak detection
+apDetectionRearm = params.actualParams.eventAnalysis.detectionRearm; % (mV); re-arm peak detection
+interpolate = params.actualParams.eventAnalysis.apThresholdInterpolate; % (Boolean)
+oneStepAhead = params.actualParams.eventAnalysis.apThresholdTakePrecedingPoint; % (Boolean)
+%rmpWindow = 100; % (ms) % use baseline window instead for RMP, etc.
 baselineWindowStart = window(1,1);
 baselineWindowEnd = window(1,2);
 windowCount = size(window, 1) - 1; % row 1 is baseline
@@ -12275,6 +12518,22 @@ for w = 1:windowCount
             maxRepol{w, j} = nan;
         end
         continue % move onto next window
+    end
+
+    % another fuckuppery in this patched-together code
+    if w == 1
+        try
+            voltageColumn = signal1Channel;
+        catch ME
+            voltageColumn = 2;
+        end
+    elseif w == 2
+        try
+            voltageColumn = signal2Channel;
+        catch ME
+            voltageColumn = 2;
+        end
+    else % noonee
     end
 
     for j = 1:sweepCount
@@ -12414,9 +12673,6 @@ results.maxRepol = maxRepol;
         dvdt = dvdt ./ dt;
         v = v(2:end); % to match with dvdt
     end
-
-% display results
-
 
 end
 
