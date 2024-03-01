@@ -8702,19 +8702,19 @@ resultsTemp2.window2 = window2;
 % analysis type
 %  window 1
 analysisType1 = h.ui.analysisType1;
-analysisType1Idx = h.ui.analysisType1.Value;
-analysisType1String = h.ui.analysisType1.String;
+analysisType1Idx = analysisType1.Value;
+analysisType1String = analysisType1.String;
 analysisType1String = analysisType1String{analysisType1Idx};
 %  window 2
 analysisType2 = h.ui.analysisType2;
-analysisType2Idx = h.ui.analysisType2.Value;
-analysisType2String = h.ui.analysisType2.String;
+analysisType2Idx = analysisType2.Value;
+analysisType2String = analysisType2.String;
 analysisType2String = analysisType2String{analysisType2Idx};
 %  recordkeeping
 analysisType = {};
 analysisType{end + 1} = analysisType1String;
 analysisType{end + 1} = analysisType2String;
-analysisTypeIdx = [analysisTypeIdx , analysisType2Idx];
+analysisTypeIdx = [analysisType1Idx , analysisType2Idx];
 
 try % try-catch for reverse compatibility
     timeColumnAvailable = h.params.actualParams.timeColumnAvailable;
@@ -9207,6 +9207,7 @@ elseif analysisType1Idx == 3 %%% fixlater - not grouped properly as it is, altho
         sweepsInGroup = ismember(sweepIdx, sweepsInGroup); % find elements of sweepIdx that match sweepsInGroup
         sweepsInGroup = find(sweepsInGroup == 1); % find their indices
         for k = 1:size(resultsTemp.eventDirection, 1) % this will suffice
+            extraExtra = 0;
             nanSweepCount = 0;
             resultsTempGrp.eventBaseline{k, i} = nan(size(resultsTemp.eventBaseline{1}));
             resultsTempGrp.eventCount{k, i} = nan(size(resultsTemp.eventCount{1}));
@@ -9219,18 +9220,33 @@ elseif analysisType1Idx == 3 %%% fixlater - not grouped properly as it is, altho
                 if isnan(resultsTemp.eventPeakValue{k, j})
                     nanSweepCount = nanSweepCount + 1;
                 end
+                extraExtra = extraExtra + length(resultsTempGrp.eventPeakValue{k, j}) - 1;
+                for v = 1:length(resultsTempGrp.eventPeakValue{k, j})
+                    eventAmplitudej = resultsTempGrp.eventAmplitude{k, j};
+                    eventTimeOfPeakj = resultsTempGrp.eventTimeOfPeak{k, j};
+                    eventPeakValuej = resultsTempGrp.eventPeakValue{k, j};
+                    eventAmplitudej = nansum(eventAmplitudej);
+                    eventTimeOfPeakj = nansum(eventTimeOfPeakj);
+                    eventPeakValuej = nansum(eventPeakValuej);
+                end
                 resultsTempGrp.eventBaseline{k, i} = nansum([resultsTempGrp.eventBaseline{k, i}; resultsTemp.eventBaseline{k, j}]);
                 resultsTempGrp.eventCount{k, i} = nansum([resultsTempGrp.eventCount{k, i}; resultsTemp.eventCount{k, j}]);
-                resultsTempGrp.eventAmplitude{k, i} = nansum([resultsTempGrp.eventAmplitude{k, i}; resultsTemp.eventAmplitude{k, j}]);
-                resultsTempGrp.eventTimeOfPeak{k, i} = nansum([resultsTempGrp.eventTimeOfPeak{k, i}; resultsTemp.eventTimeOfPeak{k, j}]);
-                resultsTempGrp.eventPeakValue{k, i} = nansum([resultsTempGrp.eventPeakValue{k, i}; resultsTemp.eventPeakValue{k, j}]);
+                %resultsTempGrp.eventAmplitude{k, i} = nansum([resultsTempGrp.eventAmplitude{k, i}; resultsTemp.eventAmplitude{k, j}]);
+                %resultsTempGrp.eventTimeOfPeak{k, i} = nansum([resultsTempGrp.eventTimeOfPeak{k, i}; resultsTemp.eventTimeOfPeak{k, j}]);
+                %resultsTempGrp.eventPeakValue{k, i} = nansum([resultsTempGrp.eventPeakValue{k, i}; resultsTemp.eventPeakValue{k, j}]);
+                resultsTempGrp.eventAmplitude{k, i} = nansum([resultsTempGrp.eventAmplitude{k, i}; eventAmplitudej]);
+                resultsTempGrp.eventTimeOfPeak{k, i} = nansum([resultsTempGrp.eventTimeOfPeak{k, i}; eventTimeOfPeakj]);
+                resultsTempGrp.eventPeakValue{k, i} = nansum([resultsTempGrp.eventPeakValue{k, i}; eventPeakValuej]);
                 resultsTempGrp.eventDirection{k, i} = nansum([resultsTempGrp.eventDirection{k, i}; resultsTemp.eventDirection{k, j}]);
             end
             resultsTempGrp.eventBaseline{k, i} = resultsTempGrp.eventBaseline{k, i}./(length(sweepsInGroup) - nanSweepCount);
             resultsTempGrp.eventCount{k, i} = resultsTempGrp.eventCount{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTempGrp.eventAmplitude{k, i} = resultsTempGrp.eventAmplitude{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTempGrp.eventTimeOfPeak{k, i} = resultsTempGrp.eventTimeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
-            resultsTempGrp.eventPeakValue{k, i} = resultsTempGrp.eventPeakValue{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            %resultsTempGrp.eventAmplitude{k, i} = resultsTempGrp.eventAmplitude{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            %resultsTempGrp.eventTimeOfPeak{k, i} = resultsTempGrp.eventTimeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            %resultsTempGrp.eventPeakValue{k, i} = resultsTempGrp.eventPeakValue{k, i}./(length(sweepsInGroup) - nanSweepCount);
+            resultsTempGrp.eventAmplitude{k, i} = resultsTempGrp.eventAmplitude{k, i}./(length(sweepsInGroup) - nanSweepCount + extraExtra);
+            resultsTempGrp.eventTimeOfPeak{k, i} = resultsTempGrp.eventTimeOfPeak{k, i}./(length(sweepsInGroup) - nanSweepCount + extraExtra);
+            resultsTempGrp.eventPeakValue{k, i} = resultsTempGrp.eventPeakValue{k, i}./(length(sweepsInGroup) - nanSweepCount + extraExtra);
             resultsTempGrp.eventDirection{k, i} = resultsTempGrp.eventDirection{k, i}./(length(sweepsInGroup) - nanSweepCount);
         end
     end
