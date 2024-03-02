@@ -30,6 +30,7 @@ The use or modification of this software (PVBS) is consented only under agreemen
  - Can be slower than running PVBS.m from Matlab IDE, but only at startup 
 
  - or -
+
 2) Run PVBS.m
  - Requirements: Statistics & Machine Learning Toolbox and Signal Processing Toolbox (developed with R2023a)
 
