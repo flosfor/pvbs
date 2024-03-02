@@ -1,7 +1,7 @@
 %% PVBS: Prairie View Browsing Solution
 % (https://github.com/flosfor/pvbs)
 %
-% Copyright 2022-2024, Jaeyoung Yoon. 
+% Copyright (C) 2022-2024, Jaeyoung Yoon. 
 % (jy.yoon@tch.harvard.edu; yoonjy@mit.edu; yjy@snu.ac.kr)
 % 
 % The use or modification of this software (PVBS) is consented only 
@@ -10,56 +10,64 @@
 % work or presentation, wherein PVBS was used.
 %
 %
-%
+% -------------------------- <!> Important <!> ---------------------------
 %
 % - Required Matlab Toolboxes: 
 %   1) Statistics & Machine Learning
 %   2) Signal Processing
+% 
+% - Import Settings:
+%   Make sure the import settings are correctly defined to match YOUR data 
+%   before importing experiments, as they can be easily different across 
+%   setups; e.g. DAC gain, input channels, etc. To access import settings, 
+%   use the button on the GUI, or see function setDefaultParams() in the 
+%   code for default parameters.
 %
-%
-% -------------------------- <!> Important <!> ---------------------------
-%  See function setDefaultParams() or use the "Import Settings" button on 
-%  the GUI for default import parameters, e.g. DAC gain, input channels, 
-%  etc.; these can easily be different across setups, so make sure they 
-%  are correct for yours _before_ importing data!
 % ------------------------------------------------------------------------
 %
-%
 % - Supported experiment types: 
-%   1) Any data in .CSV format (does not have to be from PV)*
-%   2) PV VoltageRecording
-%   3) PV LineScan (synchronized with VoltageRecording and/or MarkPoints)
-%   4) PV T-Series (of VoltageRecording experiments)
+%   1) *.CSV (any data)
+%   2) *.ABF (from pClamp)
+%   3) *.XML (from Prairie View (PV))
+%    3-1) VoltageRecording
+%    3-2) LineScan (synchronized with VoltageRecording and/or MarkPoints)
+%    3-3) T-Series (of VoltageRecording type experiments)
 %
-%    * When importing .CSV directly and not through PV metadata .XML, 
-%      PVBS.m will tacitly assume the following:
-%      - column 1 represents timestamp,
-%      - columns represent sweeps (except for column 1),
-%      - values are in units of ms, mV, pA,
-%      - signals represent voltage by default (see below)
+% ------------------------------------------------------------------------
 %
-%      This is to avoid possible confusion caused by differences in .CSV 
-%      formatting conventions used by PV (scaled, gap-free) vs. others, 
-%      such as the .CSV exported from PVBS itself (unscaled, episodic). 
-%      See function loadCSVMain() for settings. See also variable 
-%      "csvColumnsAsSweeps" in function setDefaultParams(). 
+% - Import settings can be found and modified with the options button; 
+%   by default, PVBS assumes the following:
+%      - timestamp present at column 1
+%      - following columns represent sweeps (for i or V)
+%      - ... or acquisition channels (for F)
 %
-%      Parameters in "Import Settings" represent those used for importing 
-%      .CSV files saved from PV itself (not PVBS) when loading them via 
-%      their metadata .XML (wherein columns will not be considered as 
-%      sweeps regardless of csvColumnsAsSweeps, as a single data file from
-%      PV would always assume gap-free format))
+%   If metadata is available (from .abf, or .xml in the case of PV
+%   experiments), PVBS will attempt to read correct signal definitions 
+%   from metadata.
 %
+%   PVBS assumes that values are in units of: ms, mV, pA. This also 
+%   applies to display, even when metadata is available (see below).
+%
+% ------------------------------------------------------------------------
 %
 % - NB.
-%   Default settings were intended for i-clamp experiments and positive
-%   direction for peak detection (e.g. EPSP), but the code is compatible 
-%   with either i-clamp or V-clamp, or peaks in any direction. (Axis labels 
-%   can be incorrect, especially when experiments with different signal 
-%   types (i or V) are loaded in the same instance of PVBS, but the values 
-%   are correct)
 %
+%   Default settings (including display) were intended for i-clamp 
+%   experiments and positive peak direction (e.g. EPSP), but PVBS is 
+%   compatible with both i-clamp or V-clamp, or peaks in any direction. 
+%   PVBS attempts to read correct signal definition from metadata, but 
+%   in some cases, axis labels can be incorrect especially when the 
+%   signal definitions (type or channel) are inconsistent across
+%   experiments loaded in the same instance of PVBS. Nevertheless, the 
+%   numerical values of data will still be correct even in which case 
+%   despite what the axis appearances might suggest.
 %
+%   PVBS was intended to be used with identical signal definitions across 
+%   all experiments loaded within a same instance of PVBS. For experiments 
+%   with different signal definitions (e.g. i-clamp and V-clamp), simply 
+%   launch another instance of PVBS to load them separately.
+%
+% ------------------------------------------------------------------------
 %
 %
 % A problem is a problem only when you have the ability to recognize it.
@@ -75,19 +83,20 @@
 % summarized as the following: it deprives the experimenter of their 
 % ability to perform and assess work in good quality.
 % 
-% PVBS ("Prairie View Browsing Solution" ;) ) was developed to provide a 
-% solution to this problem. The code was written since I was a complete 
-% beginner until eventually becoming a novice, as must be evident from the 
-% way it is written; hence, it is inevitably far from efficient at all. 
-% Still, it will provide at least some means instead of nothing, for a 
-% patch clamp electrophysiologist to do proper work - for those who 
-% recognize the needs for it. PVBS was conceptually influenced by Axon 
-% pClamp, particularly ClampFit.
+% PVBS ("Prairie View Browsing Solution" ;) ) was developed as a solution 
+% to this problem. It was written during the unfortunate period when I had 
+% no choice but to use PV at MIT building 46, without being provided with 
+% those very basic tools which should normally be available; and while I 
+% was a complete beginner at coding until eventually becoming a novice, as 
+% must be evident from the way it is written. Hence, it is far from being 
+% elegant; still, PVBS will provide at least some means instead of nothing 
+% for a patch clamp electrophysiologist to do proper work - at least for 
+% those who recognize the needs for it. PVBS was conceptually influenced 
+% by Axon pClamp, particularly ClampFit.
 %
 %
-%
-%
-%% ----------------------------------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+%% ------------------------------------------------------------------------
 
 
 function pvbs()
@@ -95,8 +104,8 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2024.02.29';
-pvbsStage = '(b)';
+pvbsLastMod = '2024.03.01';
+pvbsStage = '(c)';
 fpVer = '5.5'; % not the version of this code, but PV itself
 matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
 
@@ -353,14 +362,14 @@ ui.analysisRunPreset = uicontrol('Style', 'pushbutton', 'string', '>', 'fontweig
 ui.analysisResultsTitle = uicontrol('Style', 'text', 'string', 'Results', 'fontweight', 'bold', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.815, 0.39, 0.09, 0.02]);
 ui.analysisPlot1 = axes('Units', 'Normalized', 'Position', [0.835, 0.255, 0.135, 0.13], 'xminortick', 'on', 'yminortick', 'on');
 ui.analysisPlot2 = axes('Units', 'Normalized', 'Position', [0.835, 0.05, 0.135, 0.13], 'xminortick', 'on', 'yminortick', 'on');
-ui.analysisPlot1Menu1 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList1, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.855, 0.381, 0.032, 0.03], 'callback', @analysisPlotUpdateCall, 'interruptible', 'off');
-ui.analysisPlot1Menu2 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList2, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.888, 0.381, 0.03, 0.03], 'callback', @analysisPlotUpdateCall, 'interruptible', 'off');
+ui.analysisPlot1Menu1 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList1, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.855, 0.381, 0.032, 0.03], 'callback', @analysisPlotUpdateCall11, 'interruptible', 'off');
+ui.analysisPlot1Menu2 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList2, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.888, 0.381, 0.03, 0.03], 'callback', @analysisPlotUpdateCall21, 'interruptible', 'off');
 ui.analysisPlot1Menu3 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList3, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.919, 0.381, 0.032, 0.03], 'callback', @analysisPlotUpdateCall31, 'interruptible', 'off');
-ui.analysisPlot1Menu4 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList4, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.952, 0.381, 0.032, 0.03], 'callback', @analysisPlotUpdateCall, 'interruptible', 'off');
-ui.analysisPlot2Menu1 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList1, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.855, 0.176, 0.032, 0.03], 'callback', @analysisPlotUpdateCall, 'interruptible', 'off');
-ui.analysisPlot2Menu2 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList2, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.888, 0.176, 0.03, 0.03], 'callback', @analysisPlotUpdateCall, 'interruptible', 'off');
+ui.analysisPlot1Menu4 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList4, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.952, 0.381, 0.032, 0.03], 'callback', @analysisPlotUpdateCall41, 'interruptible', 'off');
+ui.analysisPlot2Menu1 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList1, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.855, 0.176, 0.032, 0.03], 'callback', @analysisPlotUpdateCall12, 'interruptible', 'off');
+ui.analysisPlot2Menu2 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList2, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.888, 0.176, 0.03, 0.03], 'callback', @analysisPlotUpdateCall22, 'interruptible', 'off');
 ui.analysisPlot2Menu3 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList3, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.919, 0.176, 0.032, 0.03], 'callback', @analysisPlotUpdateCall32, 'interruptible', 'off');
-ui.analysisPlot2Menu4 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList4, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.952, 0.176, 0.032, 0.03], 'callback', @analysisPlotUpdateCall, 'interruptible', 'off');
+ui.analysisPlot2Menu4 = uicontrol('Style', 'popupmenu', 'string', params.analysisPlotMenuList4, 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.952, 0.176, 0.032, 0.03], 'callback', @analysisPlotUpdateCall42, 'interruptible', 'off');
 ui.analysisPlot1MoveUp = uicontrol('Style', 'pushbutton', 'String', '^', 'Units', 'normalized', 'Position', [0.972, 0.36, 0.0125, 0.024], 'Callback', @resultsPlot1YMoveUp, 'interruptible', 'off');
 ui.analysisPlot1MoveDown = uicontrol('Style', 'pushbutton', 'String', 'v', 'Units', 'normalized', 'Position', [0.972, 0.255, 0.0125, 0.024], 'Callback', @resultsPlot1YMoveDown, 'interruptible', 'off');
 ui.analysisPlot1ZoomIn = uicontrol('Style', 'pushbutton', 'String', '+', 'Units', 'normalized', 'Position', [0.972, 0.335, 0.0125, 0.024], 'Callback', @resultsPlot1YZoomIn, 'interruptible', 'off');
@@ -394,8 +403,8 @@ ui.stimArtifactButton = uicontrol('Style', 'checkbox', 'enable', 'on', 'min', 0,
 ui.stimArtifactInput = uicontrol('Style', 'edit', 'string', num2str(params.actualParams.artifactLength), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.08, 0.182, 0.016, 0.026], 'Callback', @stimArtifactLength, 'interruptible', 'off');
 ui.stimArtifactText = uicontrol('Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.096, 0.182, 0.03, 0.02]);
 ui.stimArtifactText2 = uicontrol('Style', 'text', 'string', 'from', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.025, 0.152, 0.02, 0.02]);
-ui.stimArtifactInput2 = uicontrol('Style', 'edit', 'string', num2str(params.actualParams.artifactStart), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.042, 0.152, 0.016, 0.026], 'Callback', @stimArtifactStart, 'interruptible', 'off');
-ui.stimArtifactText3 = uicontrol('Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.058, 0.152, 0.02, 0.02]);
+ui.stimArtifactInput2 = uicontrol('Style', 'edit', 'string', num2str(params.actualParams.artifactStart), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.04, 0.152, 0.016, 0.026], 'Callback', @stimArtifactStart, 'interruptible', 'off');
+ui.stimArtifactText3 = uicontrol('Style', 'text', 'string', '(ms)', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.056, 0.152, 0.02, 0.02]);
 ui.stimArtifactText4 = uicontrol('Style', 'text', 'string', 'x', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.073, 0.152, 0.01, 0.02]);
 ui.stimArtifactInput3 = uicontrol('Style', 'edit', 'string', num2str(params.actualParams.artifactCount), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.08, 0.152, 0.016, 0.026], 'Callback', @stimArtifactCount, 'interruptible', 'off');
 ui.stimArtifactText5 = uicontrol('Style', 'text', 'string', 'at', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.096, 0.152, 0.03, 0.02]);
@@ -1412,7 +1421,7 @@ try % ... to display results
         case 1 % positive
             peakDirToPlot = 3;
         otherwise
-            peakDirToPlot = 2; % default to absolute if not available
+            peakDirToPlot = 1;
     end
     dataX = 1:length(resultsTempGrp.groups); % group number - will plot by groups
     dataY = resultsTempGrp.peak; % grouped results, peak
@@ -1473,7 +1482,7 @@ try % ... to display results
             case 1 % positive
                 peakDirToPlot = 3;
             otherwise
-                peakDirToPlot = 2; % default to absolute if not available
+                peakDirToPlot = 1;
         end
         dataX = 1:length(resultsTemp2Grp.groups); % group number - will plot by groups
         dataY = resultsTemp2Grp.peak; % grouped results, peak
@@ -1531,31 +1540,37 @@ try % ... to display results
                 switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
                     case 1 % unselected
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot1Menu3.Value = 1;
                     case 2 % window 1
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
                         h.ui.analysisPlot1Menu3.Value = 2; % default to peak
                     case 3 % window 2
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot1Menu3.Value = 1;
                 end
             case 3 % threshold detection
                 switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
                     case 1 % unselected
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot1Menu3.Value = 1;
                     case 2 % window 1
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
                         h.ui.analysisPlot1Menu3.Value = 2; % default to event count
                     case 3 % window 2
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot1Menu3.Value = 1;
                 end
             case 4 % waveform
                 switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
                     case 1 % unselected
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot1Menu3.Value = 1;
                     case 2 % window 1
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
                         h.ui.analysisPlot1Menu3.Value = 2; % default to ap threshold
                     case 3 % window 2
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot1Menu3.Value = 1;
                 end
         end
     catch ME
@@ -1567,8 +1582,10 @@ try % ... to display results
                 switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
                     case 1 % unselected
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot2Menu3.Value = 1;
                     case 2 % window 1
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot2Menu3.Value = 1;
                     case 3 % window 2
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
                         h.ui.analysisPlot2Menu3.Value = 2; % default to peak
@@ -1577,8 +1594,10 @@ try % ... to display results
                 switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
                     case 1 % unselected
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot2Menu3.Value = 1;
                     case 2 % window 1
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot2Menu3.Value = 1;
                     case 3 % window 2
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
                         h.ui.analysisPlot2Menu3.Value = 2; % default to event count
@@ -1587,8 +1606,10 @@ try % ... to display results
                 switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
                     case 1 % unselected
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot2Menu3.Value = 1;
                     case 2 % window 1
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot2Menu3.Value = 1;
                     case 3 % window 2
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
                         h.ui.analysisPlot2Menu3.Value = 2; % default to ap threshold
@@ -1667,7 +1688,7 @@ try % ... to display results
         case 1 % positive
             peakDirToPlot = 3;
         otherwise
-            peakDirToPlot = 2; % default to absolute if not available
+            peakDirToPlot = 1;
     end
     dataX = 1:length(resultsTempGrp.groups); % group number - will plot by groups
     dataY = resultsTempGrp.peak; % grouped results, peak
@@ -1728,7 +1749,7 @@ try % ... to display results
             case 1 % positive
                 peakDirToPlot = 3;
             otherwise
-                peakDirToPlot = 2; % default to absolute if not available
+                peakDirToPlot = 1; 
         end
         dataX = 1:length(resultsTemp2Grp.groups); % group number - will plot by groups
         dataY = resultsTemp2Grp.peak; % grouped results, peak
@@ -1786,31 +1807,37 @@ try % ... to display results
                 switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
                     case 1 % unselected
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot1Menu3.Value = 1;
                     case 2 % window 1
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
                         h.ui.analysisPlot1Menu3.Value = 2; % default to peak
                     case 3 % window 2
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot1Menu3.Value = 1;
                 end
             case 3 % threshold detection
                 switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
                     case 1 % unselected
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot1Menu3.Value = 1;
                     case 2 % window 1
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
                         h.ui.analysisPlot1Menu3.Value = 2; % default to event count
                     case 3 % window 2
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot1Menu3.Value = 1;
                 end
             case 4 % waveform
                 switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
                     case 1 % unselected
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot1Menu3.Value = 1;
                     case 2 % window 1
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
                         h.ui.analysisPlot1Menu3.Value = 2; % default to ap threshold
                     case 3 % window 2
                         h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot1Menu3.Value = 1;
                 end
         end
     catch ME
@@ -1822,8 +1849,10 @@ try % ... to display results
                 switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
                     case 1 % unselected
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot2Menu3.Value = 1;
                     case 2 % window 1
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot2Menu3.Value = 1;
                     case 3 % window 2
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
                         h.ui.analysisPlot2Menu3.Value = 2; % default to peak
@@ -1832,8 +1861,10 @@ try % ... to display results
                 switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
                     case 1 % unselected
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot2Menu3.Value = 1;
                     case 2 % window 1
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot2Menu3.Value = 1;
                     case 3 % window 2
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
                         h.ui.analysisPlot2Menu3.Value = 2; % default to event count
@@ -1842,8 +1873,10 @@ try % ... to display results
                 switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
                     case 1 % unselected
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot2Menu3.Value = 1;
                     case 2 % window 1
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                        h.ui.analysisPlot2Menu3.Value = 1;
                     case 3 % window 2
                         h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
                         h.ui.analysisPlot2Menu3.Value = 2; % default to ap threshold
@@ -4434,7 +4467,7 @@ h = cellListClickActual(h, itemSelected);
 
 fName = h.exp.fileName{itemSelected};
 fPath = h.exp.filePath{itemSelected};
-clipboard('copy', [fPath, fName]); % for convenience - but will only work for single selection
+%clipboard('copy', [fPath, fName]); % for convenience - but will only work for single selection
 
 end
 
@@ -8644,7 +8677,6 @@ sweepStr = sweepStr{expIdx};
 groupIdx = groupIdx{expIdx};
 groupStr = groupStr{expIdx};
 
-
 % initialize
 experimentCount = h.exp.experimentCount;
 if length(results) < experimentCount
@@ -8656,11 +8688,6 @@ end
 analysisTypeIdx = []; % array to save analysis type index
 
 % analysis target
-%  obsolete - see switch block below
-%{
-sweeps = []; % initializing array for sweeps to be analyzed
-groups = [];
-%}
 if iscell(VRecData)
     sweeps = 1:length(VRecData); % all sweeps
     VRecData = VRecData(sweeps); % leave relevant data
@@ -8669,44 +8696,6 @@ else
     VRecData = VRecData; % keep as is
 end
 groups = groupIdx; % all groups
-%{
-analysisTarget = h.ui.analysisTarget;
-analysisTargetString = h.ui.analysisTarget.String;
-analysisTargetIdx = h.ui.analysisTarget.Value;
-%}
-%  the following switch block is obsolete...
-%  ... originally, only relevant sweeps were analyzed;
-%  now, all sweeps are analyzed anyway, but only relevant ones are processed/plotted afterwards;
-%  the older code indexes relevant sweeps again, so it will create massive confusion if used inappropriately
-%{
-switch analysisTargetIdx
-    case 1 % unselected - default to all groups
-        analysisTargetIdx = 2;
-        analysisTarget.Value = analysisTargetIdx;
-        h.ui.analysisTarget.Value = analysisTarget.Value;
-        for i = 1:length(groupIdx)
-            sweeps = [sweeps, groupIdx{i}];
-        end
-        sweeps = sort(sweeps); % critical for analysis function to work properly
-        groups = groupIdx;
-    case 2 % all groups
-        for i = 1:length(groupIdx)
-            sweeps = [sweeps, groupIdx{i}];
-        end
-        sweeps = sort(sweeps); % critical for analysis function to work properly
-        groups = groupIdx;
-    case 3 % selected groups
-        selectedGroup = h.ui.groupListDisplay.Value;
-        sweeps = groupIdx{selectedGroup};
-        sweeps = sort(sweeps); % critical for analysis function to work properly
-        groups = groupIdx(selectedGroup);
-    case 4 % all sweeps
-        sweeps = 1:length(VRecData); % all sweeps
-    case 5 % selected sweeps
-        selectedSweeps = h.ui.sweepListDisplay.Value;
-        sweeps = selectedSweeps;
-end
-%}
 resultsTemp.sweeps = sweeps; % for recordkeeping
 resultsTemp.groups = groups; % for recordkeeping
 resultsTemp2.sweeps = sweeps; % for recordkeeping
@@ -9236,12 +9225,12 @@ elseif analysisType1Idx == 3 %%% fixlater - not grouped properly as it is, altho
         for k = 1:size(resultsTemp.eventDirection, 1) % this will suffice
             extraExtra = 0;
             nanSweepCount = 0;
-            resultsTempGrp.eventBaseline{k, i} = nan(size(resultsTemp.eventBaseline{1}));
-            resultsTempGrp.eventCount{k, i} = nan(size(resultsTemp.eventCount{1}));
-            resultsTempGrp.eventAmplitude{k, i} = nan(size(resultsTemp.eventAmplitude{1}));
-            resultsTempGrp.eventTimeOfPeak{k, i} = nan(size(resultsTemp.eventTimeOfPeak{1}));
-            resultsTempGrp.eventPeakValue{k, i} = nan(size(resultsTemp.eventPeakValue{1}));
-            resultsTempGrp.eventDirection{k, i} = nan(size(resultsTemp.eventDirection{1}));
+            resultsTempGrp.eventBaseline{k, i} = nan;
+            resultsTempGrp.eventCount{k, i} = nan;
+            resultsTempGrp.eventAmplitude{k, i} = nan;
+            resultsTempGrp.eventTimeOfPeak{k, i} = nan;
+            resultsTempGrp.eventPeakValue{k, i} = nan;
+            resultsTempGrp.eventDirection{k, i} = nan;
             for j = sweepsInGroup
                 %nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
                 if isnan(resultsTemp.eventPeakValue{k, j})
@@ -9251,11 +9240,11 @@ elseif analysisType1Idx == 3 %%% fixlater - not grouped properly as it is, altho
                 eventTimeOfPeakj = nan;
                 eventPeakValuej = nan;
                 try
-                    extraExtra = extraExtra + length(resultsTempGrp.eventPeakValue{k, j}) - 1;
-                    for v = 1:length(resultsTempGrp.eventPeakValue{k, j})
-                        eventAmplitudej = resultsTempGrp.eventAmplitude{k, j};
-                        eventTimeOfPeakj = resultsTempGrp.eventTimeOfPeak{k, j};
-                        eventPeakValuej = resultsTempGrp.eventPeakValue{k, j};
+                    extraExtra = extraExtra + length(resultsTemp.eventPeakValue{k, j}) - 1;
+                    for v = 1:length(resultsTemp.eventPeakValue{k, j})
+                        eventAmplitudej = resultsTemp.eventAmplitude{k, j};
+                        eventTimeOfPeakj = resultsTemp.eventTimeOfPeak{k, j};
+                        eventPeakValuej = resultsTemp.eventPeakValue{k, j};
                         eventAmplitudej = nansum(eventAmplitudej);
                         eventTimeOfPeakj = nansum(eventTimeOfPeakj);
                         eventPeakValuej = nansum(eventPeakValuej);
@@ -9301,12 +9290,12 @@ elseif analysisType1Idx == 3 %%% fixlater - not grouped properly as it is, altho
             for k = 1:size(resultsTemp2.eventDirection, 1) % this will suffice
                 extraExtra = 0;
                 nanSweepCount = 0;
-                resultsTemp2Grp.eventBaseline{k, i} = nan(size(resultsTemp2.eventBaseline{1}));
-                resultsTemp2Grp.eventCount{k, i} = nan(size(resultsTemp2.eventCount{1}));
-                resultsTemp2Grp.eventAmplitude{k, i} = nan(size(resultsTemp2.eventAmplitude{1}));
-                resultsTemp2Grp.eventTimeOfPeak{k, i} = nan(size(resultsTemp2.eventTimeOfPeak{1}));
-                resultsTemp2Grp.eventPeakValue{k, i} = nan(size(resultsTemp2.eventPeakValue{1}));
-                resultsTemp2Grp.eventDirection{k, i} = nan(size(resultsTemp2.eventDirection{1}));
+                resultsTemp2Grp.eventBaseline{k, i} = nan;
+                resultsTemp2Grp.eventCount{k, i} = nan;
+                resultsTemp2Grp.eventAmplitude{k, i} = nan;
+                resultsTemp2Grp.eventTimeOfPeak{k, i} = nan;
+                resultsTemp2Grp.eventPeakValue{k, i} = nan;
+                resultsTemp2Grp.eventDirection{k, i} = nan;
                 for j = sweepsInGroup
                     %nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
                     if isnan(resultsTemp2.eventPeakValue{k, j})
@@ -9316,11 +9305,11 @@ elseif analysisType1Idx == 3 %%% fixlater - not grouped properly as it is, altho
                     eventTimeOfPeakj = nan;
                     eventPeakValuej = nan;
                     try
-                        extraExtra = extraExtra + length(resultsTemp2Grp.eventPeakValue{k, j}) - 1;
-                        for v = 1:length(resultsTemp2Grp.eventPeakValue{k, j})
-                            eventAmplitudej = resultsTemp2Grp.eventAmplitude{k, j};
-                            eventTimeOfPeakj = resultsTemp2Grp.eventTimeOfPeak{k, j};
-                            eventPeakValuej = resultsTemp2Grp.eventPeakValue{k, j};
+                        extraExtra = extraExtra + length(resultsTemp2.eventPeakValue{k, j}) - 1;
+                        for v = 1:length(resultsTemp2.eventPeakValue{k, j})
+                            eventAmplitudej = resultsTemp2.eventAmplitude{k, j};
+                            eventTimeOfPeakj = resultsTemp2.eventTimeOfPeak{k, j};
+                            eventPeakValuej = resultsTemp2.eventPeakValue{k, j};
                             eventAmplitudej = nansum(eventAmplitudej);
                             eventTimeOfPeakj = nansum(eventTimeOfPeakj);
                             eventPeakValuej = nansum(eventPeakValuej);
@@ -9368,12 +9357,12 @@ elseif analysisType1Idx == 3 %%% fixlater - not grouped properly as it is, altho
             for k = 1:size(resultsTemp3.eventDirection, 1) % this will suffice
                 extraExtra = 0;
                 nanSweepCount = 0;
-                resultsTemp3Grp.eventBaseline{k, i} = nan(size(resultsTemp3.eventBaseline{1}));
-                resultsTemp3Grp.eventCount{k, i} = nan(size(resultsTemp3.eventCount{1}));
-                resultsTemp3Grp.eventAmplitude{k, i} = nan(size(resultsTemp3.eventAmplitude{1}));
-                resultsTemp3Grp.eventTimeOfPeak{k, i} = nan(size(resultsTemp3.eventTimeOfPeak{1}));
-                resultsTemp3Grp.eventPeakValue{k, i} = nan(size(resultsTemp3.eventPeakValue{1}));
-                resultsTemp3Grp.eventDirection{k, i} = nan(size(resultsTemp3.eventDirection{1}));
+                resultsTemp3Grp.eventBaseline{k, i} = nan;
+                resultsTemp3Grp.eventCount{k, i} = nan;
+                resultsTemp3Grp.eventAmplitude{k, i} = nan;
+                resultsTemp3Grp.eventTimeOfPeak{k, i} = nan;
+                resultsTemp3Grp.eventPeakValue{k, i} = nan;
+                resultsTemp3Grp.eventDirection{k, i} = nan;
                 for j = sweepsInGroup
                     %nanSweepCount = 0; % put this in for j = ... to effectively avoid redundancy
                     if isnan(resultsTemp3.eventPeakValue{k, j})
@@ -9383,11 +9372,11 @@ elseif analysisType1Idx == 3 %%% fixlater - not grouped properly as it is, altho
                     eventTimeOfPeakj = nan;
                     eventPeakValuej = nan;
                     try
-                        extraExtra = extraExtra + length(resultsTemp2Grp.eventPeakValue{k, j}) - 1;
-                        for v = 1:length(resultsTemp2Grp.eventPeakValue{k, j})
-                            eventAmplitudej = resultsTemp2Grp.eventAmplitude{k, j};
-                            eventTimeOfPeakj = resultsTemp2Grp.eventTimeOfPeak{k, j};
-                            eventPeakValuej = resultsTemp2Grp.eventPeakValue{k, j};
+                        extraExtra = extraExtra + length(resultsTemp3.eventPeakValue{k, j}) - 1;
+                        for v = 1:length(resultsTemp3.eventPeakValue{k, j})
+                            eventAmplitudej = resultsTemp3.eventAmplitude{k, j};
+                            eventTimeOfPeakj = resultsTemp3.eventTimeOfPeak{k, j};
+                            eventPeakValuej = resultsTemp3.eventPeakValue{k, j};
                             eventAmplitudej = nansum(eventAmplitudej);
                             eventTimeOfPeakj = nansum(eventTimeOfPeakj);
                             eventPeakValuej = nansum(eventPeakValuej);
@@ -9616,69 +9605,82 @@ colorMap = colorMapY .* colorMap;
 colorMapX = colorMapX + 1;
 
 % display results
+
 %  plot 1: by default, display Vm, win 1, peak, by group, for current experiment
+
 targetPlot = h.ui.analysisPlot1; % plot 1
+axes(targetPlot);
 winToPlot = 1; % analysis window 1
-peakDirToPlot = h.params.actualParams.peakDirection1;
-switch peakDirToPlot % converting to column indices for old code
-    case -1 % negative
-        peakDirToPlot = 1;
-    case 0 % absolute
-        peakDirToPlot = 2;
-    case 1 % positive
-        peakDirToPlot = 3;
-    otherwise
-        peakDirToPlot = 2; % default to absolute if not available
-end
 
 try
-    %dataX = 1:length(resultsTempGrp.groups); % plot by groups
-    if isempty(resultsTempGrp.groups)
-        groupedFlag = 0;
-        dataX = 1:length(resultsTemp.sweeps); % plot by sweeps
-        axes(targetPlot);
-        xlabel('Sweep #');
-        switch analysisType1Idx
-            case 2 % peak, area, ...
-                dataY = resultsTemp.peak;
-            case 3 % events
-                dataY = resultsTemp.eventCount;
-            case 4 % AP kinetics
-                dataY = resultsTemp.apThreshold;
-            otherwise
-                return
-        end
-    else
-        groupedFlag = 1;
-        dataX = 1:length(resultsTempGrp.groups); % plot by groups
-        axes(targetPlot);
-        xlabel('Group #');
-        switch analysisType1Idx
-            case 2 % peak, area, ...
-                dataY = resultsTempGrp.peak;
-            case 3 % events
-                dataY = resultsTempGrp.eventCount;
-            case 4 % AP kinetics
-                dataY = resultsTempGrp.apThreshold;
-            otherwise
-                return
-        end
+    peakDirToPlot = h.params.actualParams.peakDirection1;
+    switch peakDirToPlot % converting to column indices for old code
+        case -1 % negative
+            peakDirToPlot = 1;
+        case 0 % absolute
+            peakDirToPlot = 2;
+        case 1 % positive
+            peakDirToPlot = 3;
+        otherwise
+            peakDirToPlot = 1;
     end
 catch ME
-    axes(targetPlot);
-    xlabel('');
-    ylabel('');
-    cla;
-    traceDisplay = h.ui.traceDisplay;
-    axes(traceDisplay);
-    return
+    peakDirToPlot = 1;
+    h.params.actualParams.peakDirection1 = peakDirToPlot;
+end
+
+switch signal1Type % i, V, F
+    % Cf. 
+    % resultsTemp: VRec (i.e. VRec1, but mind the variable name)
+    % resultsTemp2: VRec2
+    % resultsTemp3: dF/F (i guess the code was meant for simultaneous two-channel F recording
+    %%% lol wtf fml
+    case 1
+        if isempty(resultsTempGrp.groups)
+            resultsToDisplay = resultsTemp; % VRec1
+            groupedFlag = 0;
+            dataX = 1:length(resultsToDisplay.sweeps); % plot by sweeps
+            xlabel('Sweep #');
+        else
+            resultsToDisplay = resultsTempGrp;
+            groupedFlag = 1;
+            dataX = 1:length(resultsToDisplay.groups); % plot by groups
+            xlabel('Group #');
+        end
+    case 2
+        if isempty(resultsTempGrp.groups)
+            resultsToDisplay = resultsTemp; % VRec1 (NOT resultsTemp2: VRec2)
+            groupedFlag = 0;
+            dataX = 1:length(resultsToDisplay.sweeps); % plot by sweeps
+            xlabel('Sweep #');
+        else
+            resultsToDisplay = resultsTempGrp;
+            groupedFlag = 1;
+            dataX = 1:length(resultsToDisplay.groups); % plot by groups
+            xlabel('Group #');
+        end
+    case 3
+        if isempty(resultsTempGrp.groups)
+            resultsToDisplay = resultsTemp3; % dF/F
+            groupedFlag = 0;
+            dataX = 1:length(resultsToDisplay.sweeps); % plot by sweeps
+            xlabel('Sweep #');
+        else
+            resultsToDisplay = resultsTemp3Grp;
+            groupedFlag = 1;
+            dataX = 1:length(resultsToDisplay.groups); % plot by groups
+            xlabel('Group #');
+        end
+    otherwise
 end
 
 try
-    dataY = dataY(winToPlot, :); % analysis window 1
-    dataYNew = nan(length(dataY), 1); % initialize
+
     switch analysisType1Idx
         case 2 % peak, area, ...
+            dataY = resultsToDisplay.peak;
+            dataY = dataY(winToPlot, :); % analysis window 1
+            dataYNew = nan(length(dataY), 1); % initialize
             for i = 1:length(dataY)
                 dataYi = dataY{i}; % current sweep/group
                 if isempty(dataYi)
@@ -9688,7 +9690,20 @@ try
                 end
                 dataYNew(i) = dataYi; % update
             end
+            switch signal1Type % i, V, F
+                case 1
+                    ylabel('PSC (pA)'); % although it might not actually be PSC...
+                case 2
+                    ylabel('PSP (mV)'); % although it might not actually be PSP...
+                case 3 % should be irrelevant here
+                    ylabel('dF/F');
+                otherwise
+                    ylabel('');
+            end
         case 3 % events
+            dataY = resultsToDisplay.eventCount;
+            dataY = dataY(winToPlot, :); % analysis window 1
+            dataYNew = nan(length(dataY), 1); % initialize
             for i = 1:length(dataY)
                 dataYi = dataY{i}; % current sweep/group
                 if isempty(dataYi)
@@ -9698,7 +9713,11 @@ try
                 end
                 dataYNew(i) = dataYi; % update
             end
+            ylabel('No. of Events'); % see above for default
         case 4 % AP kinetics
+            dataY = resultsToDisplay.apThreshold;
+            dataY = dataY(winToPlot, :); % analysis window 1
+            dataYNew = nan(length(dataY), 1); % initialize
             for i = 1:length(dataY)
                 dataYi = dataY{i}; % current sweep/group
                 if isempty(dataYi)
@@ -9708,145 +9727,131 @@ try
                 end
                 dataYNew(i) = dataYi; % update
             end
+            ylabel('AP Threshold (mV)'); % see above for default
         otherwise
-            return
+            %return
     end
     dataY = dataYNew; % update
-catch ME
-    axes(targetPlot);
-    xlabel('');
-    ylabel('');
-    cla;
-    traceDisplay = h.ui.traceDisplay;
-    axes(traceDisplay);
-    return
-end
 
-try
     axes(targetPlot);
     hold on;
     color = [0, 0, 0];
-    targetPlot = displayResults(targetPlot, dataX, dataY, color);
-    set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
+    targetPlot = displayResults(targetPlot, dataX, dataY, color);    
     hold off;
+    set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
+    %set(gca, 'ylim', [0, nanmax(dataY) + 0.2*nanmax(dataY)]);
+    try
+        if nanmin(dataY) < 0
+            if nanmax(dataY) < 0
+                set(gca, 'ylim', [1.2*nanmin(dataY), 0]);
+            else
+                set(gca, 'ylim', [1.2*nanmin(dataY), 1.2*nanmax(dataY)]);
+            end
+        else
+            set(gca, 'ylim', [0, 1.2*nanmax(dataY)]);
+        end
+    catch ME
+    end
+    set(gca, 'xminortick', 'on', 'yminortick', 'on');
+    
+    h.ui.analysisPlot1 = targetPlot;
+    params.resultsPlot1YRange = targetPlot.YLim;
+    h.ui.analysisPlot1Menu1.Value = 2; % signal 1
+    h.ui.analysisPlot1Menu2.Value = 2; % window 1
+    %h.ui.analysisPlot1Menu3.Value = 1; % results - will update later
+    %h.ui.analysisPlot1Menu4.Value = 3; % by group
+    h.ui.analysisPlot1Menu4.Value = groupedFlag + 2; % che pazzia
+
+    traceDisplay = h.ui.traceDisplay;
+    axes(traceDisplay);
+
 catch ME
+    targetPlot = h.ui.analysisPlot1;
     axes(targetPlot);
     xlabel('');
     ylabel('');
     cla;
     traceDisplay = h.ui.traceDisplay;
     axes(traceDisplay);
-    return
+    %return
 end
-
-switch analysisType1Idx
-    case 2 % peak, area, ...
-        switch signal1Type % i, V, F
-            case 1
-                ylabel('PSC (pA)'); % although it might not actually be PSC...
-            case 2
-                ylabel('PSP (mV)'); % although it might not actually be PSP...
-            case 3 % should be irrelevant here
-                ylabel('dF/F');
-            otherwise
-                ylabel('Value');
-        end
-    case 3 % events
-        ylabel('No. of Events'); % see above for default
-    case 4 % AP kinetics
-        ylabel('AP Threshold (mV)'); % see above for default
-    otherwise
-        return
-end
-
-%xticks(0:5:10000);
-%%{
-if nanmax(dataY) > 40
-    ylim([0, 40.5]);
-    %yticks(-1000:10:1000);
-elseif nanmax(dataY) > 10
-    ylim([0, nanmax(dataY) + 0.5]);
-    %yticks(-1000:5:1000);
-else
-    ylim([0, 10.5]);
-    %yticks(-1000:2:1000);
-end
-%}
-
-set(gca, 'xminortick', 'on', 'yminortick', 'on');
-h.ui.analysisPlot1 = targetPlot;
-params.resultsPlot1YRange = targetPlot.YLim;
-h.ui.analysisPlot1Menu1.Value = 2; % signal 1
-h.ui.analysisPlot1Menu2.Value = 2; % window 1
-%h.ui.analysisPlot1Menu3.Value = 1; % results - will update later
-%h.ui.analysisPlot1Menu4.Value = 3; % by group
-h.ui.analysisPlot1Menu4.Value = groupedFlag + 2; % che pazzia
-
-traceDisplay = h.ui.traceDisplay;
-axes(traceDisplay);
 
 %  plot 2: by default, display dF/F, win 2, peak, by group, for current experiment
 try
+
     targetPlot = h.ui.analysisPlot2; % plot 2
+    axes(targetPlot);
     winToPlot = 2; % analysis window 2
-    peakDirToPlot = h.params.actualParams.peakDirection2;
-    switch peakDirToPlot % converting to column indices for old code
-        case -1 % negative
-            peakDirToPlot = 1;
-        case 0 % absolute
-            peakDirToPlot = 2;
-        case 1 % positive
-            peakDirToPlot = 3;
-        otherwise
-            peakDirToPlot = 2; % default to absolute if not available
-    end
 
     try
-        %dataX = 1:length(resultsTemp3Grp.groups); % plot by groups
-        if isempty(resultsTempGrp.groups)
-            dataX = 1:length(resultsTemp3.sweeps); % plot by sweeps
-            axes(targetPlot);
-            xlabel('Sweep #');
-            switch analysisType1Idx
-                case 2 % peak, area, ...
-                    dataY = resultsTemp3.peak;
-                case 3 % events
-                    dataY = resultsTemp3.eventCount;
-                case 4 % AP kinetics
-                    dataY = resultsTemp3.apThreshold;
-                otherwise
-                    return
-            end
-        else
-            dataX = 1:length(resultsTemp3Grp.groups); % plot by groups
-            axes(targetPlot);
-            xlabel('Group #');
-            switch analysisType1Idx
-                case 2 % peak, area, ...
-                    dataY = resultsTemp3Grp.peak;
-                case 3 % events
-                    dataY = resultsTemp3Grp.eventCount;
-                case 4 % AP kinetics
-                    dataY = resultsTemp3Grp.apThreshold;
-                otherwise
-                    return
-            end
+        peakDirToPlot = h.params.actualParams.peakDirection2;
+        switch peakDirToPlot % converting to column indices for old code
+            case -1 % negative
+                peakDirToPlot = 1;
+            case 0 % absolute
+                peakDirToPlot = 2;
+            case 1 % positive
+                peakDirToPlot = 3;
+            otherwise
+                peakDirToPlot = 1;
         end
     catch ME
-        axes(targetPlot);
-        xlabel('');
-        ylabel('');
-        cla;
-        traceDisplay = h.ui.traceDisplay;
-        axes(traceDisplay);
-        return
+        peakDirToPlot = 1;
+        h.params.actualParams.peakDirection2 = peakDirToPlot;
+    end
+
+    switch signal2Type % i, V, F
+        % Cf.
+        % resultsTemp: VRec (i.e. VRec1, but mind the variable name)
+        % resultsTemp2: VRec2
+        % resultsTemp3: dF/F (i guess the code was meant for simultaneous two-channel F recording
+        %%% lol wtf fml
+        case 1
+            if isempty(resultsTemp2Grp.groups)
+                resultsToDisplay = resultsTemp2; % VRec2 (NOT resultsTemp: VRec (i.e. VRec1)
+                groupedFlag = 0;
+                dataX = 1:length(resultsToDisplay.sweeps); % plot by sweeps
+                xlabel('Sweep #');
+            else
+                resultsToDisplay = resultsTemp2Grp;
+                groupedFlag = 1;
+                dataX = 1:length(resultsToDisplay.groups); % plot by groups
+                xlabel('Group #');
+            end
+        case 2
+            if isempty(resultsTemp2Grp.groups)
+                resultsToDisplay = results2Temp; % VRec2
+                groupedFlag = 0;
+                dataX = 1:length(resultsToDisplay.sweeps); % plot by sweeps
+                xlabel('Sweep #');
+            else
+                resultsToDisplay = resultsTemp2Grp;
+                groupedFlag = 1;
+                dataX = 1:length(resultsToDisplay.groups); % plot by groups
+                xlabel('Group #');
+            end
+        case 3
+            if isempty(resultsTemp2Grp.groups)
+                resultsToDisplay = resultsTemp3; % dF/F
+                groupedFlag = 0;
+                dataX = 1:length(resultsToDisplay.sweeps); % plot by sweeps
+                xlabel('Sweep #');
+            else
+                resultsToDisplay = resultsTemp3Grp;
+                groupedFlag = 1;
+                dataX = 1:length(resultsToDisplay.groups); % plot by groups
+                xlabel('Group #');
+            end
+        otherwise
     end
 
     try
-        dataY = dataY(winToPlot, :); % analysis window 1
-        dataYNew = nan(length(dataY), 1); % initialize
+
         switch analysisType2Idx
             case 2 % peak, area, ...
+                dataY = resultsToDisplay.peak;
+                dataY = dataY(winToPlot, :); % analysis window 1
+                dataYNew = nan(length(dataY), 1); % initialize
                 for i = 1:length(dataY)
                     dataYi = dataY{i}; % current sweep/group
                     if isempty(dataYi)
@@ -9856,7 +9861,20 @@ try
                     end
                     dataYNew(i) = dataYi; % update
                 end
+                switch signal1Type % i, V, F
+                    case 1
+                        ylabel('PSC (pA)'); % although it might not actually be PSC...
+                    case 2
+                        ylabel('PSP (mV)'); % although it might not actually be PSP...
+                    case 3 % should be irrelevant here
+                        ylabel('dF/F');
+                    otherwise
+                        ylabel('');
+                end
             case 3 % events
+                dataY = resultsToDisplay.peak;
+                dataY = dataY(winToPlot, :); % analysis window 1
+                dataYNew = nan(length(dataY), 1); % initialize
                 for i = 1:length(dataY)
                     dataYi = dataY{i}; % current sweep/group
                     if isempty(dataYi)
@@ -9866,7 +9884,11 @@ try
                     end
                     dataYNew(i) = dataYi; % update
                 end
+                ylabel('No. of Events'); % see above for default
             case 4 % AP kinetics
+                dataY = resultsToDisplay.peak;
+                dataY = dataY(winToPlot, :); % analysis window 1
+                dataYNew = nan(length(dataY), 1); % initialize
                 for i = 1:length(dataY)
                     dataYi = dataY{i}; % current sweep/group
                     if isempty(dataYi)
@@ -9876,133 +9898,64 @@ try
                     end
                     dataYNew(i) = dataYi; % update
                 end
+                ylabel('AP Threshold (mV)'); % see above for default
             otherwise
-                return
+                %return
         end
         dataY = dataYNew; % update
-    catch ME
-        axes(targetPlot);
-        xlabel('');
-        ylabel('');
-        cla;
-        traceDisplay = h.ui.traceDisplay;
-        axes(traceDisplay);
-        return
-    end
 
-    try
         axes(targetPlot);
         hold on;
         color = [0, 0.5, 0];
         targetPlot = displayResults(targetPlot, dataX, dataY, color);
-        set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
         hold off;
+        set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
+        %set(gca, 'ylim', [0, nanmax(dataY) + 0.2*nanmax(dataY)]);
+        try
+            if nanmin(dataY) < 0
+                if nanmax(dataY) < 0
+                    set(gca, 'ylim', [1.2*nanmin(dataY), 0]);
+                else
+                    set(gca, 'ylim', [1.2*nanmin(dataY), 1.2*nanmax(dataY)]);
+                end
+            else
+                set(gca, 'ylim', [0, 1.2*nanmax(dataY)]);
+            end
+        catch ME
+        end
+        set(gca, 'xminortick', 'on', 'yminortick', 'on');
+
+        h.ui.analysisPlot2 = targetPlot;
+        params.resultsPlot2YRange = targetPlot.YLim;
+        h.ui.analysisPlot2Menu1.Value = 3; % signal 2
+        h.ui.analysisPlot2Menu2.Value = 3; % window 2
+        %h.ui.analysisPlot2Menu3.Value = 1; % results - will update later
+        %h.ui.analysisPlot2Menu4.Value = 3; % by group
+        h.ui.analysisPlot2Menu4.Value = groupedFlag + 2; % che pazzia
+
+        traceDisplay = h.ui.traceDisplay;
+        axes(traceDisplay);
+
     catch ME
+        targetPlot = h.ui.analysisPlot2; % plot 2
         axes(targetPlot);
         xlabel('');
         ylabel('');
         cla;
         traceDisplay = h.ui.traceDisplay;
         axes(traceDisplay);
-        return
+        %return
     end
-
-    switch analysisType2Idx
-        case 2 % peak, area, ...
-            switch signal1Type % i, V, F
-                case 1
-                    ylabel('PSC (pA)'); % although it might not actually be PSC...
-                case 2
-                    ylabel('PSP (mV)'); % although it might not actually be PSP...
-                case 3 % should be irrelevant here
-                    ylabel('dF/F');
-                otherwise
-                    ylabel('Value');
-            end
-        case 3 % events
-            ylabel('No. of Events'); % see above for default
-        case 4 % AP kinetics
-            ylabel('AP Threshold (mV)'); % see above for default
-        otherwise
-            return
-    end
-
-    %{
-    dataX = 1:length(resultsTemp3Grp.groups); % group number - will plot by groups
-    dataY = resultsTemp3Grp.peak; % grouped results, peak
-    dataY = dataY(winToPlot, :); % analysis window 2
-    dataYNew = nan(length(dataY), 1); % initialize
-    %%%
-    %%%%%%%
-    % data grouping not fucking working properly - why???
-    %%%%%%% the fuck happened here? was it fixed? (2022-05-03)
-    for i = 1:length(dataY)
-        dataYi = dataY{i}; % current sweep/group
-        if isempty(dataYi)
-            dataYi = NaN;
-        else
-            dataYi = dataYi(peakDirToPlot);
-        end
-        dataYNew(i) = dataYi; % update
-    end
-    dataY = dataYNew; % update
-    %}
-
-    %{
-    axes(targetPlot);
-    hold on;
-    color = [0, 0.5, 0];
-    targetPlot = displayResults(targetPlot, dataX, dataY, color);
-    set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
-    hold off;
-    xlabel('Group #');
-    %}
-
-    %ylabel('dF/F');
-
-    %{
-    switch signal2Type % i, V, F
-        case 1 % should be irrelevant here
-            ylabel('PSC (pA)'); % although it might not actually be PSC...
-        case 2 % should be irrelevant here
-            ylabel('PSP (mV)'); % although it might not actually be PSP...
-        case 3 % should be irrelevant here
-            ylabel('dF/F');
-        otherwise
-            ylabel('Value');
-    end
-    %}
-    %ylabel('dF/F');
-    %xticks(0:5:10000);
-    %{
-    if max(dataY) > 4
-        ylim([-0.5, max(dataY) + 0.5]);
-        yticks(-10:1:100);
-    else
-        ylim([-0.5, 4.5]);
-        yticks(-10:1:100);
-    end
-    %}
-    set(gca, 'xminortick', 'on', 'yminortick', 'on');
-    h.ui.analysisPlot2 = targetPlot;
-    params.resultsPlot2YRange = targetPlot.YLim;
-    h.ui.analysisPlot2Menu1.Value = 3; % signal 2
-    h.ui.analysisPlot2Menu2.Value = 3; % window 2
-    %h.ui.analysisPlot2Menu3.Value = 1; % results - will update later
-    %h.ui.analysisPlot2Menu4.Value = 3; % by group
-    h.ui.analysisPlot2Menu4.Value = groupedFlag + 2; % che pazzia
-    
-    traceDisplay = h.ui.traceDisplay;
-    axes(traceDisplay);
 
 catch ME
+    targetPlot = h.ui.analysisPlot2; % plot 2
     axes(targetPlot);
     xlabel('');
     ylabel('');
     cla;
     traceDisplay = h.ui.traceDisplay;
     axes(traceDisplay);
-    return
+    %return
 end
 
 % which results to plot
@@ -10012,32 +9965,35 @@ try
         case 2 % peak/area/mean
             switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
                 case 1 % unselected
-                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
                 case 2 % window 1
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
                     h.ui.analysisPlot1Menu3.Value = 2; % default to peak
                 case 3 % window 2
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot1Menu3.Value = 1;
             end
         case 3 % threshold detection
             switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
                 case 1 % unselected
-                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
                 case 2 % window 1
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
                     h.ui.analysisPlot1Menu3.Value = 2; % default to event count
                 case 3 % window 2
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot1Menu3.Value = 1;
             end
         case 4 % waveform
             switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
                 case 1 % unselected
-                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
                 case 2 % window 1
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
                     h.ui.analysisPlot1Menu3.Value = 2; % default to ap threshold
                 case 3 % window 2
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot1Menu3.Value = 1;
             end
     end
 catch ME
@@ -10049,9 +10005,10 @@ try
         case 2 % peak/area/mean
             switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
                 case 1 % unselected
-                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
                 case 2 % window 1
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot2Menu3.Value = 1;
                 case 3 % window 2
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
                     h.ui.analysisPlot2Menu3.Value = 2; % default to peak
@@ -10059,9 +10016,10 @@ try
         case 3 % threshold detection
             switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
                 case 1 % unselected
-                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
                 case 2 % window 1
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot2Menu3.Value = 1;
                 case 3 % window 2
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
                     h.ui.analysisPlot2Menu3.Value = 2; % default to event count
@@ -10069,9 +10027,10 @@ try
         case 4 % waveform
             switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
                 case 1 % unselected
-                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
                 case 2 % window 1
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot2Menu3.Value = 1;
                 case 3 % window 2
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
                     h.ui.analysisPlot2Menu3.Value = 2; % default to ap threshold
@@ -10079,69 +10038,6 @@ try
     end
 catch ME
 end
-
-% set defaults again
-
-%{
-% display results 1
-targetPlot = h.ui.analysisPlot1;
-tempResultsOrigin = resultsTemp.peak(1,:); % win1
-tempResults = [];
-for i = 1:length(tempResultsOrigin)
-    tempResultsEntry = tempResultsOrigin{i};
-    tempResultsEntry = tempResultsEntry(3); %%% neg abs pos
-    tempResults = [tempResults, tempResultsEntry];
-end
-axes(targetPlot);
-hold on;
-scatter(resultsTemp.sweeps, tempResults, 12, 'filled', 'markerfacecolor', 'k'); % 12 is markersize
-hold off;
-h.ui.analysisPlot1 = targetPlot;
-
-% display results 2
-targetPlot = h.ui.analysisPlot2;
-tempResultsOrigin = resultsTemp2.peak(2,:); % win2
-tempResults = [];
-for i = 1:length(tempResultsOrigin)
-    tempResultsEntry = tempResultsOrigin{i};
-    tempResultsEntry = tempResultsEntry(3); %%% neg abs pos
-    tempResults = [tempResults, tempResultsEntry];
-end
-axes(targetPlot);
-hold on;
-scatter(resultsTemp2.sweeps, tempResults, 12, 'filled', 'markerfacecolor', 'k'); % 12 is markersize
-hold off;
-h.ui.analysisPlot2 = targetPlot;
-%}
-
-%{
-% save
-resultsTemp.analysisTypeIdx = analysisTypeIdx;
-resultsCurrentExp.VRec.sweepResults = resultsTemp;
-resultsCurrentExp.VRec.groupResults = resultsTempGrp; 
-results{expIdx} = resultsCurrentExp;
-try
-    if signal2Type ~= 3 % i, V, F
-        resultsTemp2.analysisTypeIdx = analysisTypeIdx;
-        resultsCurrentExp.VRec2.sweepResults = resultsTemp2;
-        resultsCurrentExp.VRec2.groupResults = resultsTemp2Grp;
-        results{expIdx} = resultsCurrentExp;
-    else
-        resultsCurrentExp.VRec2 = struct();
-        results{expIdx} = resultsCurrentExp;
-    end
-catch ME
-end
-try
-    resultsTemp3.analysisTypeIdx = analysisTypeIdx;
-    resultsCurrentExp.dff.sweepResults = resultsTemp3;
-    resultsCurrentExp.dff.groupResults = resultsTemp3Grp;
-    results{expIdx} = resultsCurrentExp;
-catch ME
-end
-h.params = params;
-h.results = results;
-%}
 
 traceDisplay = h.ui.traceDisplay;
 axes(traceDisplay);
@@ -13215,31 +13111,37 @@ try
             switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
                 case 1 % unselected
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot1Menu3.Value = 1;
                 case 2 % window 1
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
                     h.ui.analysisPlot1Menu3.Value = 2; % default to peak
                 case 3 % window 2
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot1Menu3.Value = 1;
             end
         case 3 % threshold detection
             switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
                 case 1 % unselected
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot1Menu3.Value = 1;
                 case 2 % window 1
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
                     h.ui.analysisPlot1Menu3.Value = 2; % default to event count
                 case 3 % window 2
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot1Menu3.Value = 1;
             end
         case 4 % waveform
             switch h.ui.analysisPlot1Menu2.Value % plot 1, window number
                 case 1 % unselected
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot1Menu3.Value = 1;
                 case 2 % window 1
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
                     h.ui.analysisPlot1Menu3.Value = 2; % default to ap threshold
                 case 3 % window 2
                     h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot1Menu3.Value = 1;
             end
     end
 catch ME
@@ -13251,8 +13153,10 @@ try
             switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
                 case 1 % unselected
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot2Menu3.Value = 1;
                 case 2 % window 1
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot2Menu3.Value = 1;
                 case 3 % window 2
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
                     h.ui.analysisPlot2Menu3.Value = 2; % default to peak
@@ -13261,8 +13165,10 @@ try
             switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
                 case 1 % unselected
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot2Menu3.Value = 1;
                 case 2 % window 1
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot2Menu3.Value = 1;
                 case 3 % window 2
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
                     h.ui.analysisPlot2Menu3.Value = 2; % default to event count
@@ -13271,8 +13177,10 @@ try
             switch h.ui.analysisPlot2Menu2.Value % plot 1, window number
                 case 1 % unselected
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot2Menu3.Value = 1;
                 case 2 % window 1
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3; % to default
+                    h.ui.analysisPlot2Menu3.Value = 1;
                 case 3 % window 2
                     h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
                     h.ui.analysisPlot2Menu3.Value = 2; % default to ap threshold
@@ -15449,6 +15357,266 @@ guidata(src, h);
 end
 
 
+function analysisPlotUpdateCall11(src, ~) % menu 1; plot 1
+% choose results type, then invoke analysis plot update
+
+% load
+h = guidata(src);
+
+% results type %%% LOLOL
+inputSrc = h.ui.analysisPlot1Menu3;
+inputStr = inputSrc.String;
+inputVal = inputSrc.Value;
+inputStr = inputStr{inputVal};
+if strcmp(inputStr, 'Peak')
+    inputIdx = 1;
+elseif strcmp(inputStr, 'Area')
+    inputIdx = 2;
+elseif strcmp(inputStr, 'Mean')
+    inputIdx = 3;
+elseif strcmp(inputStr, 'Time of Peak')
+    inputIdx = 4;
+elseif strcmp(inputStr, 'Rise (time)')
+    inputIdx = 5;
+elseif strcmp(inputStr, 'Decay (time)')
+    inputIdx = 6;
+elseif strcmp(inputStr, 'Rise (slope)')
+    inputIdx = 7;
+elseif strcmp(inputStr, 'Decay (slope)')
+    inputIdx = 8;
+elseif strcmp(inputStr, 'No. of Events')
+    inputIdx = 11;
+elseif strcmp(inputStr, 'Event Peak Value')
+    inputIdx = 12;
+elseif strcmp(inputStr, 'Event Amplitude')
+    inputIdx = 13;
+elseif strcmp(inputStr, 'Event Time of Peak')
+    inputIdx = 14;
+elseif strcmp(inputStr, 'Event Baseline')
+    inputIdx = 15;
+elseif strcmp(inputStr, 'AP Threshold')
+    inputIdx = 21;
+elseif strcmp(inputStr, 'AP Amplitude')
+    inputIdx = 22;
+elseif strcmp(inputStr, 'AP Time of Peak')
+    inputIdx = 23;
+elseif strcmp(inputStr, 'AP Half-width')
+    inputIdx = 24;
+elseif strcmp(inputStr, 'Max Depol')
+    inputIdx = 25;
+elseif strcmp(inputStr, 'Max Repol')
+    inputIdx = 26;
+elseif strcmp(inputStr, 'RMP')
+    inputIdx = 27;
+else
+    inputIdx = 0;
+end
+    
+% do display
+plotIdx = 1;
+h = analysisPlotUpdateNew(h, inputIdx, plotIdx);
+
+% save
+guidata(src, h);
+
+end
+
+
+function analysisPlotUpdateCall12(src, ~) % menu 1; plot 2
+% choose results type, then invoke analysis plot update
+
+% load
+h = guidata(src);
+
+% results type % LOLOL
+inputSrc = h.ui.analysisPlot2Menu3;
+inputStr = inputSrc.String;
+inputVal = inputSrc.Value;
+inputStr = inputStr{inputVal};
+if strcmp(inputStr, 'Peak')
+    inputIdx = 1;
+elseif strcmp(inputStr, 'Area')
+    inputIdx = 2;
+elseif strcmp(inputStr, 'Mean')
+    inputIdx = 3;
+elseif strcmp(inputStr, 'Time of Peak')
+    inputIdx = 4;
+elseif strcmp(inputStr, 'Rise (time)')
+    inputIdx = 5;
+elseif strcmp(inputStr, 'Decay (time)')
+    inputIdx = 6;
+elseif strcmp(inputStr, 'Rise (slope)')
+    inputIdx = 7;
+elseif strcmp(inputStr, 'Decay (slope)')
+    inputIdx = 8;
+elseif strcmp(inputStr, 'No. of Events')
+    inputIdx = 11;
+elseif strcmp(inputStr, 'Event Peak Value')
+    inputIdx = 12;
+elseif strcmp(inputStr, 'Event Amplitude')
+    inputIdx = 13;
+elseif strcmp(inputStr, 'Event Time of Peak')
+    inputIdx = 14;
+elseif strcmp(inputStr, 'Event Baseline')
+    inputIdx = 15;
+elseif strcmp(inputStr, 'AP Threshold')
+    inputIdx = 21;
+elseif strcmp(inputStr, 'AP Amplitude')
+    inputIdx = 22;
+elseif strcmp(inputStr, 'AP Time of Peak')
+    inputIdx = 23;
+elseif strcmp(inputStr, 'AP Half-width')
+    inputIdx = 24;
+elseif strcmp(inputStr, 'Max Depol')
+    inputIdx = 25;
+elseif strcmp(inputStr, 'Max Repol')
+    inputIdx = 26;
+elseif strcmp(inputStr, 'RMP')
+    inputIdx = 27;
+else
+    inputIdx = 0;
+end
+    
+% do display
+plotIdx = 2;
+h = analysisPlotUpdateNew(h, inputIdx, plotIdx);
+
+% save
+guidata(src, h);
+
+end
+
+
+function analysisPlotUpdateCall21(src, ~) % menu 2; plot 1
+% choose results type, then invoke analysis plot update
+
+% load
+h = guidata(src);
+
+% results type %%% LOLOL
+inputSrc = h.ui.analysisPlot1Menu3;
+inputStr = inputSrc.String;
+inputVal = inputSrc.Value;
+inputStr = inputStr{inputVal};
+if strcmp(inputStr, 'Peak')
+    inputIdx = 1;
+elseif strcmp(inputStr, 'Area')
+    inputIdx = 2;
+elseif strcmp(inputStr, 'Mean')
+    inputIdx = 3;
+elseif strcmp(inputStr, 'Time of Peak')
+    inputIdx = 4;
+elseif strcmp(inputStr, 'Rise (time)')
+    inputIdx = 5;
+elseif strcmp(inputStr, 'Decay (time)')
+    inputIdx = 6;
+elseif strcmp(inputStr, 'Rise (slope)')
+    inputIdx = 7;
+elseif strcmp(inputStr, 'Decay (slope)')
+    inputIdx = 8;
+elseif strcmp(inputStr, 'No. of Events')
+    inputIdx = 11;
+elseif strcmp(inputStr, 'Event Peak Value')
+    inputIdx = 12;
+elseif strcmp(inputStr, 'Event Amplitude')
+    inputIdx = 13;
+elseif strcmp(inputStr, 'Event Time of Peak')
+    inputIdx = 14;
+elseif strcmp(inputStr, 'Event Baseline')
+    inputIdx = 15;
+elseif strcmp(inputStr, 'AP Threshold')
+    inputIdx = 21;
+elseif strcmp(inputStr, 'AP Amplitude')
+    inputIdx = 22;
+elseif strcmp(inputStr, 'AP Time of Peak')
+    inputIdx = 23;
+elseif strcmp(inputStr, 'AP Half-width')
+    inputIdx = 24;
+elseif strcmp(inputStr, 'Max Depol')
+    inputIdx = 25;
+elseif strcmp(inputStr, 'Max Repol')
+    inputIdx = 26;
+elseif strcmp(inputStr, 'RMP')
+    inputIdx = 27;
+else
+    inputIdx = 0;
+end
+    
+% do display
+plotIdx = 1;
+h = analysisPlotUpdateNew(h, inputIdx, plotIdx);
+
+% save
+guidata(src, h);
+
+end
+
+
+function analysisPlotUpdateCall22(src, ~) % menu 2; plot 2
+% choose results type, then invoke analysis plot update
+
+% load
+h = guidata(src);
+
+% results type % LOLOL
+inputSrc = h.ui.analysisPlot2Menu3;
+inputStr = inputSrc.String;
+inputVal = inputSrc.Value;
+inputStr = inputStr{inputVal};
+if strcmp(inputStr, 'Peak')
+    inputIdx = 1;
+elseif strcmp(inputStr, 'Area')
+    inputIdx = 2;
+elseif strcmp(inputStr, 'Mean')
+    inputIdx = 3;
+elseif strcmp(inputStr, 'Time of Peak')
+    inputIdx = 4;
+elseif strcmp(inputStr, 'Rise (time)')
+    inputIdx = 5;
+elseif strcmp(inputStr, 'Decay (time)')
+    inputIdx = 6;
+elseif strcmp(inputStr, 'Rise (slope)')
+    inputIdx = 7;
+elseif strcmp(inputStr, 'Decay (slope)')
+    inputIdx = 8;
+elseif strcmp(inputStr, 'No. of Events')
+    inputIdx = 11;
+elseif strcmp(inputStr, 'Event Peak Value')
+    inputIdx = 12;
+elseif strcmp(inputStr, 'Event Amplitude')
+    inputIdx = 13;
+elseif strcmp(inputStr, 'Event Time of Peak')
+    inputIdx = 14;
+elseif strcmp(inputStr, 'Event Baseline')
+    inputIdx = 15;
+elseif strcmp(inputStr, 'AP Threshold')
+    inputIdx = 21;
+elseif strcmp(inputStr, 'AP Amplitude')
+    inputIdx = 22;
+elseif strcmp(inputStr, 'AP Time of Peak')
+    inputIdx = 23;
+elseif strcmp(inputStr, 'AP Half-width')
+    inputIdx = 24;
+elseif strcmp(inputStr, 'Max Depol')
+    inputIdx = 25;
+elseif strcmp(inputStr, 'Max Repol')
+    inputIdx = 26;
+elseif strcmp(inputStr, 'RMP')
+    inputIdx = 27;
+else
+    inputIdx = 0;
+end
+    
+% do display
+plotIdx = 2;
+h = analysisPlotUpdateNew(h, inputIdx, plotIdx);
+
+% save
+guidata(src, h);
+
+end
+
+
 function analysisPlotUpdateCall31(src, ~) % menu 3; plot 1
 % choose results type, then invoke analysis plot update
 
@@ -15502,7 +15670,7 @@ else
 end
     
 % do display
-plotIdx = 1; % plot 2
+plotIdx = 1;
 h = analysisPlotUpdateNew(h, inputIdx, plotIdx);
 
 % save
@@ -15517,7 +15685,7 @@ function analysisPlotUpdateCall32(src, ~) % menu 3; plot 2
 % load
 h = guidata(src);
 
-% results type
+% results type % LOLOL
 inputStr = src.String{src.Value};
 if strcmp(inputStr, 'Peak')
     inputIdx = 1;
@@ -15564,7 +15732,137 @@ else
 end
     
 % do display
-plotIdx = 2; % plot 2
+plotIdx = 2;
+h = analysisPlotUpdateNew(h, inputIdx, plotIdx);
+
+% save
+guidata(src, h);
+
+end
+
+
+function analysisPlotUpdateCall41(src, ~) % menu 4; plot 1
+% choose results type, then invoke analysis plot update
+
+% load
+h = guidata(src);
+
+% results type %%% LOLOL
+inputSrc = h.ui.analysisPlot1Menu3;
+inputStr = inputSrc.String;
+inputVal = inputSrc.Value;
+inputStr = inputStr{inputVal};
+if strcmp(inputStr, 'Peak')
+    inputIdx = 1;
+elseif strcmp(inputStr, 'Area')
+    inputIdx = 2;
+elseif strcmp(inputStr, 'Mean')
+    inputIdx = 3;
+elseif strcmp(inputStr, 'Time of Peak')
+    inputIdx = 4;
+elseif strcmp(inputStr, 'Rise (time)')
+    inputIdx = 5;
+elseif strcmp(inputStr, 'Decay (time)')
+    inputIdx = 6;
+elseif strcmp(inputStr, 'Rise (slope)')
+    inputIdx = 7;
+elseif strcmp(inputStr, 'Decay (slope)')
+    inputIdx = 8;
+elseif strcmp(inputStr, 'No. of Events')
+    inputIdx = 11;
+elseif strcmp(inputStr, 'Event Peak Value')
+    inputIdx = 12;
+elseif strcmp(inputStr, 'Event Amplitude')
+    inputIdx = 13;
+elseif strcmp(inputStr, 'Event Time of Peak')
+    inputIdx = 14;
+elseif strcmp(inputStr, 'Event Baseline')
+    inputIdx = 15;
+elseif strcmp(inputStr, 'AP Threshold')
+    inputIdx = 21;
+elseif strcmp(inputStr, 'AP Amplitude')
+    inputIdx = 22;
+elseif strcmp(inputStr, 'AP Time of Peak')
+    inputIdx = 23;
+elseif strcmp(inputStr, 'AP Half-width')
+    inputIdx = 24;
+elseif strcmp(inputStr, 'Max Depol')
+    inputIdx = 25;
+elseif strcmp(inputStr, 'Max Repol')
+    inputIdx = 26;
+elseif strcmp(inputStr, 'RMP')
+    inputIdx = 27;
+else
+    inputIdx = 0;
+end
+    
+% do display
+plotIdx = 1;
+h = analysisPlotUpdateNew(h, inputIdx, plotIdx);
+
+% save
+guidata(src, h);
+
+end
+
+
+function analysisPlotUpdateCall42(src, ~) % menu 4; plot 2
+% choose results type, then invoke analysis plot update
+
+% load
+h = guidata(src);
+
+% results type % LOLOL
+inputSrc = h.ui.analysisPlot2Menu3;
+inputStr = inputSrc.String;
+inputVal = inputSrc.Value;
+inputStr = inputStr{inputVal};
+if strcmp(inputStr, 'Peak')
+    inputIdx = 1;
+elseif strcmp(inputStr, 'Area')
+    inputIdx = 2;
+elseif strcmp(inputStr, 'Mean')
+    inputIdx = 3;
+elseif strcmp(inputStr, 'Time of Peak')
+    inputIdx = 4;
+elseif strcmp(inputStr, 'Rise (time)')
+    inputIdx = 5;
+elseif strcmp(inputStr, 'Decay (time)')
+    inputIdx = 6;
+elseif strcmp(inputStr, 'Rise (slope)')
+    inputIdx = 7;
+elseif strcmp(inputStr, 'Decay (slope)')
+    inputIdx = 8;
+elseif strcmp(inputStr, 'No. of Events')
+    inputIdx = 11;
+elseif strcmp(inputStr, 'Event Peak Value')
+    inputIdx = 12;
+elseif strcmp(inputStr, 'Event Amplitude')
+    inputIdx = 13;
+elseif strcmp(inputStr, 'Event Time of Peak')
+    inputIdx = 14;
+elseif strcmp(inputStr, 'Event Baseline')
+    inputIdx = 15;
+elseif strcmp(inputStr, 'AP Threshold')
+    inputIdx = 21;
+elseif strcmp(inputStr, 'AP Amplitude')
+    inputIdx = 22;
+elseif strcmp(inputStr, 'AP Time of Peak')
+    inputIdx = 23;
+elseif strcmp(inputStr, 'AP Half-width')
+    inputIdx = 24;
+elseif strcmp(inputStr, 'Max Depol')
+    inputIdx = 25;
+elseif strcmp(inputStr, 'Max Repol')
+    inputIdx = 26;
+elseif strcmp(inputStr, 'RMP')
+    inputIdx = 27;
+else
+    inputIdx = 0;
+end
+    
+% do display
+plotIdx = 2;
 h = analysisPlotUpdateNew(h, inputIdx, plotIdx);
 
 % save
@@ -15593,6 +15891,30 @@ elseif strcmp(inputStr, 'Rise (slope)')
     inputIdx = 7;
 elseif strcmp(inputStr, 'Decay (slope)')
     inputIdx = 8;
+elseif strcmp(inputStr, 'No. of Events')
+    inputIdx = 11;
+elseif strcmp(inputStr, 'Event Peak Value')
+    inputIdx = 12;
+elseif strcmp(inputStr, 'Event Amplitude')
+    inputIdx = 13;
+elseif strcmp(inputStr, 'Event Time of Peak')
+    inputIdx = 14;
+elseif strcmp(inputStr, 'Event Baseline')
+    inputIdx = 15;
+elseif strcmp(inputStr, 'AP Threshold')
+    inputIdx = 21;
+elseif strcmp(inputStr, 'AP Amplitude')
+    inputIdx = 22;
+elseif strcmp(inputStr, 'AP Time of Peak')
+    inputIdx = 23;
+elseif strcmp(inputStr, 'AP Half-width')
+    inputIdx = 24;
+elseif strcmp(inputStr, 'Max Depol')
+    inputIdx = 25;
+elseif strcmp(inputStr, 'Max Repol')
+    inputIdx = 26;
+elseif strcmp(inputStr, 'RMP')
+    inputIdx = 27;
 else
     inputIdx = 0;
 end
@@ -15603,7 +15925,7 @@ h = analysisPlotUpdateNew(h, inputIdx, plotIdx);
 end
 
 
-function h = analysisPlotUpdate(h)
+function h = analysisPlotUpdate(h) % FUBAR
 
 %{
 % load
@@ -15656,10 +15978,13 @@ try
     analysisPlot1 = h.ui.analysisPlot1;
     axes(analysisPlot1);
     cla;
+    xlabel('');
+    ylabel('');
     h.ui.analysisPlot1 = analysisPlot1;
+
     switch analysisPlot1Menu1 % signal
         case 1 % unselected - do nothing
-            return
+            %return
         case 2 % S1
             switch signal1Type % i, V, F
                 case 1
@@ -15691,24 +16016,27 @@ try
                     color = [0, 0, 0];
             end
     end
-    winToPlot = analysisPlot1Menu2 - 1; % let the try block take care of winToPlot == 0
-    axes(analysisPlot1);
-    xlabel('Sweep #');
+
     switch analysisPlot1Menu4 % plot by...
         case 1 % unselected - do nothing
-            return
+            %return
         case 2 % by sweep
             results1 = results1.sweepResults;
             dataX = 1:length(results1.sweeps); % sweep number
+            xlabel('Sweep #');
         case 3 % by group
             results1 = results1.groupResults;
             dataX = 1:length(results1.groups); % group number
+            xlabel('Group #');
     end
     
     %  organize data
+    winToPlot = analysisPlot1Menu2 - 1; % wtf is this inconsistency
     try
-        peakDirection = 2; % default to this in case it fails
+        %peakDirection = 2; % default to this in case it fails
         switch winToPlot
+            case 0
+                %return
             case 1 % win 1
                 peakDirectionWin = h.params.actualParams.peakDirection1;
             case 2 % win 2
@@ -15723,41 +16051,165 @@ try
                 peakDirection = 1;
         end
     catch ME
+        peakDirection = 1;
     end
-    switch h.ui.analysisType1.Value
-        case 2 % peak/area/mean
-            switch analysisPlot1Menu3 % which kind of results
-                case 2
-                    dataY = results1.peak;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-                case 3
-                    dataY = results1.area;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-                case 4
-                    dataY = results1.mean;
-                    resultsType = 1; % only one here
-                case 5
-                    dataY = results1.timeOfPeak;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-                case 6
-                    dataY = results1.riseTime;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-                case 7
-                    dataY = results1.decayTime;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-                case 8
-                    dataY = results1.riseSlope;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-                case 9
-                    dataY = results1.decaySlope;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+
+    %winToPlot = analysisPlot1Menu2 - 1; % fmfl
+    switch winToPlot
+        case 0
+            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3;
+            h.ui.analysisPlot1Menu3.Value = 1;
+        case 1
+            switch h.ui.analysisType1.Value
+                case 2 % peak/area/mean
+                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                    switch analysisPlot1Menu3 % which kind of results
+                        case 2
+                            dataY = results1.peak;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 3
+                            dataY = results1.area;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 4
+                            dataY = results1.mean;
+                            resultsType = 1; % only one here
+                        case 5
+                            dataY = results1.timeOfPeak;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 6
+                            dataY = results1.riseTime;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 7
+                            dataY = results1.decayTime;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 8
+                            dataY = results1.riseSlope;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 9
+                            dataY = results1.decaySlope;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        otherwise
+                            dataY = [];
+                            resultsType = 1; % whatever
+                    end
+                case 3 % event
+                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                    resultsType = 1;
+                    switch analysisPlot1Menu3 % which kind of results
+                        case 2
+                            dataY = results1.eventCount;
+                        case 3
+                            dataY = results1.eventPeakValue;
+                        case 4
+                            dataY = results1.eventAmplitude;
+                        case 5
+                            dataY = results1.eventTimeOfPeak;
+                        case 6
+                            dataY = results1.eventBaseline;
+                        otherwise
+                            dataY = [];
+                    end
+                case 4 % ap threshold
+                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                    resultsType = 1;
+                    switch analysisPlot1Menu3 % which kind of results
+                        case 2
+                            dataY = results1.apThreshold;
+                        case 3
+                            dataY = results1.apAmplitude;
+                        case 4
+                            dataY = results1.apTimeOfPeak;
+                        case 5
+                            dataY = results1.apHalfWidth;
+                        case 6
+                            dataY = results1.maxDepol;
+                        case 7
+                            dataY = results1.maxRepol;
+                        case 8
+                            dataY = results1.rmp;
+                        otherwise
+                            dataY = [];
+                    end
                 otherwise
-                    dataY = [];
-                    resultsType = 1; % whatever
             end
-        otherwise % other type of analysis - not implemented yet %%%
+        case 2
+            switch h.ui.analysisType2.Value
+                case 2 % peak/area/mean
+                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                    switch analysisPlot1Menu3 % which kind of results
+                        case 2
+                            dataY = results1.peak;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 3
+                            dataY = results1.area;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 4
+                            dataY = results1.mean;
+                            resultsType = 1; % only one here
+                        case 5
+                            dataY = results1.timeOfPeak;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 6
+                            dataY = results1.riseTime;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 7
+                            dataY = results1.decayTime;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 8
+                            dataY = results1.riseSlope;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 9
+                            dataY = results1.decaySlope;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        otherwise
+                            dataY = [];
+                            resultsType = 1; % whatever
+                    end
+                case 3 % event
+                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                    resultsType = 1;
+                    switch analysisPlot1Menu3 % which kind of results
+                        case 2
+                            dataY = results1.eventCount;
+                        case 3
+                            dataY = results1.eventPeakValue;
+                        case 4
+                            dataY = results1.eventAmplitude;
+                        case 5
+                            dataY = results1.eventTimeOfPeak;
+                        case 6
+                            dataY = results1.eventBaseline;
+                        otherwise
+                            dataY = [];
+                    end
+                case 4 % ap threshold
+                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                    resultsType = 1;
+                    switch analysisPlot1Menu3 % which kind of results
+                        case 2
+                            dataY = results1.apThreshold;
+                        case 3
+                            dataY = results1.apAmplitude;
+                        case 4
+                            dataY = results1.apTimeOfPeak;
+                        case 5
+                            dataY = results1.apHalfWidth;
+                        case 6
+                            dataY = results1.maxDepol;
+                        case 7
+                            dataY = results1.maxRepol;
+                        case 8
+                            dataY = results1.rmp;
+                        otherwise
+                            dataY = [];
+                    end
+                otherwise
+            end
+        otherwise
+            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3;
+            h.ui.analysisPlot1Menu3.Value = 1;
     end
-    
+       
     dataY = dataY(winToPlot, :); % analysis window 1
     dataYNew = nan(length(dataY), 1); % initialize
     for i = 1:length(dataY)
@@ -15770,16 +16222,79 @@ try
         dataYNew(i) = dataYi; % update
     end
     dataY = dataYNew; % update
+
     axes(analysisPlot1);
     cla;
     hold on;
     analysisPlot1 = displayResults(analysisPlot1, dataX, dataY, color);
     set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
+    %set(gca, 'ylim', [0, nanmax(dataY) + 0.2*nanmax(dataY)]);
+    try
+        if nanmin(dataY) < 0
+            if nanmax(dataY) < 0
+                set(gca, 'ylim', [1.2*nanmin(dataY), 0]);
+            else
+                set(gca, 'ylim', [1.2*nanmin(dataY), 1.2*nanmax(dataY)]);
+            end
+        else
+            set(gca, 'ylim', [0, 1.2*nanmax(dataY)]);
+        end
+    catch ME
+    end
+    set(gca, 'xminortick', 'on', 'yminortick', 'on');
     hold off;
-    inputIdx = analysisPlot1Menu3 - 1; % spaghetti
+
+    inputSrc = h.ui.analysisPlot1Menu3;
+    inputStr = inputSrc.String;
+    inputVal = inputSrc.Value;
+    inputStr = inputStr{inputVal};
+    if strcmp(inputStr, 'Peak')
+        inputIdx = 1;
+    elseif strcmp(inputStr, 'Area')
+        inputIdx = 2;
+    elseif strcmp(inputStr, 'Mean')
+        inputIdx = 3;
+    elseif strcmp(inputStr, 'Time of Peak')
+        inputIdx = 4;
+    elseif strcmp(inputStr, 'Rise (time)')
+        inputIdx = 5;
+    elseif strcmp(inputStr, 'Decay (time)')
+        inputIdx = 6;
+    elseif strcmp(inputStr, 'Rise (slope)')
+        inputIdx = 7;
+    elseif strcmp(inputStr, 'Decay (slope)')
+        inputIdx = 8;
+    elseif strcmp(inputStr, 'No. of Events')
+        inputIdx = 11;
+    elseif strcmp(inputStr, 'Event Peak Value')
+        inputIdx = 12;
+    elseif strcmp(inputStr, 'Event Amplitude')
+        inputIdx = 13;
+    elseif strcmp(inputStr, 'Event Time of Peak')
+        inputIdx = 14;
+    elseif strcmp(inputStr, 'Event Baseline')
+        inputIdx = 15;
+    elseif strcmp(inputStr, 'AP Threshold')
+        inputIdx = 21;
+    elseif strcmp(inputStr, 'AP Amplitude')
+        inputIdx = 22;
+    elseif strcmp(inputStr, 'AP Time of Peak')
+        inputIdx = 23;
+    elseif strcmp(inputStr, 'AP Half-width')
+        inputIdx = 24;
+    elseif strcmp(inputStr, 'Max Depol')
+        inputIdx = 25;
+    elseif strcmp(inputStr, 'Max Repol')
+        inputIdx = 26;
+    elseif strcmp(inputStr, 'RMP')
+        inputIdx = 27;
+    else
+        inputIdx = 0;
+    end
+
     switch analysisPlot1Menu1 % signal
         case 1 % unselected - do nothing
-            return
+            %return
         case 2 % S1
             ylabel('');
             switch inputIdx
@@ -15792,7 +16307,7 @@ try
                         case 3
                             ylabel('dF/F');
                         otherwise
-                            ylabel('Value');
+                            ylabel('Peak');
                     end
                 case 2
                     switch signal1Type % i, V, F
@@ -15803,7 +16318,7 @@ try
                         case 3
                             ylabel('Area ((dF/F)*ms)');
                         otherwise
-                            ylabel('Value');
+                            ylabel('Area');
                     end
                 case 3
                     switch signal1Type % i, V, F
@@ -15814,63 +16329,144 @@ try
                         case 3
                             ylabel('Mean (dF/F)');
                         otherwise
-                            ylabel('');
+                            ylabel('Mean');
                     end
                 case 4
                     ylabel('t of peak (ms)')
                 case 5
-                    ylabel('rise (ms)')
+                    ylabel('Rise time (ms)')
                 case 6
-                    ylabel('decay (ms)')
+                    ylabel('Decay time (ms)')
                 case 7
                     switch signal1Type % i, V, F
                         case 1
-                            ylabel('rise (pA/ms)');
+                            ylabel('Rise (pA/ms)');
                         case 2
-                            ylabel('rise (mV/ms)');
+                            ylabel('Rise (mV/ms)');
                         case 3
-                            ylabel('rise ((dF/F)/ms)');
+                            ylabel('Rise ((dF/F)/ms)');
                         otherwise
-                            ylabel('');
+                            ylabel('Rise slope');
                     end
                 case 8
                     switch signal1Type % i, V, F
                         case 1
-                            ylabel('decay (pA/ms)');
+                            ylabel('Decay (pA/ms)');
                         case 2
-                            ylabel('decay (mV/ms)');
+                            ylabel('Decay (mV/ms)');
                         case 3
-                            ylabel('decay ((dF/F)/ms)');
+                            ylabel('Decay ((dF/F)/ms)');
                         otherwise
-                            ylabel('');
+                            ylabel('Decay slope');
                     end
+                case 11
+                    ylabel('No. of Events');
+                case 12
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Event Peak (pA)');
+                        case 2
+                            ylabel('Event Peak (mV)');
+                        case 3
+                            ylabel('Event Peak');
+                        otherwise
+                            ylabel('Event Peak');
+                    end
+                case 13
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Event Amplitude (pA)');
+                        case 2
+                            ylabel('Event Amplitude (mV)');
+                        case 3
+                            ylabel('Event Amplitude');
+                        otherwise
+                            ylabel('Event Amplitude');
+                    end
+                case 14
+                    ylabel('Time of Peak (ms)');
+                case 15
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Baseline (pA)');
+                        case 2
+                            ylabel('Baseline (mV)');
+                        case 3
+                            ylabel('Baseline');
+                        otherwise
+                            ylabel('Amplitude');
+                    end
+                case 21
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Threshold i (pA)');
+                        case 2
+                            ylabel('AP Threshold (mV)');
+                        case 3
+                            ylabel('Threshold (dF/F)');
+                        otherwise
+                            ylabel('Threshold');
+                    end
+                case 22
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Amplitude (pA)');
+                        case 2
+                            ylabel('AP Amplitude (mV)');
+                        case 3
+                            ylabel('Amplitude (dF/F)');
+                        otherwise
+                            ylabel('Amplitude');
+                    end
+                case 23
+                    ylabel('Time of Peak (ms)');
+                case 24
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Half-width (ms)');
+                        case 2
+                            ylabel('AP Half-width (ms)');
+                        case 3
+                            ylabel('Half-width (ms)');
+                        otherwise
+                            ylabel('Half-width (ms)');
+                    end
+                case 25
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Max di/dt (pA/ms)');
+                        case 2
+                            ylabel('Max Depol (V/s)');
+                        case 3
+                            ylabel('Max derivative');
+                        otherwise
+                            ylabel('Max derivative');
+                    end
+                case 26
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Min di/dt (-pA/ms)');
+                        case 2
+                            ylabel('Max Repol (-V/s)');
+                        case 3
+                            ylabel('Min derivative (abs.)');
+                        otherwise
+                            ylabel('Min derivative (abs.)');
+                    end
+                case 27
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Baseline i (pA)');
+                        case 2
+                            ylabel('RMP (mV)');
+                        case 3
+                            ylabel('Baseline (dF/F)');
+                        otherwise
+                            ylabel('Baseline');
+                    end
+                otherwise
+                    ylabel('')
             end
-            %{
-                if nanmax(abs(dataY)) > 150 % arbitrary but reasonable display range beyond AP
-                    ylim([min(0, nanmin(dataY) - 5), max(0, nanmax(dataY) + 5)]);
-                    yticks(-1000000:10*round(nanmax(abs(dataY))/50):1000000);
-            %{
-                elseif nanmax((dataY)) > 40 && inputIdx == 1 % arbitrary but reasonable display range for peak PSP
-                    ylim([0, 40.5]);
-                    yticks(-1000:10:1000);
-            %}
-                elseif nanmax(abs(dataY)) > 40
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:10:1000);
-                elseif nanmax(abs(dataY)) > 10
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:5:1000);
-                elseif nanmax(abs(dataY)) > 5
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:1:1000);
-                elseif nanmax(abs(dataY)) < 1
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-100:0.1*max(abs(dataY)):100);
-                else
-                    ylim([0, 5.5]);
-                    yticks(-1000:2:1000);
-                end
-            %}
         case 3 % S2
             ylabel('');
             switch inputIdx % although it doesn't make much sense here...
@@ -15883,7 +16479,7 @@ try
                         case 3
                             ylabel('dF/F');
                         otherwise
-                            ylabel('Value');
+                            ylabel('Peak');
                     end
                 case 2
                     switch signal2Type % i, V, F
@@ -15894,7 +16490,7 @@ try
                         case 3
                             ylabel('Area ((dF/F)*ms)');
                         otherwise
-                            ylabel('Value');
+                            ylabel('Area');
                     end
                 case 3
                     switch signal2Type % i, V, F
@@ -15905,80 +16501,207 @@ try
                         case 3
                             ylabel('Mean (dF/F)');
                         otherwise
-                            ylabel('');
+                            ylabel('Mean');
                     end
                 case 4
                     ylabel('t of peak (ms)')
                 case 5
-                    ylabel('rise (ms)')
+                    ylabel('Rise time (ms)')
                 case 6
-                    ylabel('decay (ms)')
+                    ylabel('Decay time (ms)')
                 case 7
                     switch signal2Type % i, V, F
                         case 1
-                            ylabel('rise (pA/ms)');
+                            ylabel('Rise (pA/ms)');
                         case 2
-                            ylabel('rise (mV/ms)');
+                            ylabel('Rise (mV/ms)');
                         case 3
-                            ylabel('rise ((dF/F)/ms)');
+                            ylabel('Rise ((dF/F)/ms)');
                         otherwise
-                            ylabel('');
+                            ylabel('Rise');
                     end
                 case 8
                     switch signal2Type % i, V, F
                         case 1
-                            ylabel('decay (pA/ms)');
+                            ylabel('Decay (pA/ms)');
                         case 2
-                            ylabel('decay (mV/ms)');
+                            ylabel('Decay (mV/ms)');
                         case 3
-                            ylabel('decay ((dF/F)/ms)');
+                            ylabel('Decay ((dF/F)/ms)');
                         otherwise
-                            ylabel('');
+                            ylabel('Decay');
                     end
+                case 11
+                    ylabel('No. of Events');
+                case 12
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Event Peak (pA)');
+                        case 2
+                            ylabel('Event Peak (mV)');
+                        case 3
+                            ylabel('Event Peak');
+                        otherwise
+                            ylabel('Event Peak');
+                    end
+                case 13
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Event Amplitude (pA)');
+                        case 2
+                            ylabel('Event Amplitude (mV)');
+                        case 3
+                            ylabel('Event Amplitude');
+                        otherwise
+                            ylabel('Event Amplitude');
+                    end
+                case 14
+                    ylabel('Time of Peak (ms)');
+                case 15
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Baseline (pA)');
+                        case 2
+                            ylabel('Baseline (mV)');
+                        case 3
+                            ylabel('Baseline');
+                        otherwise
+                            ylabel('Amplitude');
+                    end
+                case 21
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Threshold i (pA)');
+                        case 2
+                            ylabel('AP Threshold (mV)');
+                        case 3
+                            ylabel('Threshold (dF/F)');
+                        otherwise
+                            ylabel('Threshold');
+                    end
+                case 22
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Amplitude (pA)');
+                        case 2
+                            ylabel('AP Amplitude (mV)');
+                        case 3
+                            ylabel('Amplitude (dF/F)');
+                        otherwise
+                            ylabel('Amplitude');
+                    end
+                case 23
+                    ylabel('Time of Peak (ms)');
+                case 24
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Half-width (ms)');
+                        case 2
+                            ylabel('AP Half-width (ms)');
+                        case 3
+                            ylabel('Half-width (ms)');
+                        otherwise
+                            ylabel('Half-width (ms)');
+                    end
+                case 25
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Max di/dt (pA/ms)');
+                        case 2
+                            ylabel('Max Depol (V/s)');
+                        case 3
+                            ylabel('Max derivative');
+                        otherwise
+                            ylabel('Max derivative');
+                    end
+                case 26
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Min di/dt (-pA/ms)');
+                        case 2
+                            ylabel('Max Repol (-V/s)');
+                        case 3
+                            ylabel('Min derivative (abs.)');
+                        otherwise
+                            ylabel('Min derivative (abs.)');
+                    end
+                case 27
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Baseline i (pA)');
+                        case 2
+                            ylabel('RMP (mV)');
+                        case 3
+                            ylabel('Baseline (dF/F)');
+                        otherwise
+                            ylabel('Baseline');
+                    end
+                otherwise
+                    ylabel('')
             end
-            %{
-                if nanmax(abs(dataY)) > 100
-                    ylim([[min(0, nanmin(dataY) - 5), max(0, nanmax(dataY) + 5)]]);
-                    yticks(-1000000:10*round(nanmax(abs(dataY))/50):1000000);
-                elseif nanmax(abs(dataY)) > 50
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:10:1000);
-                elseif nanmax(abs(dataY)) > 10
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-100:5:100);
-                elseif nanmax(abs(dataY)) > 4
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-10:1:10);
-                else
-                    ylim([min(-4.5, nanmin(dataY) - 0.5), max(4.5, nanmax(dataY) + 0.5)]);
-                    yticks(-10:1:100);
-                end
-            %}
     end
-    %xticks(0:5:10000);
-    set(gca, 'xminortick', 'on', 'yminortick', 'on');
-    switch analysisPlot1Menu4 % plot by...
-        case 1 % unselected - do nothing
-            return
-        case 2 % by sweep
-            xlabel('Sweep #');
-        case 3 % by group
-            xlabel('Group #');
-    end
+
     h.ui.analysisPlot1 = analysisPlot1;
     h.params.resultsPlot1YRange = analysisPlot1.YLim;
+
 catch ME
+
+    try
+        winToPlot = analysisPlot1Menu2 - 1; % fmfl
+        switch winToPlot
+            case 0
+                h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3;
+                h.ui.analysisPlot1Menu3.Value = 1;
+            case 1
+                switch h.ui.analysisType1.Value
+                    case 2 % peak/area/mean
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                        h.ui.analysisPlot1Menu3.Value = 1;
+                    case 3 % event
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                        h.ui.analysisPlot1Menu3.Value = 1;
+                    case 4 % ap threshold
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.Value = 1;
+                    otherwise
+                end
+            case 2
+                switch h.ui.analysisType2.Value
+                    case 2 % peak/area/mean
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                        h.ui.analysisPlot1Menu3.Value = 1;
+                    case 3 % event
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                        h.ui.analysisPlot1Menu3.Value = 1;
+                    case 4 % ap threshold
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.Value = 1;
+                    otherwise
+                end
+            otherwise
+                h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3;
+                h.ui.analysisPlot1Menu3.Value = 1;
+        end
+    catch ME
+    end
+
+    traceDisplay = h.ui.traceDisplay;
+    axes(traceDisplay);
 end
 
 %  plot 2
 try
+
     analysisPlot2 = h.ui.analysisPlot2;
     axes(analysisPlot2);
     cla;
+    xlabel('');
+    ylabel('');
     h.ui.analysisPlot2 = analysisPlot2;
+
     switch analysisPlot2Menu1 % signal
         case 1 % unselected - do nothing
-            return
+            %return
         case 2 % S1
             switch signal1Type % i, V, F
                 case 1
@@ -16010,24 +16733,27 @@ try
                     color = [0, 0, 0];
             end
     end
-    winToPlot = analysisPlot2Menu2 - 1; % let the try block take care of winToPlot == 0
-    axes(analysisPlot2);
-    xlabel('');
+
     switch analysisPlot2Menu4 % plot by...
         case 1 % unselected - do nothing
-            return
+            %return
         case 2 % by sweep
             results2 = results2.sweepResults;
             dataX = 1:length(results2.sweeps); % sweep number
+            xlabel('Sweep #');
         case 3 % by group
             results2 = results2.groupResults;
             dataX = 1:length(results2.groups); % group number
+            xlabel('Group #');
     end
 
     %  organize data
+    winToPlot = analysisPlot2Menu2 - 1; % wtf is this inconsistency
     try
-        peakDirection = 2; % default to this in case it fails
+        %peakDirection = 2; % default to this in case it fails
         switch winToPlot
+            case 0
+                %return
             case 1 % win 1
                 peakDirectionWin = h.params.actualParams.peakDirection1;
             case 2 % win 2
@@ -16042,41 +16768,166 @@ try
                 peakDirection = 1;
         end
     catch ME
+        peakDirection = 1;
     end
-    switch h.ui.analysisType2.Value
-        case 2 % peak/area/mean
-            switch analysisPlot2Menu3 % which kind of results
-                case 2
-                    dataY = results2.peak;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-                case 3
-                    dataY = results2.area;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-                case 4
-                    dataY = results2.mean;
-                    resultsType = 1; % only one here
-                case 5
-                    dataY = results2.timeOfPeak;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-                case 6
-                    dataY = results2.riseTime;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-                case 7
-                    dataY = results2.decayTime;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-                case 8
-                    dataY = results2.riseSlope;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-                case 9
-                    dataY = results2.decaySlope;
-                    resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+
+    %winToPlot = analysisPlot2Menu2 - 1; % fmfl
+    switch winToPlot
+        case 0
+            h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3;
+            h.ui.analysisPlot2Menu3.Value = 1;
+        case 1
+            switch h.ui.analysisType1.Value
+                case 2 % peak/area/mean
+                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                    switch analysisPlot2Menu3 % which kind of results
+                        case 2
+                            dataY = results2.peak;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 3
+                            dataY = results2.area;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 4
+                            dataY = results2.mean;
+                            resultsType = 1; % only one here
+                        case 5
+                            dataY = results2.timeOfPeak;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 6
+                            dataY = results2.riseTime;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 7
+                            dataY = results2.decayTime;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 8
+                            dataY = results2.riseSlope;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 9
+                            dataY = results2.decaySlope;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        otherwise
+                            dataY = [];
+                            resultsType = 1; % whatever
+                    end
+                case 3 % event
+                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
+                    resultsType = 1;
+                    switch analysisPlot2Menu3 % which kind of results
+                        case 2
+                            dataY = results2.eventCount;
+                        case 3
+                            dataY = results2.eventPeakValue;
+                        case 4
+                            dataY = results2.eventAmplitude;
+                        case 5
+                            dataY = results2.eventTimeOfPeak;
+                        case 6
+                            dataY = results2.eventBaseline;
+                        otherwise
+                            dataY = [];
+                    end
+                case 4 % ap threshold
+                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
+                    resultsType = 1;
+                    switch analysisPlot2Menu3 % which kind of results
+                        case 2
+                            dataY = results2.apThreshold;
+                        case 3
+                            dataY = results2.apAmplitude;
+                        case 4
+                            dataY = results2.apTimeOfPeak;
+                        case 5
+                            dataY = results2.apHalfWidth;
+                        case 6
+                            dataY = results2.maxDepol;
+                        case 7
+                            dataY = results2.maxRepol;
+                        case 8
+                            dataY = results2.rmp;
+                        otherwise
+                            dataY = [];
+                    end
                 otherwise
-                    dataY = [];
-                    resultsType = 1; % whatever
             end
-        otherwise % other type of analysis - not implemented yet %%%
+        case 2
+            switch h.ui.analysisType2.Value
+                case 2 % peak/area/mean
+                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                    switch analysisPlot2Menu3 % which kind of results
+                        case 2
+                            dataY = results2.peak;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 3
+                            dataY = results2.area;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 4
+                            dataY = results2.mean;
+                            resultsType = 1; % only one here
+                        case 5
+                            dataY = results2.timeOfPeak;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 6
+                            dataY = results2.riseTime;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 7
+                            dataY = results2.decayTime;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 8
+                            dataY = results2.riseSlope;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        case 9
+                            dataY = results2.decaySlope;
+                            resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                        otherwise
+                            dataY = [];
+                            resultsType = 1; % whatever
+                    end
+                case 3 % event
+                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
+                    resultsType = 1;
+                    switch analysisPlot2Menu3 % which kind of results
+                        case 2
+                            dataY = results2.eventCount;
+                        case 3
+                            dataY = results2.eventPeakValue;
+                        case 4
+                            dataY = results2.eventAmplitude;
+                        case 5
+                            dataY = results2.eventTimeOfPeak;
+                        case 6
+                            dataY = results2.eventBaseline;
+                        otherwise
+                            dataY = [];
+                    end
+                case 4 % ap threshold
+                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
+                    resultsType = 1;
+                    switch analysisPlot2Menu3 % which kind of results
+                        case 2
+                            dataY = results2.apThreshold;
+                        case 3
+                            dataY = results2.apAmplitude;
+                        case 4
+                            dataY = results2.apTimeOfPeak;
+                        case 5
+                            dataY = results2.apHalfWidth;
+                        case 6
+                            dataY = results2.maxDepol;
+                        case 7
+                            dataY = results2.maxRepol;
+                        case 8
+                            dataY = results2.rmp;
+                        otherwise
+                            dataY = [];
+                    end
+                otherwise
+            end
+        otherwise
+            h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3;
+            h.ui.analysisPlot2Menu3.Value = 1;
     end
-    
+
+        
     dataY = dataY(winToPlot, :); % analysis window 2
     dataYNew = nan(length(dataY), 1); % initialize
     for i = 1:length(dataY)
@@ -16088,17 +16939,80 @@ try
         end
         dataYNew(i) = dataYi; % update
     end
+
     dataY = dataYNew; % update
     axes(analysisPlot2);
     cla;
     hold on;
     analysisPlot2 = displayResults(analysisPlot2, dataX, dataY, color);
     set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
+    %set(gca, 'ylim', [0, nanmax(dataY) + 0.2*nanmax(dataY)]);
+    try
+        if nanmin(dataY) < 0
+            if nanmax(dataY) < 0
+                set(gca, 'ylim', [1.2*nanmin(dataY), 0]);
+            else
+                set(gca, 'ylim', [1.2*nanmin(dataY), 1.2*nanmax(dataY)]);
+            end
+        else
+            set(gca, 'ylim', [0, 1.2*nanmax(dataY)]);
+        end
+    catch ME
+    end
+    set(gca, 'xminortick', 'on', 'yminortick', 'on');
     hold off;
-    inputIdx = analysisPlot2Menu3 - 1; % spaghetti
+    
+    inputSrc = h.ui.analysisPlot2Menu3;
+    inputStr = inputSrc.String;
+    inputVal = inputSrc.Value;
+    inputStr = inputStr{inputVal};
+    if strcmp(inputStr, 'Peak')
+        inputIdx = 1;
+    elseif strcmp(inputStr, 'Area')
+        inputIdx = 2;
+    elseif strcmp(inputStr, 'Mean')
+        inputIdx = 3;
+    elseif strcmp(inputStr, 'Time of Peak')
+        inputIdx = 4;
+    elseif strcmp(inputStr, 'Rise (time)')
+        inputIdx = 5;
+    elseif strcmp(inputStr, 'Decay (time)')
+        inputIdx = 6;
+    elseif strcmp(inputStr, 'Rise (slope)')
+        inputIdx = 7;
+    elseif strcmp(inputStr, 'Decay (slope)')
+        inputIdx = 8;
+    elseif strcmp(inputStr, 'No. of Events')
+        inputIdx = 11;
+    elseif strcmp(inputStr, 'Event Peak Value')
+        inputIdx = 12;
+    elseif strcmp(inputStr, 'Event Amplitude')
+        inputIdx = 13;
+    elseif strcmp(inputStr, 'Event Time of Peak')
+        inputIdx = 14;
+    elseif strcmp(inputStr, 'Event Baseline')
+        inputIdx = 15;
+    elseif strcmp(inputStr, 'AP Threshold')
+        inputIdx = 21;
+    elseif strcmp(inputStr, 'AP Amplitude')
+        inputIdx = 22;
+    elseif strcmp(inputStr, 'AP Time of Peak')
+        inputIdx = 23;
+    elseif strcmp(inputStr, 'AP Half-width')
+        inputIdx = 24;
+    elseif strcmp(inputStr, 'Max Depol')
+        inputIdx = 25;
+    elseif strcmp(inputStr, 'Max Repol')
+        inputIdx = 26;
+    elseif strcmp(inputStr, 'RMP')
+        inputIdx = 27;
+    else
+        inputIdx = 0;
+    end
+
     switch analysisPlot2Menu1 % signal
         case 1 % unselected - do nothing
-            return
+            %return
         case 2 % S1
             ylabel('');
             switch inputIdx
@@ -16111,7 +17025,7 @@ try
                         case 3
                             ylabel('dF/F');
                         otherwise
-                            ylabel('Value');
+                            ylabel('Peak');
                     end
                 case 2
                     switch signal1Type % i, V, F
@@ -16122,7 +17036,7 @@ try
                         case 3
                             ylabel('Area ((dF/F)*ms)');
                         otherwise
-                            ylabel('Value');
+                            ylabel('Area');
                     end
                 case 3
                     switch signal1Type % i, V, F
@@ -16133,63 +17047,144 @@ try
                         case 3
                             ylabel('Mean (dF/F)');
                         otherwise
-                            ylabel('');
+                            ylabel('Mean');
                     end
                 case 4
                     ylabel('t of peak (ms)')
                 case 5
-                    ylabel('rise (ms)')
+                    ylabel('Rise time (ms)')
                 case 6
-                    ylabel('decay (ms)')
+                    ylabel('Decay time (ms)')
                 case 7
                     switch signal1Type % i, V, F
                         case 1
-                            ylabel('rise (pA/ms)');
+                            ylabel('Rise (pA/ms)');
                         case 2
-                            ylabel('rise (mV/ms)');
+                            ylabel('Rise (mV/ms)');
                         case 3
-                            ylabel('rise ((dF/F)/ms)');
+                            ylabel('Rise ((dF/F)/ms)');
                         otherwise
-                            ylabel('');
+                            ylabel('Rise slope');
                     end
                 case 8
                     switch signal1Type % i, V, F
                         case 1
-                            ylabel('decay (pA/ms)');
+                            ylabel('Decay (pA/ms)');
                         case 2
-                            ylabel('decay (mV/ms)');
+                            ylabel('Decay (mV/ms)');
                         case 3
-                            ylabel('decay ((dF/F)/ms)');
+                            ylabel('Decay ((dF/F)/ms)');
                         otherwise
-                            ylabel('');
+                            ylabel('Decay slope');
                     end
+                case 11
+                    ylabel('No. of Events');
+                case 12
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Event Peak (pA)');
+                        case 2
+                            ylabel('Event Peak (mV)');
+                        case 3
+                            ylabel('Event Peak');
+                        otherwise
+                            ylabel('Event Peak');
+                    end
+                case 13
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Event Amplitude (pA)');
+                        case 2
+                            ylabel('Event Amplitude (mV)');
+                        case 3
+                            ylabel('Event Amplitude');
+                        otherwise
+                            ylabel('Event Amplitude');
+                    end
+                case 14
+                    ylabel('Time of Peak (ms)');
+                case 15
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Baseline (pA)');
+                        case 2
+                            ylabel('Baseline (mV)');
+                        case 3
+                            ylabel('Baseline');
+                        otherwise
+                            ylabel('Amplitude');
+                    end
+                case 21
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Threshold i (pA)');
+                        case 2
+                            ylabel('AP Threshold (mV)');
+                        case 3
+                            ylabel('Threshold (dF/F)');
+                        otherwise
+                            ylabel('Threshold');
+                    end
+                case 22
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Amplitude (pA)');
+                        case 2
+                            ylabel('AP Amplitude (mV)');
+                        case 3
+                            ylabel('Amplitude (dF/F)');
+                        otherwise
+                            ylabel('Amplitude');
+                    end
+                case 23
+                    ylabel('Time of Peak (ms)');
+                case 24
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Half-width (ms)');
+                        case 2
+                            ylabel('AP Half-width (ms)');
+                        case 3
+                            ylabel('Half-width (ms)');
+                        otherwise
+                            ylabel('Half-width (ms)');
+                    end
+                case 25
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Max di/dt (pA/ms)');
+                        case 2
+                            ylabel('Max Depol (V/s)');
+                        case 3
+                            ylabel('Max derivative');
+                        otherwise
+                            ylabel('Max derivative');
+                    end
+                case 26
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Min di/dt (-pA/ms)');
+                        case 2
+                            ylabel('Max Repol (-V/s)');
+                        case 3
+                            ylabel('Min derivative (abs.)');
+                        otherwise
+                            ylabel('Min derivative (abs.)');
+                    end
+                case 27
+                    switch signal1Type % i, V, F
+                        case 1
+                            ylabel('Baseline i (pA)');
+                        case 2
+                            ylabel('RMP (mV)');
+                        case 3
+                            ylabel('Baseline (dF/F)');
+                        otherwise
+                            ylabel('Baseline');
+                    end
+                otherwise
+                    ylabel('')
             end
-            %{
-                if nanmax(abs(dataY)) > 150 % arbitrary but reasonable display range beyond AP
-                    ylim([min(0, nanmin(dataY) - 5), max(0, nanmax(dataY) + 5)]);
-                    yticks(-1000000:10*round(nanmax(abs(dataY))/50):1000000);
-            %{
-                elseif nanmax((dataY)) > 40 && inputIdx == 1 % arbitrary but reasonable display range for peak PSP
-                    ylim([0, 40.5]);
-                    yticks(-1000:10:1000);
-            %}
-                elseif nanmax(abs(dataY)) > 40
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:10:1000);
-                elseif nanmax(abs(dataY)) > 10
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:5:1000);
-                elseif nanmax(abs(dataY)) > 5
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:1:1000);
-                elseif nanmax(abs(dataY)) < 1
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-100:0.1*max(abs(dataY)):100);
-                else
-                    ylim([0, 5.5]);
-                    yticks(-1000:2:1000);
-                end
-            %}
         case 3 % S2
             ylabel('');
             switch inputIdx % although it doesn't make much sense here...
@@ -16202,7 +17197,7 @@ try
                         case 3
                             ylabel('dF/F');
                         otherwise
-                            ylabel('Value');
+                            ylabel('Peak');
                     end
                 case 2
                     switch signal2Type % i, V, F
@@ -16213,7 +17208,7 @@ try
                         case 3
                             ylabel('Area ((dF/F)*ms)');
                         otherwise
-                            ylabel('Value');
+                            ylabel('Area');
                     end
                 case 3
                     switch signal2Type % i, V, F
@@ -16224,69 +17219,192 @@ try
                         case 3
                             ylabel('Mean (dF/F)');
                         otherwise
-                            ylabel('');
+                            ylabel('Mean');
                     end
                 case 4
                     ylabel('t of peak (ms)')
                 case 5
-                    ylabel('rise (ms)')
+                    ylabel('Rise time (ms)')
                 case 6
-                    ylabel('decay (ms)')
+                    ylabel('Decay time (ms)')
                 case 7
                     switch signal2Type % i, V, F
                         case 1
-                            ylabel('rise (pA/ms)');
+                            ylabel('Rise (pA/ms)');
                         case 2
-                            ylabel('rise (mV/ms)');
+                            ylabel('Rise (mV/ms)');
                         case 3
-                            ylabel('rise ((dF/F)/ms)');
+                            ylabel('Rise ((dF/F)/ms)');
                         otherwise
-                            ylabel('');
+                            ylabel('Rise');
                     end
                 case 8
                     switch signal2Type % i, V, F
                         case 1
-                            ylabel('decay (pA/ms)');
+                            ylabel('Decay (pA/ms)');
                         case 2
-                            ylabel('decay (mV/ms)');
+                            ylabel('Decay (mV/ms)');
                         case 3
-                            ylabel('decay ((dF/F)/ms)');
+                            ylabel('Decay ((dF/F)/ms)');
                         otherwise
-                            ylabel('');
+                            ylabel('Decay');
                     end
+                case 11
+                    ylabel('No. of Events');
+                case 12
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Event Peak (pA)');
+                        case 2
+                            ylabel('Event Peak (mV)');
+                        case 3
+                            ylabel('Event Peak');
+                        otherwise
+                            ylabel('Event Peak');
+                    end
+                case 13
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Event Amplitude (pA)');
+                        case 2
+                            ylabel('Event Amplitude (mV)');
+                        case 3
+                            ylabel('Event Amplitude');
+                        otherwise
+                            ylabel('Event Amplitude');
+                    end
+                case 14
+                    ylabel('Time of Peak (ms)');
+                case 15
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Baseline (pA)');
+                        case 2
+                            ylabel('Baseline (mV)');
+                        case 3
+                            ylabel('Baseline');
+                        otherwise
+                            ylabel('Amplitude');
+                    end
+                case 21
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Threshold i (pA)');
+                        case 2
+                            ylabel('AP Threshold (mV)');
+                        case 3
+                            ylabel('Threshold (dF/F)');
+                        otherwise
+                            ylabel('Threshold');
+                    end
+                case 22
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Amplitude (pA)');
+                        case 2
+                            ylabel('AP Amplitude (mV)');
+                        case 3
+                            ylabel('Amplitude (dF/F)');
+                        otherwise
+                            ylabel('Amplitude');
+                    end
+                case 23
+                    ylabel('Time of Peak (ms)');
+                case 24
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Half-width (ms)');
+                        case 2
+                            ylabel('AP Half-width (ms)');
+                        case 3
+                            ylabel('Half-width (ms)');
+                        otherwise
+                            ylabel('Half-width (ms)');
+                    end
+                case 25
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Max di/dt (pA/ms)');
+                        case 2
+                            ylabel('Max Depol (V/s)');
+                        case 3
+                            ylabel('Max derivative');
+                        otherwise
+                            ylabel('Max derivative');
+                    end
+                case 26
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Min di/dt (-pA/ms)');
+                        case 2
+                            ylabel('Max Repol (-V/s)');
+                        case 3
+                            ylabel('Min derivative (abs.)');
+                        otherwise
+                            ylabel('Min derivative (abs.)');
+                    end
+                case 27
+                    switch signal2Type % i, V, F
+                        case 1
+                            ylabel('Baseline i (pA)');
+                        case 2
+                            ylabel('RMP (mV)');
+                        case 3
+                            ylabel('Baseline (dF/F)');
+                        otherwise
+                            ylabel('Baseline');
+                    end
+                otherwise
+                    ylabel('')
             end
-            %{
-                if nanmax(abs(dataY)) > 100
-                    ylim([[min(0, nanmin(dataY) - 5), max(0, nanmax(dataY) + 5)]]);
-                    yticks(-1000000:10*round(nanmax(abs(dataY))/50):1000000);
-                elseif nanmax(abs(dataY)) > 50
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:10:1000);
-                elseif nanmax(abs(dataY)) > 10
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-100:5:100);
-                elseif nanmax(abs(dataY)) > 4
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-10:1:10);
-                else
-                    ylim([min(-4.5, nanmin(dataY) - 0.5), max(4.5, nanmax(dataY) + 0.5)]);
-                    yticks(-10:1:100);
-                end
-            %}
     end
-    %xticks(0:5:10000);
-    set(gca, 'xminortick', 'on', 'yminortick', 'on');
-    switch analysisPlot2Menu4 % plot by...
-        case 1 % unselected - do nothing
-            return
-        case 2 % by sweep
-            xlabel('Sweep #');
-        case 3 % by group
-            xlabel('Group #');
-    end
+
     h.ui.analysisPlot2 = analysisPlot2;
     h.params.resultsPlot2YRange = analysisPlot2.YLim;
+    
 catch ME
+
+    try
+        winToPlot = analysisPlot2Menu2 - 1; % fmfl
+        switch winToPlot
+            case 0
+                h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3;
+                h.ui.analysisPlot2Menu3.Value = 1;
+            case 1
+                switch h.ui.analysisType1.Value
+                    case 2 % peak/area/mean
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                        h.ui.analysisPlot2Menu3.Value = 1;
+                    case 3 % event
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
+                        h.ui.analysisPlot2Menu3.Value = 1;
+                    case 4 % ap threshold
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
+                        h.ui.analysisPlot2Menu3.Value = 1;
+                    otherwise
+                end
+            case 2
+                switch h.ui.analysisType2.Value
+                    case 2 % peak/area/mean
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                        h.ui.analysisPlot2Menu3.Value = 1;
+                    case 3 % event
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
+                        h.ui.analysisPlot2Menu3.Value = 1;
+                    case 4 % ap threshold
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
+                        h.ui.analysisPlot2Menu3.Value = 1;
+                    otherwise
+                end
+            otherwise
+                h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3;
+                h.ui.analysisPlot2Menu3.Value = 1;
+        end
+    catch ME
+    end
+
+    traceDisplay = h.ui.traceDisplay;
+    axes(traceDisplay);
 end
 
 %{
@@ -16297,7 +17415,7 @@ guidata(src, h);
 end
 
 
-function h = analysisPlotUpdateNew(h, inputIdx, plotIdx)
+function h = analysisPlotUpdateNew(h, inputIdx, plotIdx) % FUBAR
 
 %{
 % load
@@ -16350,10 +17468,13 @@ if plotIdx == 1
         analysisPlot1 = h.ui.analysisPlot1;
         axes(analysisPlot1);
         cla;
+        xlabel('');
+        ylabel('');
         h.ui.analysisPlot1 = analysisPlot1;
+
         switch analysisPlot1Menu1 % signal
             case 1 % unselected - do nothing
-                return
+                %return
             case 2 % S1
                 switch signal1Type % i, V, F
                     case 1
@@ -16385,85 +17506,201 @@ if plotIdx == 1
                         color = [0, 0, 0];
                 end
         end
-        winToPlot = analysisPlot1Menu2 - 1; % let the try block take care of winToPlot == 0
+
         switch analysisPlot1Menu4 % plot by...
             case 1 % unselected - do nothing
-                return
+                %return
             case 2 % by sweep
                 results1 = results1.sweepResults;
                 dataX = 1:length(results1.sweeps); % sweep number
+                xlabel('Sweep #');
             case 3 % by group
                 results1 = results1.groupResults;
                 dataX = 1:length(results1.groups); % group number
+                xlabel('Group #');
         end
+
         %  organize data
-        %dataY = results1.peak; % grouped results, peak %%% switch here for analysis type later
-        %   which kind of results
-        switch inputIdx
-            case 1
-                dataY = results1.peak;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 2
-                dataY = results1.area;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 3
-                dataY = results1.mean;
-                resultsType = 1; % only one here
-            case 4
-                dataY = results1.timeOfPeak;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 5
-                dataY = results1.riseTime;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 6
-                dataY = results1.decayTime;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 7
-                dataY = results1.riseSlope;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 8
-                dataY = results1.decaySlope;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 11
-                dataY = results1.eventCount;
-                resultsType = 1;
-            case 12
-                dataY = results1.eventPeakValue;
-                resultsType = 1;
-            case 13
-                dataY = results1.eventAmplitude;
-                resultsType = 1;
-            case 14
-                dataY = results1.eventTimeOfPeak;
-                resultsType = 1; % for display, first one will do
-            case 15
-                dataY = results1.eventBaseline;
-                resultsType = 1;
-            case 21
-                dataY = results1.apThreshold;
-                resultsType = 1;
-            case 22
-                dataY = results1.apAmplitude;
-                resultsType = 1;
-            case 23
-                dataY = results1.apTimeOfPeak;
-                resultsType = 1; % for display, first one will do
-            case 24
-                dataY = results1.apHalfWidth;
-                resultsType = 1;
-            case 25
-                dataY = results1.maxDepol;
-                resultsType = 1;
-            case 26
-                dataY = results1.maxRepol;
-                resultsType = 1;
-            case 27
-                dataY = results1.rmp;
-                resultsType = 1;
-            otherwise
-                dataY = [];
-                resultsType = 1; % whatever
+        winToPlot = analysisPlot1Menu2 - 1; % wtf is this inconsistency
+        try
+            %peakDirection = 2; % default to this in case it fails
+            switch winToPlot
+                case 0
+                    %return
+                case 1 % win 1
+                    peakDirectionWin = h.params.actualParams.peakDirection1;
+                case 2 % win 2
+                    peakDirectionWin = h.params.actualParams.peakDirection2;
+            end
+            switch peakDirectionWin % confusing af due to usual lack of foresight
+                case 1 % positive-going
+                    peakDirection = 3;
+                case 0 % either direction
+                    peakDirection = 2;
+                case -1 % negative-going
+                    peakDirection = 1;
+            end
+        catch ME
+            peakDirection = 1;
         end
+
+        %winToPlot = analysisPlot1Menu2 - 1; % fmfl
+        switch winToPlot
+            case 0
+                h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3;
+                h.ui.analysisPlot1Menu3.Value = 1;
+            case 1
+                switch h.ui.analysisType1.Value
+                    case 2 % peak/area/mean
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                        switch analysisPlot1Menu3 % which kind of results
+                            case 2
+                                dataY = results1.peak;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 3
+                                dataY = results1.area;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 4
+                                dataY = results1.mean;
+                                resultsType = 1; % only one here
+                            case 5
+                                dataY = results1.timeOfPeak;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 6
+                                dataY = results1.riseTime;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 7
+                                dataY = results1.decayTime;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 8
+                                dataY = results1.riseSlope;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 9
+                                dataY = results1.decaySlope;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            otherwise
+                                dataY = [];
+                                resultsType = 1; % whatever
+                        end
+                    case 3 % event
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                        resultsType = 1;
+                        switch analysisPlot1Menu3 % which kind of results
+                            case 2
+                                dataY = results1.eventCount;
+                            case 3
+                                dataY = results1.eventPeakValue;
+                            case 4
+                                dataY = results1.eventAmplitude;
+                            case 5
+                                dataY = results1.eventTimeOfPeak;
+                            case 6
+                                dataY = results1.eventBaseline;
+                            otherwise
+                                dataY = [];
+                        end
+                    case 4 % ap threshold
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                        resultsType = 1;
+                        switch analysisPlot1Menu3 % which kind of results
+                            case 2
+                                dataY = results1.apThreshold;
+                            case 3
+                                dataY = results1.apAmplitude;
+                            case 4
+                                dataY = results1.apTimeOfPeak;
+                            case 5
+                                dataY = results1.apHalfWidth;
+                            case 6
+                                dataY = results1.maxDepol;
+                            case 7
+                                dataY = results1.maxRepol;
+                            case 8
+                                dataY = results1.rmp;
+                            otherwise
+                                dataY = [];
+                        end
+                    otherwise
+                end
+            case 2
+                switch h.ui.analysisType2.Value
+                    case 2 % peak/area/mean
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                        switch analysisPlot1Menu3 % which kind of results
+                            case 2
+                                dataY = results1.peak;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 3
+                                dataY = results1.area;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 4
+                                dataY = results1.mean;
+                                resultsType = 1; % only one here
+                            case 5
+                                dataY = results1.timeOfPeak;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 6
+                                dataY = results1.riseTime;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 7
+                                dataY = results1.decayTime;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 8
+                                dataY = results1.riseSlope;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 9
+                                dataY = results1.decaySlope;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            otherwise
+                                dataY = [];
+                                resultsType = 1; % whatever
+                        end
+                    case 3 % event
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                        resultsType = 1;
+                        switch analysisPlot1Menu3 % which kind of results
+                            case 2
+                                dataY = results1.eventCount;
+                            case 3
+                                dataY = results1.eventPeakValue;
+                            case 4
+                                dataY = results1.eventAmplitude;
+                            case 5
+                                dataY = results1.eventTimeOfPeak;
+                            case 6
+                                dataY = results1.eventBaseline;
+                            otherwise
+                                dataY = [];
+                        end
+                    case 4 % ap threshold
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                        resultsType = 1;
+                        switch analysisPlot1Menu3 % which kind of results
+                            case 2
+                                dataY = results1.apThreshold;
+                            case 3
+                                dataY = results1.apAmplitude;
+                            case 4
+                                dataY = results1.apTimeOfPeak;
+                            case 5
+                                dataY = results1.apHalfWidth;
+                            case 6
+                                dataY = results1.maxDepol;
+                            case 7
+                                dataY = results1.maxRepol;
+                            case 8
+                                dataY = results1.rmp;
+                            otherwise
+                                dataY = [];
+                        end
+                    otherwise
+                end
+            otherwise
+                h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3;
+                h.ui.analysisPlot1Menu3.Value = 1;
+        end
+
+        
         dataY = dataY(winToPlot, :); % analysis window 1
         dataYNew = nan(length(dataY), 1); % initialize
         for i = 1:length(dataY)
@@ -16476,15 +17713,79 @@ if plotIdx == 1
             dataYNew(i) = dataYi; % update
         end
         dataY = dataYNew; % update
+
         axes(analysisPlot1);
         cla;
         hold on;
         analysisPlot1 = displayResults(analysisPlot1, dataX, dataY, color);
         set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
+        %set(gca, 'ylim', [0, nanmax(dataY) + 0.2*nanmax(dataY)]);
+        try
+            if nanmin(dataY) < 0
+                if nanmax(dataY) < 0
+                    set(gca, 'ylim', [1.2*nanmin(dataY), 0]);
+                else
+                    set(gca, 'ylim', [1.2*nanmin(dataY), 1.2*nanmax(dataY)]);
+                end
+            else
+                set(gca, 'ylim', [0, 1.2*nanmax(dataY)]);
+            end
+        catch ME
+        end
+        set(gca, 'xminortick', 'on', 'yminortick', 'on');
         hold off;
+
+        inputSrc = h.ui.analysisPlot1Menu3;
+        inputStr = inputSrc.String;
+        inputVal = inputSrc.Value;
+        inputStr = inputStr{inputVal};
+        if strcmp(inputStr, 'Peak')
+            inputIdx = 1;
+        elseif strcmp(inputStr, 'Area')
+            inputIdx = 2;
+        elseif strcmp(inputStr, 'Mean')
+            inputIdx = 3;
+        elseif strcmp(inputStr, 'Time of Peak')
+            inputIdx = 4;
+        elseif strcmp(inputStr, 'Rise (time)')
+            inputIdx = 5;
+        elseif strcmp(inputStr, 'Decay (time)')
+            inputIdx = 6;
+        elseif strcmp(inputStr, 'Rise (slope)')
+            inputIdx = 7;
+        elseif strcmp(inputStr, 'Decay (slope)')
+            inputIdx = 8;
+        elseif strcmp(inputStr, 'No. of Events')
+            inputIdx = 11;
+        elseif strcmp(inputStr, 'Event Peak Value')
+            inputIdx = 12;
+        elseif strcmp(inputStr, 'Event Amplitude')
+            inputIdx = 13;
+        elseif strcmp(inputStr, 'Event Time of Peak')
+            inputIdx = 14;
+        elseif strcmp(inputStr, 'Event Baseline')
+            inputIdx = 15;
+        elseif strcmp(inputStr, 'AP Threshold')
+            inputIdx = 21;
+        elseif strcmp(inputStr, 'AP Amplitude')
+            inputIdx = 22;
+        elseif strcmp(inputStr, 'AP Time of Peak')
+            inputIdx = 23;
+        elseif strcmp(inputStr, 'AP Half-width')
+            inputIdx = 24;
+        elseif strcmp(inputStr, 'Max Depol')
+            inputIdx = 25;
+        elseif strcmp(inputStr, 'Max Repol')
+            inputIdx = 26;
+        elseif strcmp(inputStr, 'RMP')
+            inputIdx = 27;
+        else
+            inputIdx = 0;
+        end
+
         switch analysisPlot1Menu1 % signal
             case 1 % unselected - do nothing
-                return
+                %return
             case 2 % S1
                 ylabel('');
                 switch inputIdx
@@ -16524,9 +17825,9 @@ if plotIdx == 1
                     case 4
                         ylabel('t of peak (ms)')
                     case 5
-                        ylabel('Rise (ms)')
+                        ylabel('Rise time (ms)')
                     case 6
-                        ylabel('Decay (ms)')
+                        ylabel('Decay time (ms)')
                     case 7
                         switch signal1Type % i, V, F
                             case 1
@@ -16536,7 +17837,7 @@ if plotIdx == 1
                             case 3
                                 ylabel('Rise ((dF/F)/ms)');
                             otherwise
-                                ylabel('Rise');
+                                ylabel('Rise slope');
                         end
                     case 8
                         switch signal1Type % i, V, F
@@ -16547,7 +17848,7 @@ if plotIdx == 1
                             case 3
                                 ylabel('Decay ((dF/F)/ms)');
                             otherwise
-                                ylabel('Decay');
+                                ylabel('Decay slope');
                         end
                     case 11
                         ylabel('No. of Events');
@@ -16657,32 +17958,6 @@ if plotIdx == 1
                     otherwise
                         ylabel('')
                 end
-                %{
-                if nanmax(abs(dataY)) > 150 % arbitrary but reasonable display range beyond AP
-                    ylim([min(0, nanmin(dataY) - 5), max(0, nanmax(dataY) + 5)]);
-                    yticks(-1000000:10*round(nanmax(abs(dataY))/50):1000000);
-                    %{
-                elseif nanmax((dataY)) > 40 && inputIdx == 1 % arbitrary but reasonable display range for peak PSP
-                    ylim([0, 40.5]);
-                    yticks(-1000:10:1000);
-                    %}
-                elseif nanmax(abs(dataY)) > 40
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:10:1000);
-                elseif nanmax(abs(dataY)) > 10
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:5:1000);
-                elseif nanmax(abs(dataY)) > 5
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:1:1000);
-                elseif nanmax(abs(dataY)) < 1
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-100:0.1*max(abs(dataY)):100);
-                else
-                    ylim([0, 5.5]);
-                    yticks(-1000:2:1000);
-                end
-                %}
             case 3 % S2
                 ylabel('');
                 switch inputIdx % although it doesn't make much sense here...
@@ -16695,7 +17970,7 @@ if plotIdx == 1
                             case 3
                                 ylabel('dF/F');
                             otherwise
-                                ylabel('Value');
+                                ylabel('Peak');
                         end
                     case 2
                         switch signal2Type % i, V, F
@@ -16706,7 +17981,7 @@ if plotIdx == 1
                             case 3
                                 ylabel('Area ((dF/F)*ms)');
                             otherwise
-                                ylabel('Value');
+                                ylabel('Area');
                         end
                     case 3
                         switch signal2Type % i, V, F
@@ -16717,35 +17992,35 @@ if plotIdx == 1
                             case 3
                                 ylabel('Mean (dF/F)');
                             otherwise
-                                ylabel('');
+                                ylabel('Mean');
                         end
                     case 4
                         ylabel('t of peak (ms)')
                     case 5
-                        ylabel('rise (ms)')
+                        ylabel('Rise time (ms)')
                     case 6
-                        ylabel('decay (ms)')
+                        ylabel('Decay time (ms)')
                     case 7
                         switch signal2Type % i, V, F
                             case 1
-                                ylabel('rise (pA/ms)');
+                                ylabel('Rise (pA/ms)');
                             case 2
-                                ylabel('rise (mV/ms)');
+                                ylabel('Rise (mV/ms)');
                             case 3
-                                ylabel('rise ((dF/F)/ms)');
+                                ylabel('Rise ((dF/F)/ms)');
                             otherwise
-                                ylabel('');
+                                ylabel('Rise');
                         end
                     case 8
                         switch signal2Type % i, V, F
                             case 1
-                                ylabel('decay (pA/ms)');
+                                ylabel('Decay (pA/ms)');
                             case 2
-                                ylabel('decay (mV/ms)');
+                                ylabel('Decay (mV/ms)');
                             case 3
-                                ylabel('decay ((dF/F)/ms)');
+                                ylabel('Decay ((dF/F)/ms)');
                             otherwise
-                                ylabel('');
+                                ylabel('Decay');
                         end
                     case 11
                         ylabel('No. of Events');
@@ -16855,51 +18130,71 @@ if plotIdx == 1
                     otherwise
                         ylabel('')
                 end
-                %{
-                if nanmax(abs(dataY)) > 100
-                    ylim([[min(0, nanmin(dataY) - 5), max(0, nanmax(dataY) + 5)]]);
-                    yticks(-1000000:10*round(nanmax(abs(dataY))/50):1000000);
-                elseif nanmax(abs(dataY)) > 50
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:10:1000);
-                elseif nanmax(abs(dataY)) > 10
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-100:5:100);
-                elseif nanmax(abs(dataY)) > 4
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-10:1:10);
-                else
-                    ylim([min(-4.5, nanmin(dataY) - 0.5), max(4.5, nanmax(dataY) + 0.5)]);
-                    yticks(-10:1:100);
-                end
-                %}
         end
-        %xticks(0:5:10000);
-        set(gca, 'xminortick', 'on', 'yminortick', 'on');
-        switch analysisPlot1Menu4 % plot by...
-            case 1 % unselected - do nothing
-                return
-            case 2 % by sweep
-                xlabel('Sweep #');
-            case 3 % by group
-                xlabel('Group #');
-        end
+
         h.ui.analysisPlot1 = analysisPlot1;
         h.params.resultsPlot1YRange = analysisPlot1.YLim;
+
     catch ME
+
+        try
+            winToPlot = analysisPlot1Menu2 - 1; % fmfl
+            switch winToPlot
+                case 0
+                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3;
+                    h.ui.analysisPlot1Menu3.Value = 1;
+                case 1
+                    switch h.ui.analysisType1.Value
+                        case 2 % peak/area/mean
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                            h.ui.analysisPlot1Menu3.Value = 1;
+                        case 3 % event
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                            h.ui.analysisPlot1Menu3.Value = 1;
+                        case 4 % ap threshold
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.Value = 1;
+                        otherwise
+                    end
+                case 2
+                    switch h.ui.analysisType2.Value
+                        case 2 % peak/area/mean
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                            h.ui.analysisPlot1Menu3.Value = 1;
+                        case 3 % event
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                            h.ui.analysisPlot1Menu3.Value = 1;
+                        case 4 % ap threshold
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.Value = 1;
+                        otherwise
+                    end
+                otherwise
+                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList3;
+                    h.ui.analysisPlot1Menu3.Value = 1;
+            end
+        catch ME
+        end
+
+        traceDisplay = h.ui.traceDisplay;
+        axes(traceDisplay);
     end
 end
 
 %  plot 2
 if plotIdx == 2
     try
+
         analysisPlot2 = h.ui.analysisPlot2;
         axes(analysisPlot2);
         cla;
+        xlabel('');
+        ylabel('');
         h.ui.analysisPlot2 = analysisPlot2;
+
         switch analysisPlot2Menu1 % signal
             case 1 % unselected - do nothing
-                return
+                %return
             case 2 % S1
                 switch signal1Type % i, V, F
                     case 1
@@ -16931,85 +18226,201 @@ if plotIdx == 2
                         color = [0, 0, 0];
                 end
         end
-        winToPlot = analysisPlot2Menu2 - 1; % let the try block take care of winToPlot == 0
+
         switch analysisPlot2Menu4 % plot by...
             case 1 % unselected - do nothing
-                return
+                %return
             case 2 % by sweep
                 results2 = results2.sweepResults;
                 dataX = 1:length(results2.sweeps); % sweep number
+                xlabel('Sweep #');
             case 3 % by group
                 results2 = results2.groupResults;
                 dataX = 1:length(results2.groups); % group number
+                xlabel('Group #');
         end
+
         %  organize data
-        %dataY = results2.peak; % grouped results, peak %%% switch here for analysis type later
-        %   which kind of results
-        switch inputIdx
-            case 1
-                dataY = results2.peak;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 2
-                dataY = results2.area;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 3
-                dataY = results2.mean;
-                resultsType = 1; % only one here
-            case 4
-                dataY = results2.timeOfPeak;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 5
-                dataY = results2.riseTime;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 6
-                dataY = results2.decayTime;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 7
-                dataY = results2.riseSlope;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 8
-                dataY = results2.decaySlope;
-                resultsType = 3; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
-            case 11
-                dataY = results2.eventCount;
-                resultsType = 1;
-            case 12
-                dataY = results2.eventPeakValue;
-                resultsType = 1;
-            case 13
-                dataY = results2.eventAmplitude;
-                resultsType = 1;
-            case 14
-                dataY = results2.eventTimeOfPeak;
-                resultsType = 1; % for display, first one will do
-            case 15
-                dataY = results2.eventBaseline;
-                resultsType = 1;
-            case 21
-                dataY = results2.apThreshold;
-                resultsType = 1;
-            case 22
-                dataY = results2.apAmplitude;
-                resultsType = 1;
-            case 23
-                dataY = results2.apTimeOfPeak;
-                resultsType = 1; % for display, first one will do
-            case 24
-                dataY = results2.apHalfWidth;
-                resultsType = 1;
-            case 25
-                dataY = results2.maxDepol;
-                resultsType = 1;
-            case 26
-                dataY = results2.maxRepol;
-                resultsType = 1;
-            case 27
-                dataY = results2.rmp;
-                resultsType = 1;
-            otherwise
-                dataY = [];
-                resultsType = 1; % whatever
+        winToPlot = analysisPlot2Menu2 - 1; % wtf is this inconsistency
+        try
+            %peakDirection = 2; % default to this in case it fails
+            switch winToPlot
+                case 0
+                    %return
+                case 1 % win 1
+                    peakDirectionWin = h.params.actualParams.peakDirection1;
+                case 2 % win 2
+                    peakDirectionWin = h.params.actualParams.peakDirection2;
+            end
+            switch peakDirectionWin % confusing af due to usual lack of foresight
+                case 1 % positive-going
+                    peakDirection = 3;
+                case 0 % either direction
+                    peakDirection = 2;
+                case -1 % negative-going
+                    peakDirection = 1;
+            end
+        catch ME
+            peakDirection = 1;
         end
+
+        %winToPlot = analysisPlot2Menu2 - 1; % fmfl
+        switch winToPlot
+            case 0
+                h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3;
+                h.ui.analysisPlot2Menu3.Value = 1;
+            case 1
+                switch h.ui.analysisType1.Value
+                    case 2 % peak/area/mean
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                        switch analysisPlot2Menu3 % which kind of results
+                            case 2
+                                dataY = results2.peak;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 3
+                                dataY = results2.area;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 4
+                                dataY = results2.mean;
+                                resultsType = 1; % only one here
+                            case 5
+                                dataY = results2.timeOfPeak;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 6
+                                dataY = results2.riseTime;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 7
+                                dataY = results2.decayTime;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 8
+                                dataY = results2.riseSlope;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 9
+                                dataY = results2.decaySlope;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            otherwise
+                                dataY = [];
+                                resultsType = 1; % whatever
+                        end
+                    case 3 % event
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
+                        resultsType = 1;
+                        switch analysisPlot2Menu3 % which kind of results
+                            case 2
+                                dataY = results2.eventCount;
+                            case 3
+                                dataY = results2.eventPeakValue;
+                            case 4
+                                dataY = results2.eventAmplitude;
+                            case 5
+                                dataY = results2.eventTimeOfPeak;
+                            case 6
+                                dataY = results2.eventBaseline;
+                            otherwise
+                                dataY = [];
+                        end
+                    case 4 % ap threshold
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
+                        resultsType = 1;
+                        switch analysisPlot2Menu3 % which kind of results
+                            case 2
+                                dataY = results2.apThreshold;
+                            case 3
+                                dataY = results2.apAmplitude;
+                            case 4
+                                dataY = results2.apTimeOfPeak;
+                            case 5
+                                dataY = results2.apHalfWidth;
+                            case 6
+                                dataY = results2.maxDepol;
+                            case 7
+                                dataY = results2.maxRepol;
+                            case 8
+                                dataY = results2.rmp;
+                            otherwise
+                                dataY = [];
+                        end
+                    otherwise
+                end
+            case 2
+                switch h.ui.analysisType2.Value
+                    case 2 % peak/area/mean
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                        switch analysisPlot2Menu3 % which kind of results
+                            case 2
+                                dataY = results2.peak;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 3
+                                dataY = results2.area;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 4
+                                dataY = results2.mean;
+                                resultsType = 1; % only one here
+                            case 5
+                                dataY = results2.timeOfPeak;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 6
+                                dataY = results2.riseTime;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 7
+                                dataY = results2.decayTime;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 8
+                                dataY = results2.riseSlope;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            case 9
+                                dataY = results2.decaySlope;
+                                resultsType = peakDirection; % 1: neg, 2: abs, 3: pos; column indices %%% switch here for results type later
+                            otherwise
+                                dataY = [];
+                                resultsType = 1; % whatever
+                        end
+                    case 3 % event
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
+                        resultsType = 1;
+                        switch analysisPlot2Menu3 % which kind of results
+                            case 2
+                                dataY = results2.eventCount;
+                            case 3
+                                dataY = results2.eventPeakValue;
+                            case 4
+                                dataY = results2.eventAmplitude;
+                            case 5
+                                dataY = results2.eventTimeOfPeak;
+                            case 6
+                                dataY = results2.eventBaseline;
+                            otherwise
+                                dataY = [];
+                        end
+                    case 4 % ap threshold
+                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
+                        resultsType = 1;
+                        switch analysisPlot2Menu3 % which kind of results
+                            case 2
+                                dataY = results2.apThreshold;
+                            case 3
+                                dataY = results2.apAmplitude;
+                            case 4
+                                dataY = results2.apTimeOfPeak;
+                            case 5
+                                dataY = results2.apHalfWidth;
+                            case 6
+                                dataY = results2.maxDepol;
+                            case 7
+                                dataY = results2.maxRepol;
+                            case 8
+                                dataY = results2.rmp;
+                            otherwise
+                                dataY = [];
+                        end
+                    otherwise
+                end
+            otherwise
+                h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3;
+                h.ui.analysisPlot2Menu3.Value = 1;
+        end
+
+        
         dataY = dataY(winToPlot, :); % analysis window 2
         dataYNew = nan(length(dataY), 1); % initialize
         for i = 1:length(dataY)
@@ -17021,16 +18432,80 @@ if plotIdx == 2
             end
             dataYNew(i) = dataYi; % update
         end
+
         dataY = dataYNew; % update
         axes(analysisPlot2);
         cla;
         hold on;
         analysisPlot2 = displayResults(analysisPlot2, dataX, dataY, color);
         set(gca, 'xlim', [0, length(dataX) + 1]); % padding for appearance
+        %set(gca, 'ylim', [0, nanmax(dataY) + 0.2*nanmax(dataY)]);
+        try
+            if nanmin(dataY) < 0
+                if nanmax(dataY) < 0
+                    set(gca, 'ylim', [1.2*nanmin(dataY), 0]);
+                else
+                    set(gca, 'ylim', [1.2*nanmin(dataY), 1.2*nanmax(dataY)]);
+                end
+            else
+                set(gca, 'ylim', [0, 1.2*nanmax(dataY)]);
+            end
+        catch ME
+        end
+        set(gca, 'xminortick', 'on', 'yminortick', 'on');
         hold off;
+
+        inputSrc = h.ui.analysisPlot2Menu3;
+        inputStr = inputSrc.String;
+        inputVal = inputSrc.Value;
+        inputStr = inputStr{inputVal};
+        if strcmp(inputStr, 'Peak')
+            inputIdx = 1;
+        elseif strcmp(inputStr, 'Area')
+            inputIdx = 2;
+        elseif strcmp(inputStr, 'Mean')
+            inputIdx = 3;
+        elseif strcmp(inputStr, 'Time of Peak')
+            inputIdx = 4;
+        elseif strcmp(inputStr, 'Rise (time)')
+            inputIdx = 5;
+        elseif strcmp(inputStr, 'Decay (time)')
+            inputIdx = 6;
+        elseif strcmp(inputStr, 'Rise (slope)')
+            inputIdx = 7;
+        elseif strcmp(inputStr, 'Decay (slope)')
+            inputIdx = 8;
+        elseif strcmp(inputStr, 'No. of Events')
+            inputIdx = 11;
+        elseif strcmp(inputStr, 'Event Peak Value')
+            inputIdx = 12;
+        elseif strcmp(inputStr, 'Event Amplitude')
+            inputIdx = 13;
+        elseif strcmp(inputStr, 'Event Time of Peak')
+            inputIdx = 14;
+        elseif strcmp(inputStr, 'Event Baseline')
+            inputIdx = 15;
+        elseif strcmp(inputStr, 'AP Threshold')
+            inputIdx = 21;
+        elseif strcmp(inputStr, 'AP Amplitude')
+            inputIdx = 22;
+        elseif strcmp(inputStr, 'AP Time of Peak')
+            inputIdx = 23;
+        elseif strcmp(inputStr, 'AP Half-width')
+            inputIdx = 24;
+        elseif strcmp(inputStr, 'Max Depol')
+            inputIdx = 25;
+        elseif strcmp(inputStr, 'Max Repol')
+            inputIdx = 26;
+        elseif strcmp(inputStr, 'RMP')
+            inputIdx = 27;
+        else
+            inputIdx = 0;
+        end
+
         switch analysisPlot2Menu1 % signal
             case 1 % unselected - do nothing
-                return
+                %return
             case 2 % S1
                 ylabel('');
                 switch inputIdx
@@ -17043,7 +18518,7 @@ if plotIdx == 2
                             case 3
                                 ylabel('dF/F');
                             otherwise
-                                ylabel('Value');
+                                ylabel('Peak');
                         end
                     case 2
                         switch signal1Type % i, V, F
@@ -17054,7 +18529,7 @@ if plotIdx == 2
                             case 3
                                 ylabel('Area ((dF/F)*ms)');
                             otherwise
-                                ylabel('Value');
+                                ylabel('Area');
                         end
                     case 3
                         switch signal1Type % i, V, F
@@ -17065,63 +18540,144 @@ if plotIdx == 2
                             case 3
                                 ylabel('Mean (dF/F)');
                             otherwise
-                                ylabel('');
+                                ylabel('Mean');
                         end
                     case 4
                         ylabel('t of peak (ms)')
                     case 5
-                        ylabel('rise (ms)')
+                        ylabel('Rise time (ms)')
                     case 6
-                        ylabel('decay (ms)')
+                        ylabel('Decay time (ms)')
                     case 7
                         switch signal1Type % i, V, F
                             case 1
-                                ylabel('rise (pA/ms)');
+                                ylabel('Rise (pA/ms)');
                             case 2
-                                ylabel('rise (mV/ms)');
+                                ylabel('Rise (mV/ms)');
                             case 3
-                                ylabel('rise ((dF/F)/ms)');
+                                ylabel('Rise ((dF/F)/ms)');
                             otherwise
-                                ylabel('');
+                                ylabel('Rise slope');
                         end
                     case 8
                         switch signal1Type % i, V, F
                             case 1
-                                ylabel('decay (pA/ms)');
+                                ylabel('Decay (pA/ms)');
                             case 2
-                                ylabel('decay (mV/ms)');
+                                ylabel('Decay (mV/ms)');
                             case 3
-                                ylabel('decay ((dF/F)/ms)');
+                                ylabel('Decay ((dF/F)/ms)');
                             otherwise
-                                ylabel('');
+                                ylabel('Decay slope');
                         end
+                    case 11
+                        ylabel('No. of Events');
+                    case 12
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Event Peak (pA)');
+                            case 2
+                                ylabel('Event Peak (mV)');
+                            case 3
+                                ylabel('Event Peak');
+                            otherwise
+                                ylabel('Event Peak');
+                        end
+                    case 13
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Event Amplitude (pA)');
+                            case 2
+                                ylabel('Event Amplitude (mV)');
+                            case 3
+                                ylabel('Event Amplitude');
+                            otherwise
+                                ylabel('Event Amplitude');
+                        end
+                    case 14
+                        ylabel('Time of Peak (ms)');
+                    case 15
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Baseline (pA)');
+                            case 2
+                                ylabel('Baseline (mV)');
+                            case 3
+                                ylabel('Baseline');
+                            otherwise
+                                ylabel('Amplitude');
+                        end
+                    case 21
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Threshold i (pA)');
+                            case 2
+                                ylabel('AP Threshold (mV)');
+                            case 3
+                                ylabel('Threshold (dF/F)');
+                            otherwise
+                                ylabel('Threshold');
+                        end
+                    case 22
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Amplitude (pA)');
+                            case 2
+                                ylabel('AP Amplitude (mV)');
+                            case 3
+                                ylabel('Amplitude (dF/F)');
+                            otherwise
+                                ylabel('Amplitude');
+                        end
+                    case 23
+                        ylabel('Time of Peak (ms)');
+                    case 24
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Half-width (ms)');
+                            case 2
+                                ylabel('AP Half-width (ms)');
+                            case 3
+                                ylabel('Half-width (ms)');
+                            otherwise
+                                ylabel('Half-width (ms)');
+                        end
+                    case 25
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Max di/dt (pA/ms)');
+                            case 2
+                                ylabel('Max Depol (V/s)');
+                            case 3
+                                ylabel('Max derivative');
+                            otherwise
+                                ylabel('Max derivative');
+                        end
+                    case 26
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Min di/dt (-pA/ms)');
+                            case 2
+                                ylabel('Max Repol (-V/s)');
+                            case 3
+                                ylabel('Min derivative (abs.)');
+                            otherwise
+                                ylabel('Min derivative (abs.)');
+                        end
+                    case 27
+                        switch signal1Type % i, V, F
+                            case 1
+                                ylabel('Baseline i (pA)');
+                            case 2
+                                ylabel('RMP (mV)');
+                            case 3
+                                ylabel('Baseline (dF/F)');
+                            otherwise
+                                ylabel('Baseline');
+                        end
+                    otherwise
+                        ylabel('')
                 end
-                %{
-                if nanmax(abs(dataY)) > 150 % arbitrary but reasonable display range beyond AP
-                    ylim([min(0, nanmin(dataY) - 5), max(0, nanmax(dataY) + 5)]);
-                    yticks(-1000000:10*round(nanmax(abs(dataY))/50):1000000);
-                    %{
-                elseif nanmax((dataY)) > 40 && inputIdx == 1 % arbitrary but reasonable display range for peak PSP
-                    ylim([0, 40.5]);
-                    yticks(-1000:10:1000);
-                    %}
-                elseif nanmax(abs(dataY)) > 40
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:10:1000);
-                elseif nanmax(abs(dataY)) > 10
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:5:1000);
-                elseif nanmax(abs(dataY)) > 5
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:1:1000);
-                elseif nanmax(abs(dataY)) < 1
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-100:0.1*max(abs(dataY)):100);
-                else
-                    ylim([0, 5.5]);
-                    yticks(-1000:2:1000);
-                end
-                %}
             case 3 % S2
                 ylabel('');
                 switch inputIdx % although it doesn't make much sense here...
@@ -17134,7 +18690,7 @@ if plotIdx == 2
                             case 3
                                 ylabel('dF/F');
                             otherwise
-                                ylabel('Value');
+                                ylabel('Peak');
                         end
                     case 2
                         switch signal2Type % i, V, F
@@ -17145,7 +18701,7 @@ if plotIdx == 2
                             case 3
                                 ylabel('Area ((dF/F)*ms)');
                             otherwise
-                                ylabel('Value');
+                                ylabel('Area');
                         end
                     case 3
                         switch signal2Type % i, V, F
@@ -17156,69 +18712,191 @@ if plotIdx == 2
                             case 3
                                 ylabel('Mean (dF/F)');
                             otherwise
-                                ylabel('');
+                                ylabel('Mean');
                         end
                     case 4
                         ylabel('t of peak (ms)')
                     case 5
-                        ylabel('rise (ms)')
+                        ylabel('Rise time (ms)')
                     case 6
-                        ylabel('decay (ms)')
+                        ylabel('Decay time (ms)')
                     case 7
                         switch signal2Type % i, V, F
                             case 1
-                                ylabel('rise (pA/ms)');
+                                ylabel('Rise (pA/ms)');
                             case 2
-                                ylabel('rise (mV/ms)');
+                                ylabel('Rise (mV/ms)');
                             case 3
-                                ylabel('rise ((dF/F)/ms)');
+                                ylabel('Rise ((dF/F)/ms)');
                             otherwise
-                                ylabel('');
+                                ylabel('Rise');
                         end
                     case 8
                         switch signal2Type % i, V, F
                             case 1
-                                ylabel('decay (pA/ms)');
+                                ylabel('Decay (pA/ms)');
                             case 2
-                                ylabel('decay (mV/ms)');
+                                ylabel('Decay (mV/ms)');
                             case 3
-                                ylabel('decay ((dF/F)/ms)');
+                                ylabel('Decay ((dF/F)/ms)');
                             otherwise
-                                ylabel('');
+                                ylabel('Decay');
                         end
+                    case 11
+                        ylabel('No. of Events');
+                    case 12
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Event Peak (pA)');
+                            case 2
+                                ylabel('Event Peak (mV)');
+                            case 3
+                                ylabel('Event Peak');
+                            otherwise
+                                ylabel('Event Peak');
+                        end
+                    case 13
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Event Amplitude (pA)');
+                            case 2
+                                ylabel('Event Amplitude (mV)');
+                            case 3
+                                ylabel('Event Amplitude');
+                            otherwise
+                                ylabel('Event Amplitude');
+                        end
+                    case 14
+                        ylabel('Time of Peak (ms)');
+                    case 15
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Baseline (pA)');
+                            case 2
+                                ylabel('Baseline (mV)');
+                            case 3
+                                ylabel('Baseline');
+                            otherwise
+                                ylabel('Amplitude');
+                        end
+                    case 21
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Threshold i (pA)');
+                            case 2
+                                ylabel('AP Threshold (mV)');
+                            case 3
+                                ylabel('Threshold (dF/F)');
+                            otherwise
+                                ylabel('Threshold');
+                        end
+                    case 22
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Amplitude (pA)');
+                            case 2
+                                ylabel('AP Amplitude (mV)');
+                            case 3
+                                ylabel('Amplitude (dF/F)');
+                            otherwise
+                                ylabel('Amplitude');
+                        end
+                    case 23
+                        ylabel('Time of Peak (ms)');
+                    case 24
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Half-width (ms)');
+                            case 2
+                                ylabel('AP Half-width (ms)');
+                            case 3
+                                ylabel('Half-width (ms)');
+                            otherwise
+                                ylabel('Half-width (ms)');
+                        end
+                    case 25
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Max di/dt (pA/ms)');
+                            case 2
+                                ylabel('Max Depol (V/s)');
+                            case 3
+                                ylabel('Max derivative');
+                            otherwise
+                                ylabel('Max derivative');
+                        end
+                    case 26
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Min di/dt (-pA/ms)');
+                            case 2
+                                ylabel('Max Repol (-V/s)');
+                            case 3
+                                ylabel('Min derivative (abs.)');
+                            otherwise
+                                ylabel('Min derivative (abs.)');
+                        end
+                    case 27
+                        switch signal2Type % i, V, F
+                            case 1
+                                ylabel('Baseline i (pA)');
+                            case 2
+                                ylabel('RMP (mV)');
+                            case 3
+                                ylabel('Baseline (dF/F)');
+                            otherwise
+                                ylabel('Baseline');
+                        end
+                    otherwise
+                        ylabel('')
                 end
-                %{
-                if nanmax(abs(dataY)) > 100
-                    ylim([[min(0, nanmin(dataY) - 5), max(0, nanmax(dataY) + 5)]]);
-                    yticks(-1000000:10*round(nanmax(abs(dataY))/50):1000000);
-                elseif nanmax(abs(dataY)) > 50
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-1000:10:1000);
-                elseif nanmax(abs(dataY)) > 10
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-100:5:100);
-                elseif nanmax(abs(dataY)) > 4
-                    ylim([min(0, nanmin(dataY) - 0.5), max(0, nanmax(dataY) + 0.5)]);
-                    yticks(-10:1:10);
-                else
-                    ylim([min(-4.5, nanmin(dataY) - 0.5), max(4.5, nanmax(dataY) + 0.5)]);
-                    yticks(-10:1:100);
-                end
-                %}
         end
-        %xticks(0:5:10000);
-        set(gca, 'xminortick', 'on', 'yminortick', 'on');
-        switch analysisPlot2Menu4 % plot by...
-            case 1 % unselected - do nothing
-                return
-            case 2 % by sweep
-                xlabel('Sweep #');
-            case 3 % by group
-                xlabel('Group #');
-        end
+
         h.ui.analysisPlot2 = analysisPlot2;
         h.params.resultsPlot2YRange = analysisPlot2.YLim;
+
     catch ME
+
+        try
+            winToPlot = analysisPlot2Menu2 - 1; % fmfl
+            switch winToPlot
+                case 0
+                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3;
+                    h.ui.analysisPlot2Menu3.Value = 1;
+                case 1
+                    switch h.ui.analysisType1.Value
+                        case 2 % peak/area/mean
+                            h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                        case 3 % event
+                            h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
+                            h.ui.analysisPlot2Menu3.Value = 1;
+                        case 4 % ap threshold
+                            h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
+                            h.ui.analysisPlot2Menu3.Value = 1;
+                        otherwise
+                    end
+                case 2
+                    switch h.ui.analysisType2.Value
+                        case 2 % peak/area/mean
+                            h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                            h.ui.analysisPlot2Menu3.Value = 1;
+                        case 3 % event
+                            h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
+                            h.ui.analysisPlot2Menu3.Value = 1;
+                        case 4 % ap threshold
+                            h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
+                            h.ui.analysisPlot2Menu3.Value = 1;
+                        otherwise
+                    end
+                otherwise
+                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList3;
+                    h.ui.analysisPlot2Menu3.Value = 1;
+            end
+        catch ME
+        end
+
+        traceDisplay = h.ui.traceDisplay;
+        axes(traceDisplay);
     end
 end
 
@@ -17237,7 +18915,7 @@ axes(targetDisplay);
 cla;
 hold on;
 %scatter(dataX, dataY, 12, 'filled', 'markerfacecolor', color); % 12 is markersize
-plot(dataX, dataY, 'color', color, 'marker', 'o', 'markersize', 3, 'markerfacecolor', color);
+plot(dataX, dataY, 'LineStyle', '-', 'color', color, 'marker', 'o', 'markersize', 3, 'markerfacecolor', color);
 hold off;
 
 end
@@ -19741,7 +21419,7 @@ end
         end
         
         try
-            peakDirection = 2; % default to this in case it fails
+            %peakDirection = 2; % default to this in case it fails
             switch targetWindow
                 case 1 % win 1
                     peakDirectionWin = h.params.actualParams.peakDirection1;
@@ -19757,7 +21435,9 @@ end
                     peakDirection = 1;
             end
         catch ME
+            peakDirection = 1;
         end
+
         switch targetAnalysisType
             case 2 % peak/area/mean
                 switch targetResult % which kind of results
@@ -19789,7 +21469,52 @@ end
                         resultsToExport = [];
                         resultsType = 1; % whatever
                 end
-            otherwise % other type of analysis - not implemented yet %%%
+            case 3 % event
+                switch targetResult % which kind of results
+                    case 2
+                        resultsToExport = resultsToExport.eventCount;
+                        resultsType = 1;
+                    case 3
+                        resultsToExport = resultsToExport.eventPeakValue;
+                        resultsType = 1;
+                    case 4
+                        resultsToExport = resultsToExport.eventAmplitude;
+                        resultsType = 1;
+                    case 5
+                        resultsToExport = resultsToExport.eventTimeOfPeak;
+                        resultsType = 1;
+                    case 6
+                        resultsToExport = resultsToExport.eventBaseline;
+                        resultsType = 1;
+                    otherwise
+                        resultsToExport = [];
+                        resultsType = 1;
+                end
+            case 4 % waveform
+                switch targetResult % which kind of results
+                    case 2
+                        resultsToExport = resultsToExport.apThreshold;
+                        resultsType = 1;
+                    case 3
+                        resultsToExport = resultsToExport.apAmplitude;
+                        resultsType = 1;
+                    case 4
+                        resultsToExport = resultsToExport.apTimeOfPeak;
+                        resultsType = 1;
+                    case 5
+                        resultsToExport = resultsToExport.apHalfWidth;
+                        resultsType = 1;
+                    case 6
+                        resultsToExport = resultsToExport.maxDepol;
+                        resultsType = 1;
+                    case 7
+                        resultsToExport = resultsToExport.maxRepol;
+                        resultsType = 1;
+                    otherwise
+                        resultsToExport = [];
+                        resultsType = 1;
+                end
+            otherwise
         end
         
         resultsToExport = resultsToExport(targetWindow, :); % window
@@ -21614,8 +23339,11 @@ params = h.params;
 displayWin = h.ui.analysisPlot1;
 
 % do display
-axes(displayWin); 
-ylim(h.params.resultsPlot1YRange);
+axes(displayWin);
+try
+    ylim(h.params.resultsPlot1YRange);
+catch ME
+end
 
 % save
 h.params = params; % don't change anything
@@ -21762,7 +23490,11 @@ displayWin = h.ui.analysisPlot2;
 
 % do display
 axes(displayWin); 
-ylim(h.params.resultsPlot2YRange);
+
+try
+    ylim(h.params.resultsPlot2YRange);
+catch ME
+end
 
 % save
 h.params = params; % don't change anything
@@ -21777,15 +23509,18 @@ end
 
 function text = copyTextFromPopup(src, ~)
 
+% don't do this anymore
+%{
 text = src.String;
 clipboard('copy', text);
 
 fprintf('\nCopied to Clipboard: \n %s \n', text);
+%}
 
 end
 
 
-%% Stolen code (... I mean borrowed...... without permission) 
+%% Adapted from published codes 
 
 
 % xml2struct by Wouter Falkena et al.
@@ -25248,4 +26983,4 @@ end
 % };*/=
 
 
-%% ----------------------------------------------------------------------------------------------------
+%% ------------------------------------------------------------------------
