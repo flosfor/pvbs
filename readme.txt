@@ -33,6 +33,7 @@ The use or modification of this software (PVBS) is consented only under agreemen
 (Stand-alone .exe; can be run without Matlab license, but does require Matlab Runtime, and slower than running directly from Matlab IDE)
 (Matlab runtime: https://www.mathworks.com/products/compiler/matlab-runtime.html)
 
+
 - For a usage example: 
 
 1) Unzip sampledata.zip (, .z01, .z02)
@@ -40,6 +41,10 @@ The use or modification of this software (PVBS) is consented only under agreemen
 
 2) Load sampledata.mat from PVBS using "Load Dataset (.mat)" 
 (NOT "Load PV Experiment (.xml, .csv)" - this function is for loading experiments saved from Prairie View (VoltageRecording, LineScan, TSeries; via respective metadata), or .csv exported from PVBS)
+
+
+- For additional scripts that can be used with PVBS:
+Scripts for PVBS-processed data (https://github.com/flosfor/pvbs_auxiliary)
 
 
 
