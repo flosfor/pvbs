@@ -24,8 +24,13 @@ The use or modification of this software (PVBS) is consented only under agreemen
 
 - Instructions: 
 
-1) Run PVBS (pvbs.m)
+1) Run PVBS.m
 (Developed with Matlab 2020b; requirements: statistics & machine learning toolbox, signal processing toolbox)
+
+ - or -
+
+2) Run PVBS.exe
+(Stand-alone .exe; can be run without Matlab license, but does require Matlab Runtime, and slower than running directly from Matlab IDE)
 
 
 - For a usage example: 
