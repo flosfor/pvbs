@@ -30,7 +30,7 @@ The use or modification of this software (PVBS) is consented only under agreemen
  - or -
 
 2) Run PVBS.exe
-(Stand-alone .exe; can be run without Matlab license, but does require Matlab Runtime, and slower than running directly from Matlab IDE)
+(Stand-alone executable that can be run without a licensed copy of Matlab; still requires Matlab Runtime (MCR), and slower than running PVBS.m from Matlab IDE)
 (Matlab runtime: https://www.mathworks.com/products/compiler/matlab-runtime.html)
 
 
@@ -39,8 +39,8 @@ The use or modification of this software (PVBS) is consented only under agreemen
 1) Unzip sampledata.zip (, .z01, .z02)
 (Download from Github by left-clicking on each file name and then clicking "download", instead of right-clicking on the file names and choosing "save link as" - file sizes should be 14.2 MB (.zip) or 24.0 MB (.z01 & .z02))
 
-2) Load sampledata.mat from PVBS using "Load Dataset (.mat)" 
-(NOT "Load PV Experiment (.xml, .csv)" - this function is for loading experiments saved from Prairie View (VoltageRecording, LineScan, TSeries; via respective metadata), or .csv exported from PVBS)
+2) Load sampledata.mat using the "Load Dataset (.mat)" button on the PVBS GUI
+(NOT "Load Experiment (.abf, .xml, .csv)" - this function is for loading experiment files containing data and/or metadata, not for loading dataset .mat files saved from PVBS)
 
 
 - For additional scripts that can be used with PVBS:
