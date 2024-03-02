@@ -22381,6 +22381,22 @@ catch ME
     end
 end
 
+try
+    y3RangeDefault = params.y3RangeDefault;
+    y3Range = params.y3Range;
+    y3RangeZoom = params.y3RangeZoom;
+    y3RangeMove = params.y3RangeMove;
+catch ME
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
+    y3Range = y3RangeDefault;
+    y3RangeZoom = 2; % y range zooming factor, for i
+    y3RangeMove = 0.083333334; % y range moving factor, for i
+    h.params.actualParams.y3RangeDefault = y3RangeDefault;
+    h.params.actualParams.y3Range = y3Range;
+    h.params.actualParams.y3RangeZoom = y3RangeZoom;
+    h.params.actualParams.y3RangeMove = y3RangeMove;
+end
+
 switch signal1Type % i, V, F
     case 1
         zoom = params.y3RangeZoom; % zooming factor
@@ -22440,6 +22456,22 @@ catch ME
         h.params.defaultParams.signal1Channel = signal1Channel;
         h.params.defaultParams.signal2Channel = signal2Channel;
     end
+end
+
+try
+    y3RangeDefault = params.y3RangeDefault;
+    y3Range = params.y3Range;
+    y3RangeZoom = params.y3RangeZoom;
+    y3RangeMove = params.y3RangeMove;
+catch ME
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
+    y3Range = y3RangeDefault;
+    y3RangeZoom = 2; % y range zooming factor, for i
+    y3RangeMove = 0.083333334; % y range moving factor, for i
+    h.params.actualParams.y3RangeDefault = y3RangeDefault;
+    h.params.actualParams.y3Range = y3Range;
+    h.params.actualParams.y3RangeZoom = y3RangeZoom;
+    h.params.actualParams.y3RangeMove = y3RangeMove;
 end
 
 switch signal1Type % i, V, F
@@ -22504,6 +22536,22 @@ catch ME
     end
 end
 
+try
+    y3RangeDefault = params.y3RangeDefault;
+    y3Range = params.y3Range;
+    y3RangeZoom = params.y3RangeZoom;
+    y3RangeMove = params.y3RangeMove;
+catch ME
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
+    y3Range = y3RangeDefault;
+    y3RangeZoom = 2; % y range zooming factor, for i
+    y3RangeMove = 0.083333334; % y range moving factor, for i
+    h.params.actualParams.y3RangeDefault = y3RangeDefault;
+    h.params.actualParams.y3Range = y3Range;
+    h.params.actualParams.y3RangeZoom = y3RangeZoom;
+    h.params.actualParams.y3RangeMove = y3RangeMove;
+end
+
 switch signal1Type % i, V, F
     case 1
         move = params.y3RangeMove; % moving factor
@@ -22564,6 +22612,22 @@ catch ME
         h.params.defaultParams.signal1Channel = signal1Channel;
         h.params.defaultParams.signal2Channel = signal2Channel;
     end
+end
+
+try
+    y3RangeDefault = params.y3RangeDefault;
+    y3Range = params.y3Range;
+    y3RangeZoom = params.y3RangeZoom;
+    y3RangeMove = params.y3RangeMove;
+catch ME
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
+    y3Range = y3RangeDefault;
+    y3RangeZoom = 2; % y range zooming factor, for i
+    y3RangeMove = 0.083333334; % y range moving factor, for i
+    h.params.actualParams.y3RangeDefault = y3RangeDefault;
+    h.params.actualParams.y3Range = y3Range;
+    h.params.actualParams.y3RangeZoom = y3RangeZoom;
+    h.params.actualParams.y3RangeMove = y3RangeMove;
 end
 
 switch signal1Type % i, V, F
@@ -22628,6 +22692,22 @@ catch ME
         h.params.defaultParams.signal1Channel = signal1Channel;
         h.params.defaultParams.signal2Channel = signal2Channel;
     end
+end
+
+try
+    y3RangeDefault = params.y3RangeDefault;
+    y3Range = params.y3Range;
+    y3RangeZoom = params.y3RangeZoom;
+    y3RangeMove = params.y3RangeMove;
+catch ME
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
+    y3Range = y3RangeDefault;
+    y3RangeZoom = 2; % y range zooming factor, for i
+    y3RangeMove = 0.083333334; % y range moving factor, for i
+    h.params.actualParams.y3RangeDefault = y3RangeDefault;
+    h.params.actualParams.y3Range = y3Range;
+    h.params.actualParams.y3RangeZoom = y3RangeZoom;
+    h.params.actualParams.y3RangeMove = y3RangeMove;
 end
 
 switch signal1Type % i, V, F
@@ -22698,6 +22778,22 @@ catch ME
     end
 end
 
+try
+    y3RangeDefault = params.y3RangeDefault;
+    y3Range = params.y3Range;
+    y3RangeZoom = params.y3RangeZoom;
+    y3RangeMove = params.y3RangeMove;
+catch ME
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
+    y3Range = y3RangeDefault;
+    y3RangeZoom = 2; % y range zooming factor, for i
+    y3RangeMove = 0.083333334; % y range moving factor, for i
+    h.params.actualParams.y3RangeDefault = y3RangeDefault;
+    h.params.actualParams.y3Range = y3Range;
+    h.params.actualParams.y3RangeZoom = y3RangeZoom;
+    h.params.actualParams.y3RangeMove = y3RangeMove;
+end
+
 switch signal1Type % i, V, F
     case 1
         move = params.y3RangeMove; % moving factor
@@ -22761,6 +22857,22 @@ catch ME
         h.params.defaultParams.signal1Channel = signal1Channel;
         h.params.defaultParams.signal2Channel = signal2Channel;
     end
+end
+
+try
+    y3RangeDefault = params.y3RangeDefault;
+    y3Range = params.y3Range;
+    y3RangeZoom = params.y3RangeZoom;
+    y3RangeMove = params.y3RangeMove;
+catch ME
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
+    y3Range = y3RangeDefault;
+    y3RangeZoom = 2; % y range zooming factor, for i
+    y3RangeMove = 0.083333334; % y range moving factor, for i
+    h.params.actualParams.y3RangeDefault = y3RangeDefault;
+    h.params.actualParams.y3Range = y3Range;
+    h.params.actualParams.y3RangeZoom = y3RangeZoom;
+    h.params.actualParams.y3RangeMove = y3RangeMove;
 end
 
 switch signal1Type % i, V, F
@@ -22847,6 +22959,41 @@ catch ME
             h.params.defaultParams.signal2Channel = signal2Channel;
         end
     end
+end
+
+try
+    y3RangeDefault = params.y3RangeDefault;
+    y3Range = params.y3Range;
+    y3RangeZoom = params.y3RangeZoom;
+    y3RangeMove = params.y3RangeMove;
+catch ME
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
+    y3Range = y3RangeDefault;
+    y3RangeZoom = 2; % y range zooming factor, for i
+    y3RangeMove = 0.083333334; % y range moving factor, for i
+    h.params.actualParams.y3RangeDefault = y3RangeDefault;
+    h.params.actualParams.y3Range = y3Range;
+    h.params.actualParams.y3RangeZoom = y3RangeZoom;
+    h.params.actualParams.y3RangeMove = y3RangeMove;
+end
+
+try
+    yRangeDefault = params.yRangeDefault;
+catch ME
+    yRangeDefault = [-140, 20]; % y axis range for main trace display, for V
+    params.yRangeDefault = yRangeDefault;
+end
+try
+    y2RangeDefault = params.y2RangeDefault;
+catch ME
+    y2RangeDefault = [-1, 4]; % y axis range for main trace display, for F
+    params.y2RangeDefault = y2RangeDefault;
+end
+try
+    y3RangeDefault = params.y3RangeDefault;
+catch ME
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
+    params.y3RangeDefault = y3RangeDefault;
 end
 
 switch signal1Type % i, V, F
@@ -22985,6 +23132,22 @@ catch ME
             h.params.defaultParams.signal2Channel = signal2Channel;
         end
     end
+end
+
+try
+    y3RangeDefault = params.y3RangeDefault;
+    y3Range = params.y3Range;
+    y3RangeZoom = params.y3RangeZoom;
+    y3RangeMove = params.y3RangeMove;
+catch ME
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
+    y3Range = y3RangeDefault;
+    y3RangeZoom = 2; % y range zooming factor, for i
+    y3RangeMove = 0.083333334; % y range moving factor, for i
+    h.params.actualParams.y3RangeDefault = y3RangeDefault;
+    h.params.actualParams.y3Range = y3Range;
+    h.params.actualParams.y3RangeZoom = y3RangeZoom;
+    h.params.actualParams.y3RangeMove = y3RangeMove;
 end
 
 try
@@ -23129,6 +23292,41 @@ catch ME
         h.params.defaultParams.signal1Channel = signal1Channel;
         h.params.defaultParams.signal2Channel = signal2Channel;
     end
+end
+
+try
+    y3RangeDefault = params.y3RangeDefault;
+    y3Range = params.y3Range;
+    y3RangeZoom = params.y3RangeZoom;
+    y3RangeMove = params.y3RangeMove;
+catch ME
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
+    y3Range = y3RangeDefault;
+    y3RangeZoom = 2; % y range zooming factor, for i
+    y3RangeMove = 0.083333334; % y range moving factor, for i
+    h.params.actualParams.y3RangeDefault = y3RangeDefault;
+    h.params.actualParams.y3Range = y3Range;
+    h.params.actualParams.y3RangeZoom = y3RangeZoom;
+    h.params.actualParams.y3RangeMove = y3RangeMove;
+end
+
+try
+    yRangeDefault = params.yRangeDefault;
+catch ME
+    yRangeDefault = [-140, 20]; % y axis range for main trace display, for V
+    params.yRangeDefault = yRangeDefault;
+end
+try
+    y2RangeDefault = params.y2RangeDefault;
+catch ME
+    y2RangeDefault = [-1, 4]; % y axis range for main trace display, for F
+    params.y2RangeDefault = y2RangeDefault;
+end
+try
+    y3RangeDefault = params.y3RangeDefault;
+catch ME
+    y3RangeDefault = [-500, 400]; % y axis range for main trace display, for i
+    params.y3RangeDefault = y3RangeDefault;
 end
 
 switch signal1Type % i, V, F
