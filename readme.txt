@@ -31,7 +31,7 @@ The use or modification of this software (PVBS) is consented only under agreemen
 
 2) Run PVBS.exe
 (Stand-alone .exe; can be run without Matlab license, but does require Matlab Runtime, and slower than running directly from Matlab IDE)
-
+(Matlab runtime: https://www.mathworks.com/products/compiler/matlab-runtime.html)
 
 - For a usage example: 
 
