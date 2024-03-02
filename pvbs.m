@@ -8315,7 +8315,8 @@ catch ME
     eventAnalysisParams.apThresholdTakePrecedingPoint = 1; % take one data point preceding AP threshold definition for AP threshold - useful in case of low sampling rates (0: no, 1: yes)
     eventAnalysisParams.restingStateDuration = 100; % (ms); e.g. for RMP calculation
     h.params.actualParams.eventAnalysis = eventAnalysisParams;
-    h.params.defaultParams.eventAnalysis = eventAnalysisParams;
+    eventAnalysisParamsDefault = eventAnalysisParams;
+    h.params.defaultParams.eventAnalysis = eventAnalysisParamsDefault;
 end
 % failsafes
 detectionRearmDelta = (eventAnalysisParams.detectionRearm - eventAnalysisParams.detectionThreshold); % sign must be the opposite of detectionDirection by design
