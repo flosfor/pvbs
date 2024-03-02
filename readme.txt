@@ -8,12 +8,11 @@ The use or modification of this software (PVBS) is consented only under agreemen
 
 
 - MATLAB-based general-purpose GUI for browsing and analyzing electrophysiology (patch clamp) and calcium imaging data
-  (Requires Statistics & Machine Learning Toolbox, Signal Processing Toolbox)
 
-- Developed for interpreting data acquired with Prairie View (Bruker)
-- Compatible with any data in .CSV format (does not have to be from Prairie View)
 
- - Supported experiment types: 
+- Initially developed for interpreting data acquired with Prairie View (Bruker), but compatible with any data in the following format:
+
+ (Supported experiment types)
    1) *.CSV (any data)
    2) *.ABF (from pClamp)
    3) *.XML (from Prairie View (PV))
@@ -24,14 +23,15 @@ The use or modification of this software (PVBS) is consented only under agreemen
 
 - Instructions: 
 
-1) Run PVBS.m
- (Developed with Matlab 2023a; requirements: statistics & machine learning toolbox, signal processing toolbox)
+2) Run PVBS.exe
+ - Stand-alone executable that can be run without a licensed copy of Matlab)
+ - Requires either Matlab Runtime (R2023a (9.14)), or a licensed copy of Matlab with Statistics & Machine Learning Toolbox and Signal Processing Toolbox
+ - If run without licensed copy of Matlab, make sure to have the correct version of MCR (R2023a (9.14)) (https://www.mathworks.com/products/compiler/matlab-runtime.html)
+ - Can be slower than running PVBS.m from Matlab IDE, but only at startup 
 
  - or -
-
-2) Run PVBS.exe
- (Stand-alone executable that can be run without a licensed copy of Matlab; still requires Matlab Runtime (R2023a (9.14)), and slower than running PVBS.m from Matlab IDE)
- (Make sure to have the correct version of MCR (R2023a (9.14)): https://www.mathworks.com/products/compiler/matlab-runtime.html)
+1) Run PVBS.m
+ - Requirements: Statistics & Machine Learning Toolbox and Signal Processing Toolbox (developed with R2023a)
 
 
 - For a usage example: 
