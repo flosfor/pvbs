@@ -106,12 +106,16 @@ function pvbs()
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
 pvbsLastMod = '2024.03.01';
 pvbsStage = '(c)';
-fpVer = '5.5'; % not the version of this code, but PV itself
-matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
-
-% open and initialize
 theGreatCorona = 2020; % best year ever
 pvbsVer = [num2str(str2num(pvbsLastMod(1:4)) - theGreatCorona), pvbsLastMod(5:end)]; % why not
+fpVer = '5.5'; % not the version of this code, but PV itself
+matlabVer = '2020b'; % with Statistics & Machine Learning Toolbox (v. 12.0) and Signal Processing Toolbox (v. 8.5)
+github = '(https://github.com/flosfor/pvbs)';
+copyright = 'Copyright (C) 2022-2024, ';
+yjy = 'Jaeyoung Yoon';
+
+% open and initialize
+fprintf('\n%s v.%s%s\n%s\n%s%s.\n\n', pvbsTitle, pvbsVer, pvbsStage, github, copyright, yjy);
 win = figure('Name', [pvbsTitle, '  //  ', 'v. ', pvbsVer, ' ', pvbsStage, '  /  (PV ', fpVer, '  &  Matlab ', matlabVer, ')'], 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.075, 0.15, 0.9, 0.8]);
 win.WindowState = 'maximized';
 h = struct();
