@@ -24,10 +24,10 @@ The use or modification of this software (PVBS) is consented only under agreemen
 - Instructions: 
 
 1) Run PVBS.exe
- - Stand-alone executable that can be run without a licensed copy of Matlab)
+ - Stand-alone executable that can be run without a licensed copy of Matlab
  - Requires either Matlab Runtime (R2023a (9.14)), or a licensed copy of Matlab with Statistics & Machine Learning Toolbox and Signal Processing Toolbox
- - If run without licensed copy of Matlab, make sure to have the correct version of MCR (R2023a (9.14)) (https://www.mathworks.com/products/compiler/matlab-runtime.html)
- - Can be slower than running PVBS.m from Matlab IDE, but only at startup 
+ - If run with Matlab Runtime (MCR) only, make sure to have the correct version of MCR (R2023a (9.14)) (https://www.mathworks.com/products/compiler/matlab-runtime.html)
+ - Can be slower than running PVBS.m from Matlab IDE, but only at startup
 
  - or -
 
