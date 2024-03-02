@@ -119,7 +119,7 @@ copyright = 'Copyright (C) 2022-2024, ';
 yjy = 'Jaeyoung Yoon';
 
 % open and initialize
-fprintf('\n%s v.%s%s\n%s\n%s%s.\n\n', pvbsTitle, pvbsVer, pvbsStage, github, copyright, yjy);
+fprintf('\n%s v.%s%s\n%s\n%s%s.\n\n\n', pvbsTitle, pvbsVer, pvbsStage, github, copyright, yjy);
 win = figure('Name', [pvbsTitle, '  //  ', 'v. ', pvbsVer, ' ', pvbsStage, '  /  (PV ', fpVer, '  &  Matlab ', matlabVer, ')'], 'NumberTitle', 'off', 'MenuBar', 'none', 'Units', 'Normalized', 'Position', [0.075, 0.15, 0.9, 0.8]);
 win.WindowState = 'maximized';
 h = struct();
