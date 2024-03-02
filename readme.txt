@@ -25,7 +25,7 @@ The use or modification of this software (PVBS) is consented only under agreemen
 - Instructions: 
 
 1) Run PVBS (pvbs.m)
-(designed for Prairie View 5.5; developed with Matlab 2020b, requires statistics & machine learning toolbox, signal processing toolbox)
+(Developed with Matlab 2020b; requirements: statistics & machine learning toolbox, signal processing toolbox)
 
 
 - For a usage example: 
