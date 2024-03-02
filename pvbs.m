@@ -22391,10 +22391,17 @@ catch ME
     y3Range = y3RangeDefault;
     y3RangeZoom = 2; % y range zooming factor, for i
     y3RangeMove = 0.083333334; % y range moving factor, for i
+    params.y3Range = y3Range;
+    params.y3RangeZoom = y3RangeZoom;
+    params.y3RangeMove = y3RangeMove;
     h.params.actualParams.y3RangeDefault = y3RangeDefault;
     h.params.actualParams.y3Range = y3Range;
     h.params.actualParams.y3RangeZoom = y3RangeZoom;
     h.params.actualParams.y3RangeMove = y3RangeMove;
+    h.params.defaultParams.y3RangeDefault = y3RangeDefault;
+    h.params.defaultParams.y3Range = y3Range;
+    h.params.defaultParams.y3RangeZoom = y3RangeZoom;
+    h.params.defaultParams.y3RangeMove = y3RangeMove;
 end
 
 switch signal1Type % i, V, F
@@ -22468,10 +22475,17 @@ catch ME
     y3Range = y3RangeDefault;
     y3RangeZoom = 2; % y range zooming factor, for i
     y3RangeMove = 0.083333334; % y range moving factor, for i
+    params.y3Range = y3Range;
+    params.y3RangeZoom = y3RangeZoom;
+    params.y3RangeMove = y3RangeMove;
     h.params.actualParams.y3RangeDefault = y3RangeDefault;
     h.params.actualParams.y3Range = y3Range;
     h.params.actualParams.y3RangeZoom = y3RangeZoom;
     h.params.actualParams.y3RangeMove = y3RangeMove;
+    h.params.defaultParams.y3RangeDefault = y3RangeDefault;
+    h.params.defaultParams.y3Range = y3Range;
+    h.params.defaultParams.y3RangeZoom = y3RangeZoom;
+    h.params.defaultParams.y3RangeMove = y3RangeMove;
 end
 
 switch signal1Type % i, V, F
@@ -22546,10 +22560,17 @@ catch ME
     y3Range = y3RangeDefault;
     y3RangeZoom = 2; % y range zooming factor, for i
     y3RangeMove = 0.083333334; % y range moving factor, for i
+    params.y3Range = y3Range;
+    params.y3RangeZoom = y3RangeZoom;
+    params.y3RangeMove = y3RangeMove;
     h.params.actualParams.y3RangeDefault = y3RangeDefault;
     h.params.actualParams.y3Range = y3Range;
     h.params.actualParams.y3RangeZoom = y3RangeZoom;
     h.params.actualParams.y3RangeMove = y3RangeMove;
+    h.params.defaultParams.y3RangeDefault = y3RangeDefault;
+    h.params.defaultParams.y3Range = y3Range;
+    h.params.defaultParams.y3RangeZoom = y3RangeZoom;
+    h.params.defaultParams.y3RangeMove = y3RangeMove;
 end
 
 switch signal1Type % i, V, F
@@ -22624,10 +22645,17 @@ catch ME
     y3Range = y3RangeDefault;
     y3RangeZoom = 2; % y range zooming factor, for i
     y3RangeMove = 0.083333334; % y range moving factor, for i
+    params.y3Range = y3Range;
+    params.y3RangeZoom = y3RangeZoom;
+    params.y3RangeMove = y3RangeMove;
     h.params.actualParams.y3RangeDefault = y3RangeDefault;
     h.params.actualParams.y3Range = y3Range;
     h.params.actualParams.y3RangeZoom = y3RangeZoom;
     h.params.actualParams.y3RangeMove = y3RangeMove;
+    h.params.defaultParams.y3RangeDefault = y3RangeDefault;
+    h.params.defaultParams.y3Range = y3Range;
+    h.params.defaultParams.y3RangeZoom = y3RangeZoom;
+    h.params.defaultParams.y3RangeMove = y3RangeMove;
 end
 
 switch signal1Type % i, V, F
@@ -22704,10 +22732,17 @@ catch ME
     y3Range = y3RangeDefault;
     y3RangeZoom = 2; % y range zooming factor, for i
     y3RangeMove = 0.083333334; % y range moving factor, for i
+    params.y3Range = y3Range;
+    params.y3RangeZoom = y3RangeZoom;
+    params.y3RangeMove = y3RangeMove;
     h.params.actualParams.y3RangeDefault = y3RangeDefault;
     h.params.actualParams.y3Range = y3Range;
     h.params.actualParams.y3RangeZoom = y3RangeZoom;
     h.params.actualParams.y3RangeMove = y3RangeMove;
+    h.params.defaultParams.y3RangeDefault = y3RangeDefault;
+    h.params.defaultParams.y3Range = y3Range;
+    h.params.defaultParams.y3RangeZoom = y3RangeZoom;
+    h.params.defaultParams.y3RangeMove = y3RangeMove;
 end
 
 switch signal1Type % i, V, F
@@ -22788,10 +22823,17 @@ catch ME
     y3Range = y3RangeDefault;
     y3RangeZoom = 2; % y range zooming factor, for i
     y3RangeMove = 0.083333334; % y range moving factor, for i
+    params.y3Range = y3Range;
+    params.y3RangeZoom = y3RangeZoom;
+    params.y3RangeMove = y3RangeMove;
     h.params.actualParams.y3RangeDefault = y3RangeDefault;
     h.params.actualParams.y3Range = y3Range;
     h.params.actualParams.y3RangeZoom = y3RangeZoom;
     h.params.actualParams.y3RangeMove = y3RangeMove;
+    h.params.defaultParams.y3RangeDefault = y3RangeDefault;
+    h.params.defaultParams.y3Range = y3Range;
+    h.params.defaultParams.y3RangeZoom = y3RangeZoom;
+    h.params.defaultParams.y3RangeMove = y3RangeMove;
 end
 
 switch signal1Type % i, V, F
@@ -22869,10 +22911,17 @@ catch ME
     y3Range = y3RangeDefault;
     y3RangeZoom = 2; % y range zooming factor, for i
     y3RangeMove = 0.083333334; % y range moving factor, for i
+    params.y3Range = y3Range;
+    params.y3RangeZoom = y3RangeZoom;
+    params.y3RangeMove = y3RangeMove;
     h.params.actualParams.y3RangeDefault = y3RangeDefault;
     h.params.actualParams.y3Range = y3Range;
     h.params.actualParams.y3RangeZoom = y3RangeZoom;
     h.params.actualParams.y3RangeMove = y3RangeMove;
+    h.params.defaultParams.y3RangeDefault = y3RangeDefault;
+    h.params.defaultParams.y3Range = y3Range;
+    h.params.defaultParams.y3RangeZoom = y3RangeZoom;
+    h.params.defaultParams.y3RangeMove = y3RangeMove;
 end
 
 switch signal1Type % i, V, F
@@ -22971,10 +23020,17 @@ catch ME
     y3Range = y3RangeDefault;
     y3RangeZoom = 2; % y range zooming factor, for i
     y3RangeMove = 0.083333334; % y range moving factor, for i
+    params.y3Range = y3Range;
+    params.y3RangeZoom = y3RangeZoom;
+    params.y3RangeMove = y3RangeMove;
     h.params.actualParams.y3RangeDefault = y3RangeDefault;
     h.params.actualParams.y3Range = y3Range;
     h.params.actualParams.y3RangeZoom = y3RangeZoom;
     h.params.actualParams.y3RangeMove = y3RangeMove;
+    h.params.defaultParams.y3RangeDefault = y3RangeDefault;
+    h.params.defaultParams.y3Range = y3Range;
+    h.params.defaultParams.y3RangeZoom = y3RangeZoom;
+    h.params.defaultParams.y3RangeMove = y3RangeMove;
 end
 
 try
@@ -23144,10 +23200,17 @@ catch ME
     y3Range = y3RangeDefault;
     y3RangeZoom = 2; % y range zooming factor, for i
     y3RangeMove = 0.083333334; % y range moving factor, for i
+    params.y3Range = y3Range;
+    params.y3RangeZoom = y3RangeZoom;
+    params.y3RangeMove = y3RangeMove;
     h.params.actualParams.y3RangeDefault = y3RangeDefault;
     h.params.actualParams.y3Range = y3Range;
     h.params.actualParams.y3RangeZoom = y3RangeZoom;
     h.params.actualParams.y3RangeMove = y3RangeMove;
+    h.params.defaultParams.y3RangeDefault = y3RangeDefault;
+    h.params.defaultParams.y3Range = y3Range;
+    h.params.defaultParams.y3RangeZoom = y3RangeZoom;
+    h.params.defaultParams.y3RangeMove = y3RangeMove;
 end
 
 try
@@ -23304,10 +23367,17 @@ catch ME
     y3Range = y3RangeDefault;
     y3RangeZoom = 2; % y range zooming factor, for i
     y3RangeMove = 0.083333334; % y range moving factor, for i
+    params.y3Range = y3Range;
+    params.y3RangeZoom = y3RangeZoom;
+    params.y3RangeMove = y3RangeMove;
     h.params.actualParams.y3RangeDefault = y3RangeDefault;
     h.params.actualParams.y3Range = y3Range;
     h.params.actualParams.y3RangeZoom = y3RangeZoom;
     h.params.actualParams.y3RangeMove = y3RangeMove;
+    h.params.defaultParams.y3RangeDefault = y3RangeDefault;
+    h.params.defaultParams.y3Range = y3Range;
+    h.params.defaultParams.y3RangeZoom = y3RangeZoom;
+    h.params.defaultParams.y3RangeMove = y3RangeMove;
 end
 
 try
