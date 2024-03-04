@@ -13070,7 +13070,7 @@ function analysisTargetSel(src, event)
 end
 
 
-function analysisTypeSel(src, event)
+function analysisTypeSel(src, event) % completely obsolete due to how the analysis & display functions are now written
 % callback for analysis type selection
 
 % load
@@ -13112,6 +13112,7 @@ switch h.ui.analysisType2.Value
 end
 %}
 
+%{
 % analysis types
 try
     switch h.ui.analysisType1.Value % analysis type for window 1
@@ -13197,6 +13198,7 @@ try
     end
 catch ME
 end
+%}
 
 % save
 guidata(src, h);
