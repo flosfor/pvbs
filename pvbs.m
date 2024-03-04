@@ -16071,7 +16071,17 @@ try
         case 1
             switch h.ui.analysisType1.Value
                 case 2 % peak/area/mean
-                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                    try
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                    catch ME
+                        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.String = analysisPlotMenuList31;
+                    end
                     switch analysisPlot1Menu3 % which kind of results
                         case 2
                             dataY = results1.peak;
@@ -16102,7 +16112,17 @@ try
                             resultsType = 1; % whatever
                     end
                 case 3 % event
-                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                    try
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                    catch ME
+                        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.String = analysisPlotMenuList32;
+                    end
                     resultsType = 1;
                     switch analysisPlot1Menu3 % which kind of results
                         case 2
@@ -16119,7 +16139,17 @@ try
                             dataY = [];
                     end
                 case 4 % ap threshold
-                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                    try
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                    catch ME
+                        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.String = analysisPlotMenuList33;
+                    end
                     resultsType = 1;
                     switch analysisPlot1Menu3 % which kind of results
                         case 2
@@ -16144,7 +16174,17 @@ try
         case 2
             switch h.ui.analysisType2.Value
                 case 2 % peak/area/mean
-                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                    try
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                    catch ME
+                        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.String = analysisPlotMenuList31;
+                    end
                     switch analysisPlot1Menu3 % which kind of results
                         case 2
                             dataY = results1.peak;
@@ -16175,7 +16215,17 @@ try
                             resultsType = 1; % whatever
                     end
                 case 3 % event
-                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                    try
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                    catch ME
+                        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.String = analysisPlotMenuList32;
+                    end
                     resultsType = 1;
                     switch analysisPlot1Menu3 % which kind of results
                         case 2
@@ -16192,7 +16242,17 @@ try
                             dataY = [];
                     end
                 case 4 % ap threshold
-                    h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                    try
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                    catch ME
+                        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.String = analysisPlotMenuList33;
+                    end
                     resultsType = 1;
                     switch analysisPlot1Menu3 % which kind of results
                         case 2
@@ -16656,6 +16716,19 @@ try
 catch ME
 
     try
+        analysisPlotMenuList31 = h.params.analysisPlotMenuList31;
+        analysisPlotMenuList32 = h.params.analysisPlotMenuList32;
+        analysisPlotMenuList33 = h.params.analysisPlotMenuList33;
+    catch ME
+        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+    end
+
+    try
         winToPlot = analysisPlot1Menu2 - 1; % fmfl
         switch winToPlot
             case 0
@@ -16788,7 +16861,17 @@ try
         case 1
             switch h.ui.analysisType1.Value
                 case 2 % peak/area/mean
-                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                    try
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                    catch ME
+                        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.String = analysisPlotMenuList31;
+                    end
                     switch analysisPlot2Menu3 % which kind of results
                         case 2
                             dataY = results2.peak;
@@ -16819,7 +16902,17 @@ try
                             resultsType = 1; % whatever
                     end
                 case 3 % event
-                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
+                    try
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                    catch ME
+                        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.String = analysisPlotMenuList32;
+                    end
                     resultsType = 1;
                     switch analysisPlot2Menu3 % which kind of results
                         case 2
@@ -16836,7 +16929,17 @@ try
                             dataY = [];
                     end
                 case 4 % ap threshold
-                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
+                    try
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                    catch ME
+                        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.String = analysisPlotMenuList33;
+                    end
                     resultsType = 1;
                     switch analysisPlot2Menu3 % which kind of results
                         case 2
@@ -16861,7 +16964,17 @@ try
         case 2
             switch h.ui.analysisType2.Value
                 case 2 % peak/area/mean
-                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                    try
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                    catch ME
+                        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.String = analysisPlotMenuList31;
+                    end
                     switch analysisPlot2Menu3 % which kind of results
                         case 2
                             dataY = results2.peak;
@@ -16892,7 +17005,17 @@ try
                             resultsType = 1; % whatever
                     end
                 case 3 % event
-                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
+                    try
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                    catch ME
+                        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.String = analysisPlotMenuList32;
+                    end
                     resultsType = 1;
                     switch analysisPlot2Menu3 % which kind of results
                         case 2
@@ -16909,7 +17032,17 @@ try
                             dataY = [];
                     end
                 case 4 % ap threshold
-                    h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
+                    try
+                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                    catch ME
+                        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                        h.ui.analysisPlot1Menu3.String = analysisPlotMenuList33;
+                    end
                     resultsType = 1;
                     switch analysisPlot2Menu3 % which kind of results
                         case 2
@@ -17374,6 +17507,19 @@ try
 catch ME
 
     try
+        analysisPlotMenuList31 = h.params.analysisPlotMenuList31;
+        analysisPlotMenuList32 = h.params.analysisPlotMenuList32;
+        analysisPlotMenuList33 = h.params.analysisPlotMenuList33;
+    catch ME
+        analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+        analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+        analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+        h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+        h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+        h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+    end
+
+    try
         winToPlot = analysisPlot2Menu2 - 1; % fmfl
         switch winToPlot
             case 0
@@ -17561,7 +17707,17 @@ if plotIdx == 1
             case 1
                 switch h.ui.analysisType1.Value
                     case 2 % peak/area/mean
-                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                        try
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                        catch ME
+                            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.String = analysisPlotMenuList31;
+                        end
                         switch analysisPlot1Menu3 % which kind of results
                             case 2
                                 dataY = results1.peak;
@@ -17592,7 +17748,17 @@ if plotIdx == 1
                                 resultsType = 1; % whatever
                         end
                     case 3 % event
-                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                        try
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                        catch ME
+                            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.String = analysisPlotMenuList32;
+                        end
                         resultsType = 1;
                         switch analysisPlot1Menu3 % which kind of results
                             case 2
@@ -17609,7 +17775,17 @@ if plotIdx == 1
                                 dataY = [];
                         end
                     case 4 % ap threshold
-                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                        try
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                        catch ME
+                            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.String = analysisPlotMenuList33;
+                        end
                         resultsType = 1;
                         switch analysisPlot1Menu3 % which kind of results
                             case 2
@@ -17634,7 +17810,17 @@ if plotIdx == 1
             case 2
                 switch h.ui.analysisType2.Value
                     case 2 % peak/area/mean
-                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                        try
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                        catch ME
+                            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.String = analysisPlotMenuList31;
+                        end
                         switch analysisPlot1Menu3 % which kind of results
                             case 2
                                 dataY = results1.peak;
@@ -17665,7 +17851,17 @@ if plotIdx == 1
                                 resultsType = 1; % whatever
                         end
                     case 3 % event
-                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                        try
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                        catch ME
+                            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.String = analysisPlotMenuList32;
+                        end
                         resultsType = 1;
                         switch analysisPlot1Menu3 % which kind of results
                             case 2
@@ -17682,7 +17878,17 @@ if plotIdx == 1
                                 dataY = [];
                         end
                     case 4 % ap threshold
-                        h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                        try
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                        catch ME
+                            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.String = analysisPlotMenuList33;
+                        end
                         resultsType = 1;
                         switch analysisPlot1Menu3 % which kind of results
                             case 2
@@ -18147,6 +18353,19 @@ if plotIdx == 1
     catch ME
 
         try
+            analysisPlotMenuList31 = h.params.analysisPlotMenuList31;
+            analysisPlotMenuList32 = h.params.analysisPlotMenuList32;
+            analysisPlotMenuList33 = h.params.analysisPlotMenuList33;
+        catch ME
+            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+        end
+
+        try
             winToPlot = analysisPlot1Menu2 - 1; % fmfl
             switch winToPlot
                 case 0
@@ -18281,7 +18500,17 @@ if plotIdx == 2
             case 1
                 switch h.ui.analysisType1.Value
                     case 2 % peak/area/mean
-                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                        try
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                        catch ME
+                            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.String = analysisPlotMenuList31;
+                        end
                         switch analysisPlot2Menu3 % which kind of results
                             case 2
                                 dataY = results2.peak;
@@ -18312,7 +18541,17 @@ if plotIdx == 2
                                 resultsType = 1; % whatever
                         end
                     case 3 % event
-                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
+                        try
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                        catch ME
+                            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.String = analysisPlotMenuList32;
+                        end
                         resultsType = 1;
                         switch analysisPlot2Menu3 % which kind of results
                             case 2
@@ -18329,7 +18568,17 @@ if plotIdx == 2
                                 dataY = [];
                         end
                     case 4 % ap threshold
-                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
+                        try
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                        catch ME
+                            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.String = analysisPlotMenuList33;
+                        end
                         resultsType = 1;
                         switch analysisPlot2Menu3 % which kind of results
                             case 2
@@ -18354,7 +18603,17 @@ if plotIdx == 2
             case 2
                 switch h.ui.analysisType2.Value
                     case 2 % peak/area/mean
-                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList31;
+                        try
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList31;
+                        catch ME
+                            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.String = analysisPlotMenuList31;
+                        end
                         switch analysisPlot2Menu3 % which kind of results
                             case 2
                                 dataY = results2.peak;
@@ -18385,7 +18644,17 @@ if plotIdx == 2
                                 resultsType = 1; % whatever
                         end
                     case 3 % event
-                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList32;
+                        try
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList32;
+                        catch ME
+                            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.String = analysisPlotMenuList32;
+                        end
                         resultsType = 1;
                         switch analysisPlot2Menu3 % which kind of results
                             case 2
@@ -18402,7 +18671,17 @@ if plotIdx == 2
                                 dataY = [];
                         end
                     case 4 % ap threshold
-                        h.ui.analysisPlot2Menu3.String = h.params.analysisPlotMenuList33;
+                        try
+                            h.ui.analysisPlot1Menu3.String = h.params.analysisPlotMenuList33;
+                        catch ME
+                            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+                            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+                            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+                            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+                            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+                            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+                            h.ui.analysisPlot1Menu3.String = analysisPlotMenuList33;
+                        end
                         resultsType = 1;
                         switch analysisPlot2Menu3 % which kind of results
                             case 2
@@ -18865,6 +19144,19 @@ if plotIdx == 2
         h.params.resultsPlot2YRange = analysisPlot2.YLim;
 
     catch ME
+
+        try
+            analysisPlotMenuList31 = h.params.analysisPlotMenuList31;
+            analysisPlotMenuList32 = h.params.analysisPlotMenuList32;
+            analysisPlotMenuList33 = h.params.analysisPlotMenuList33;
+        catch ME
+            analysisPlotMenuList31 = {'(Results)', 'Peak', 'Area', 'Mean', 'Time of Peak', 'Rise (time)', 'Decay (time)', 'Rise (slope)', 'Decay (slope)'};
+            analysisPlotMenuList32 = {'(Results)', 'No. of Events', 'Event Peak Value', 'Event Amplitude', 'Event Time of Peak', 'Event Baseline'};
+            analysisPlotMenuList33 = {'(Results)', 'AP Threshold', 'AP Amplitude', 'AP Time of Peak', 'AP Half-width', 'Max Depol', 'Max Repol', 'RMP'};
+            h.params.analysisPlotMenuList31 = analysisPlotMenuList31;
+            h.params.analysisPlotMenuList32 = analysisPlotMenuList32;
+            h.params.analysisPlotMenuList33 = analysisPlotMenuList33;
+        end
 
         try
             winToPlot = analysisPlot2Menu2 - 1; % fmfl
