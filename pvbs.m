@@ -10053,6 +10053,15 @@ axes(traceDisplay);
 
 end
 
+
+function analysisPresetSel(src, ~) % obsolete
+
+h = guidata(src);
+guidata(src, h);
+
+end
+
+
 function runAutoAnalysis(src, ~)
 
 win = src; % cannot use "src" as variable name as there will be nested functions downstream using src, cuz i'm a fucking idiot
