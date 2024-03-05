@@ -19294,7 +19294,7 @@ function [h, data_voltage_original] = loadIntrinsicActual(h)
 
     % load datafile
     try
-        [fName, fPath] = uigetfile({'*.*', 'All files (.*)'; '*.abf', 'Axon binary file'; '*.xml', 'VoltageRecording Metadata'; '*.csv', 'VoltageRecording Data'}, 'Select File (.abf, .xml, .csv)'); % filters for '.xml' extension only
+        [fName, fPath] = uigetfile({'*.*', 'All files'; '*.abf', 'Axon binary file'; '*.xml', 'VoltageRecording Metadata'; '*.csv', 'VoltageRecording Data'}, 'Select File (.abf, .xml, .csv)'); % filters for '.xml' extension only
     catch
         waitfor(msgbox('Error: Select valid .xml or .csv'));
         error('Error: Select valid .xml or .csv');
