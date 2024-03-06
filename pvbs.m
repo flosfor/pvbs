@@ -108,7 +108,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2024.03.01';
+pvbsLastMod = '2024.03.06';
 pvbsStage = '(c)';
 theGreatCorona = 2020; % best year ever
 pvbsVer = [num2str(str2num(pvbsLastMod(1:4)) - theGreatCorona), pvbsLastMod(5:end)]; % why not
@@ -197,7 +197,7 @@ params.traceColorActive = [1, 0, 0]; % color for active (selected) traces
 params.trace2ColorInactive = [0.9, 0.95, 0.9]; % secondary color for inactive traces
 params.trace2ColorActive = [0.6, 0.8, 0.6]; % secondary color for active (selected) traces
 params.selectionInterval = 1; % default sweep selection interval
-params.groupSelectionInterval = 0; % default selection interval for grouping
+params.groupSelectionInterval = 1; % misleading name; previously default selection interval for grouping, now group every this number of sweeps
 params.groupSweepIdx = 0; % index of sweep to display within group
 %params.peakDirection = 0; % direction for peak detection (-1: negative, 0: absolute, 1: positive) - obsolete
 params.traceProcessingTargetList = {'Voltage / Current', 'Fluorescence'}; % obsolete, using params.analysisPlotMenuList1 instead
@@ -312,8 +312,8 @@ ui.sweepSelectEven = uicontrol('Style', 'pushbutton', 'string', 'Evn', 'Units', 
 ui.sweepSelectInvert = uicontrol('Style', 'pushbutton', 'string', 'Inv', 'Units', 'normalized', 'Position', [0.968, 0.87, 0.0165, 0.03], 'Callback', @sweepSelectInvert, 'interruptible', 'off');
 ui.sweepGroupText = uicontrol('Style', 'text', 'string', 'Grp. by: ', 'horizontalalignment', 'left', 'Units', 'normalized', 'Position', [0.936, 0.71, 0.045, 0.02]);
 ui.groupSelected = uicontrol('Style', 'pushbutton', 'String', 'Sel.', 'Units', 'normalized', 'Position', [0.96, 0.71, 0.024, 0.03], 'Callback', @groupSelected, 'interruptible', 'off');
-ui.groupSelectedMod = uicontrol('Style', 'pushbutton', 'string', 'Interval:', 'Units', 'normalized', 'Position', [0.936, 0.68, 0.032, 0.03], 'Callback', @groupSelectedMod, 'interruptible', 'off');
-ui.groupSelectedModValue = uicontrol('Style', 'edit', 'string', num2str(params.groupSelectionInterval), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.9685, 0.681, 0.015, 0.028], 'Callback', @groupSelectModValue, 'interruptible', 'off');
+ui.groupSelectedMod = uicontrol('Style', 'pushbutton', 'string', 'Swps', 'Units', 'normalized', 'Position', [0.96, 0.68, 0.024, 0.03], 'Callback', @groupSelectedMod, 'interruptible', 'off');
+ui.groupSelectedModValue = uicontrol('Style', 'edit', 'string', num2str(params.groupSelectionInterval), 'horizontalalignment', 'right', 'Units', 'normalized', 'Position', [0.94, 0.681, 0.02, 0.028], 'Callback', @groupSelectModValue, 'interruptible', 'off');
 %{
 ui.groupAuto1 = uicontrol('Style', 'pushbutton', 'String', 'VOut', 'Units', 'normalized', 'Position', [0.936, 0.65, 0.024, 0.03], 'Callback', @groupAutoVOut, 'interruptible', 'off');
 ui.groupAuto2 = uicontrol('Style', 'pushbutton', 'String', 'MkPts', 'Units', 'normalized', 'Position', [0.96, 0.65, 0.024, 0.03], 'Callback', @groupAutoMkPts, 'interruptible', 'off');
@@ -6130,8 +6130,93 @@ end
 
 
 function groupSelectedMod(src, ~)
-% group every x sweeps from selection
+% group by a given number of sweeps; misleading name due to previous design, see bottom of function
 
+% load
+h = guidata(src);
+cellListIdx = h.ui.cellListDisplay.Value;
+cellListIdx = cellListIdx(1); % force single selection
+h.ui.cellListDisplay.Value = cellListIdx;
+if isempty(h.ui.cellListDisplay.String) % if no experiment is loaded
+    return
+elseif isempty(h.ui.cellListDisplay.Value) % if no experiment is selected
+    return
+end
+sweepList = h.ui.sweepList;
+sweepCount = length(sweepList);
+selectionInterval = h.params.groupSelectionInterval;
+groupListDisplay = h.ui.groupListDisplay;
+sweepListSelected = h.ui.sweepListDisplay.Value;
+sweepIdx = h.exp.data.sweepIdx{cellListIdx};
+sweepStr = h.exp.data.sweepStr{cellListIdx};
+groupIdx = h.exp.data.groupIdx{cellListIdx};
+groupStr = h.exp.data.groupStr{cellListIdx};
+
+% do nothing if no item was selected
+if isempty(sweepListSelected)
+    return
+end
+
+if selectionInterval <= 0 % was == 0 for line below
+    %selectionInterval = length(sweepListSelected) + 1; % %%% doesn't fucking make sense anymore, nor would be convenient
+    return
+end
+
+% iterate
+for k = 1:floor(length(sweepListSelected)/selectionInterval)
+    try
+        [h, itemSelected] = groupSelectModMain(h, k);
+    catch ME
+    end
+end
+
+    function [h, itemSelected] = groupSelectModMain(h, k)
+        
+        % select sweeps
+        currentSelection = h.ui.sweepListDisplay.Value; % load current selection
+        currentSelectionEnd = currentSelection(end);
+        itemSelected = [];
+        for i = 1 : selectionInterval
+            itemSelected(end + 1) = currentSelection((k - 1)*selectionInterval + i);
+        end
+        %h.ui.sweepListDisplay.Value = itemSelected; % un-commenting this line will fuck things up because of how currentSelection is re-defined at the top row of this block; could be remedied easily, but i'm that lazy
+        
+        % convert from ordinal index from sweep list to absolute index
+        sweepListSelectedIdx = sweepIdx(itemSelected);
+        
+        % group
+        groupIdx{end + 1} = sweepListSelectedIdx;
+        groupStrNew = sweepStr{sweepListSelectedIdx(1)};
+        if length(sweepListSelectedIdx) > 1
+            for i = 2:length(sweepListSelectedIdx)
+                groupStrNew = [groupStrNew, ',', sweepStr{sweepListSelectedIdx(i)}];
+            end
+        end
+        groupStr{end + 1} = groupStrNew;
+        set(groupListDisplay, 'string', groupStr);
+        if groupListDisplay.Value == 0 % if all groups had been deleted
+            set(groupListDisplay, 'value', 1); % shouldn't the line below suffice? was i drunk?
+        else
+            set(groupListDisplay, 'value', length(groupListDisplay.String)); % highlight
+        end
+        
+    end
+
+% save
+h.exp.data.groupIdx{cellListIdx} = groupIdx;
+h.exp.data.groupStr{cellListIdx} = groupStr;
+h.ui.groupListDisplay = groupListDisplay;
+guidata(src, h);
+
+% do display
+h = highlightSweep(h, itemSelected);
+
+% save
+guidata(src, h);
+
+
+% originally for grouping every x sweeps from selection - commented below in entirety
+%{
 % load
 h = guidata(src);
 cellListIdx = h.ui.cellListDisplay.Value;
@@ -6214,6 +6299,7 @@ h = highlightSweep(h, itemSelected);
 
 % save
 guidata(src, h);
+%}
 
 end
 
