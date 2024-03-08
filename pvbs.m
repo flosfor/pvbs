@@ -541,8 +541,8 @@ csvColumnsAsSweeps = 1; % each column represents a sweep - set this to 0 if prim
 
 % voltage/current data
 analysisColumn = pvbsVoltageColumn; % column for analysis; NB. column 1 will usually be timestamp in the current code
-peakDirection1 = 1; % window 1 default peak direction (-1, 0, 1 : negative, absolute, positive)
-peakDirection2 = 1; % window 2 default peak direction (-1, 0, 1 : negative, absolute, positive)
+peakDirection1 = 0; % window 1 default peak direction (-1, 0, 1 : negative, absolute, positive)
+peakDirection2 = 0; % window 2 default peak direction (-1, 0, 1 : negative, absolute, positive)
 useMedian = 1; % use median instead of mean for baseline, "mean" (in peak analysis), etc., to be robust from noise
 riseDecay = [20, 80]; % low/high point for kinetics analysis (e.g. [20, 80] for 20-80 %)
 
