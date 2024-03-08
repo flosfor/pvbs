@@ -108,7 +108,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2024.03.06';
+pvbsLastMod = '2024.03.08';
 pvbsStage = '(c)';
 theGreatCorona = 2020; % best year ever
 pvbsVer = [num2str(str2num(pvbsLastMod(1:4)) - theGreatCorona), pvbsLastMod(5:end)]; % why not
@@ -6157,8 +6157,15 @@ if isempty(sweepListSelected)
     return
 end
 
-if selectionInterval <= 0 % was == 0 for line below
-    %selectionInterval = length(sweepListSelected) + 1; % %%% doesn't fucking make sense anymore, nor would be convenient
+if selectionInterval < 1
+    return
+else
+    selectionInterval = floor(selectionInterval);
+    h.params.groupSelectionInterval = selectionInterval;
+    h.ui.groupSelectedModValue.String = num2str(selectionInterval);
+end
+
+if floor(length(sweepListSelected)/selectionInterval) < 1
     return
 end
 
