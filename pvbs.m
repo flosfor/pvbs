@@ -108,7 +108,7 @@ function pvbs()
 
 % version
 pvbsTitle = 'PVBS (Prairie View Browsing Solution)';
-pvbsLastMod = '2024.03.08';
+pvbsLastMod = '2024.03.18';
 pvbsStage = '(c)';
 theGreatCorona = 2020; % best year ever
 pvbsVer = [num2str(str2num(pvbsLastMod(1:4)) - theGreatCorona), pvbsLastMod(5:end)]; % why not
@@ -22165,16 +22165,60 @@ end
     function exportTracesMain(h, currentExperiment, targetSignal)
         % current experiment
         dataToExport = h.exp.data;
-        
+
+        try % try-catch for reverse compatibility
+            timeColumn = h.params.actualParams.timeColumn;
+        catch ME
+            timeColumn = 1;
+            h.params.actualParams.timeColumn = timeColumn;
+        end
+        try
+            signal1Type = h.params.actualParams.signal1Type; % current, voltage, fluorescence
+            signal2Type = h.params.actualParams.signal2Type; % current, voltage, fluorescence
+        catch ME
+            signal1Type = 2; % current, voltage, fluorescence - defaulting to voltage
+            signal2Type = 3; % current, voltage, fluorescence - defaulting to fluorescence
+            h.params.actualParams.signal1Type = signal1Type;
+            h.params.actualParams.signal2Type = signal2Type;
+            h.params.defaultParams.signal1Type = signal1Type;
+            h.params.defaultParams.signal2Type = signal2Type;
+        end
+        try
+            signal1Channel = h.params.actualParams.signal1Channel;
+            signal2Channel = h.params.actualParams.signal2Channel;
+        catch ME
+            signal1Channel = 2;
+            signal2Channel = 2;
+            h.params.actualParams.signal1Channel = signal1Channel;
+            h.params.actualParams.signal2Channel = signal2Channel;
+            h.params.defaultParams.signal1Channel = signal1Channel;
+            h.params.defaultParams.signal2Channel = signal2Channel;
+        end
+        guidata(src, h); % saving here, because it isn't saved from the parent function
+
         switch targetSignal % signal
-            case 1 % v/i
-                dataToExport = dataToExport.VRec{currentExperiment};
-                timeStampColumnIdx = 1; % %%% fixlater
-                dataColumnIdx = 2; % %%% fixlater
-            case 2 % dff
-                dataToExport = dataToExport.lineScanDFF{currentExperiment};
-                timeStampColumnIdx = 1; % %%% fixlater
-                dataColumnIdx = 2; % %%% fixlater
+            case 1
+                timeStampColumnIdx = timeColumn;
+                dataColumnIdx = signal1Channel;
+                switch signal1Type % i, V, F
+                    case 1
+                        dataToExport = dataToExport.VRec{currentExperiment};
+                    case 2
+                        dataToExport = dataToExport.VRec{currentExperiment};
+                    case 3 % not considering dual-channel F at this point %%% fixlater
+                        dataToExport = dataToExport.lineScanDFF{currentExperiment};
+                end
+            case 2
+                timeStampColumnIdx = timeColumn;
+                dataColumnIdx = signal2Channel;
+                switch signal2Type % i, V, F
+                    case 1
+                        dataToExport = dataToExport.VRec{currentExperiment};
+                    case 2
+                        dataToExport = dataToExport.VRec{currentExperiment};
+                    case 3 % not considering dual-channel F at this point %%% fixlater
+                        dataToExport = dataToExport.lineScanDFF{currentExperiment};
+                end
         end
         
         numSweeps = length(dataToExport);
